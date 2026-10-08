@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="theme-color" content="#4a90e2">
+<title>Absensi Karyawan</title>
+<style>
+:root{--primary:#4a90e2;--primary-dark:#357abd;--success:#28a745;--danger:#dc3545;--warning:#ffc107;--info:#17a2b8;--gray:#6c757d;--dark:#343a40;--radius:12px;--shadow:0 4px 6px rgba(0,0,0,.1)}
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+body{background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);min-height:100vh;color:#333;padding-bottom:20px;-webkit-tap-highlight-color:transparent}
+input,select,textarea,button{font-size:16px!important}
+.container{max-width:500px;margin:0 auto;padding:16px}
+.screen{display:none;animation:fadeIn .3s ease}
+.screen.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.app-header{background:linear-gradient(135deg,var(--primary),#6a11cb);color:#fff;padding:20px 16px;border-radius:0 0 var(--radius) var(--radius);margin:-16px -16px 20px;box-shadow:var(--shadow)}
+.app-header h1{font-size:20px}
+.app-header .subtitle{opacity:.9;font-size:13px;margin-top:4px}
+.logo-circle{width:60px;height:60px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:28px}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px}
+.card-title{font-size:17px;font-weight:600;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:none;border-radius:var(--radius);font-size:15px;font-weight:500;cursor:pointer;transition:all .2s;min-height:48px}
+.btn:active{transform:scale(.98)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-block{width:100%;margin-bottom:10px}
+.btn-sm{padding:8px 12px;font-size:13px;min-height:36px}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-warning{background:var(--warning);color:#212529}
+.btn-info{background:var(--info);color:#fff}
+.btn-outline{background:#fff;border:2px solid var(--primary);color:var(--primary)}
+.btn-group{display:flex;gap:12px;margin-top:12px}
+.btn-group .btn{flex:1}
+.form-group{margin-bottom:16px}
+.form-label{display:block;margin-bottom:6px;font-weight:500;font-size:14px}
+.form-control{width:100%;padding:12px 14px;border:1px solid #ddd;border-radius:var(--radius);font-size:15px;background:#fff}
+.form-control:focus{outline:none;border-color:var(--primary)}
+.status-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.status-card{background:#f8f9fa;border-radius:var(--radius);padding:16px;text-align:center;position:relative;overflow:hidden}
+.status-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:4px}
+.status-card.clock-in::before{background:var(--success)}
+.status-card.clock-out::before{background:var(--danger)}
+.status-card .time{font-size:22px;font-weight:bold;margin:6px 0}
+.status-card.clock-in .time{color:var(--success)}
+.status-card.clock-out .time{color:var(--danger)}
+.status-card .label{font-size:13px;color:var(--gray)}
+.location-info{display:flex;align-items:center;gap:12px;padding:12px;background:#f8f9fa;border-radius:var(--radius);margin-bottom:16px}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:1000;align-items:center;justify-content:center;padding:16px}
+.modal.active{display:flex}
+.modal-content{background:#fff;border-radius:var(--radius);width:100%;max-width:500px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column}
+.modal-header{padding:14px 16px;background:var(--primary);color:#fff;display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.icon-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:8px}
+.camera-container{position:relative;width:100%;height:280px;background:#000;border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.camera-container video{width:100%;height:100%;object-fit:cover}
+.face-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border:3px dashed rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
+.liveness-instruction{text-align:center;padding:12px;background:#e3f2fd;border-radius:var(--radius);margin-bottom:12px;font-weight:500;font-size:14px}
+.liveness-instruction.err{background:#f8d7da;color:#721c24}
+.table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #eee}
+th{background:#f8f9fa;font-weight:600}
+.badge{display:inline-block;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600}
+.badge-success{background:#d4edda;color:#155724}
+.badge-warning{background:#fff3cd;color:#856404}
+.badge-danger{background:#f8d7da;color:#721c24}
+.badge-info{background:#d1ecf1;color:#0c5460}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;border-radius:var(--radius);padding:16px;text-align:center;box-shadow:var(--shadow)}
+.stat-card .value{font-size:26px;font-weight:bold;color:var(--primary)}
+.stat-card .label{font-size:12px;color:var(--gray);margin-top:4px}
+.approval-item{border:1px solid #eee;border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:12px 24px;border-radius:30px;box-shadow:var(--shadow);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90%;text-align:center;font-size:14px}
+.toast.show{opacity:1}
+.error-text{color:var(--danger);font-size:13px;margin-top:10px;text-align:center}
+.hidden{display:none!important}
+.text-center{text-align:center}
+.d-flex{display:flex}
+.justify-between{justify-content:space-between}
+.align-center{align-items:center}
+.spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.3);border-top:4px solid #fff;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.mode-badge{position:fixed;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:4px 8px;border-radius:10px;z-index:99998}
+</style>
+</head>
+<body>
+
+<div id="loadingScreen" style="position:fixed;inset:0;background:linear-gradient(135deg,#4a90e2,#6a11cb);display:flex;align-items:center;justify-content:center;z-index:99999;color:#fff;flex-direction:column;gap:12px">
+<div style="font-size:48px">📍</div>
+<div style="font-size:20px;font-weight:700">Absensi Karyawan</div>
+<div style="font-size:14px;opacity:.85">Memuat aplikasi...</div>
+<div class="spinner" style="margin-top:8px"></div>
+</div>
+<div class="mode-badge" id="modeBadge"></div>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen">
+<div class="container">
+<div class="app-header">
+<div class="logo-circle">📍</div>
+<h1>Absensi Karyawan</h1>
+<p class="subtitle">Face Recognition & GPS</p>
+</div>
+<div class="card">
+<div class="form-group"><label class="form-label">NIK / Email</label><input type="text" id="loginNik" class="form-control" placeholder="Contoh: ST 260505" autocomplete="username"></div>
+<div class="form-group"><label class="form-label">PIN</label><input type="password" id="loginPin" class="form-control" placeholder="Masukkan PIN" inputmode="numeric" autocomplete="current-password"></div>
+<button type="button" id="loginBtn" class="btn btn-primary btn-block" onclick="doLogin()">Masuk</button>
+<div id="loginError" class="error-text"></div>
+</div>
+</div>
+</div>
+
+<!-- MAIN -->
+<div id="mainScreen" class="screen">
+<div class="container">
+<div class="app-header">
+<div class="d-flex justify-between align-center">
+<div><h1 id="userNama" style="font-size:20px">-</h1><p class="subtitle" id="userJabatan">-</p></div>
+<button type="button" class="icon-btn" onclick="handleLogout()">✕</button>
+</div>
+</div>
+<div class="card">
+<h3 class="card-title">📋 Kehadiran Hari Ini</h3>
+<div class="status-grid">
+<div class="status-card clock-in"><div class="label">🟢 CLOCK IN</div><div class="time" id="clockInTime">--:--</div></div>
+<div class="status-card clock-out"><div class="label">🔴 CLOCK OUT</div><div class="time" id="clockOutTime">--:--</div></div>
+</div>
+<div class="location-info">
+<span style="font-size:22px">📍</span>
+<div style="flex:1"><div style="font-weight:500">Lokasi Anda</div><div id="locationStatus" style="font-size:13px;color:var(--gray)">Belum diambil</div></div>
+<button type="button" class="btn btn-outline btn-sm" onclick="getCurrentLocation()">🔄</button>
+</div>
+<div class="btn-group">
+<button type="button" id="clockInBtn" class="btn btn-success" onclick="openCamera('MASUK')">🟢 CLOCK IN</button>
+<button type="button" id="clockOutBtn" class="btn btn-danger" onclick="openCamera('PULANG')" disabled>🔴 CLOCK OUT</button>
+</div>
+</div>
+<div class="card" id="menuKaryawan">
+<h3 class="card-title">📋 Menu</h3>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('riwayat');loadRiwayat()">🕘 Riwayat Kehadiran</button>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('cuti');loadMasterCuti()">📅 Pengajuan Cuti</button>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('riwayatCuti');loadRiwayatCuti()">📄 Riwayat Cuti Saya</button>
+</div>
+<div class="card hidden" id="menuApproval">
+<h3 class="card-title">✅ Persetujuan</h3>
+<button type="button" class="btn btn-warning btn-block" onclick="showScreen('approval');loadApprovals()">📋 Pending Approval <span class="badge badge-danger" id="approvalBadge" style="display:none">0</span></button>
+</div>
+<div class="card hidden" id="menuAdmin">
+<h3 class="card-title">⚙️ Menu HR/Admin</h3>
+<button type="button" class="btn btn-info btn-block" onclick="showScreen('dashboard');loadDashboard()">📊 Dashboard</button>
+<button type="button" class="btn btn-outline btn-block" onclick="openAddEmployeeModal()">👤 Tambah Karyawan</button>
+<button type="button" class="btn btn-outline btn-block" onclick="openFaceRegistrationModal()">📷 Daftarkan Face ID</button>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('dataKaryawan');loadDataKaryawan()">👥 Data Karyawan</button>
+</div>
+</div>
+</div>
+
+<!-- RIWAYAT -->
+<div id="riwayatScreen" class="screen">
+<div class="container">
+<div class="app-header"><h1>🕘 Riwayat Kehadiran</h1></div>
+<div class="card"><div class="table-responsive">
+<table><thead><tr><th>Tanggal</th><th>In</th><th>Out</th><th>Status</th></tr></thead>
+<tbody id="riwayatBody"><tr><td colspan="4" class="text-center">Memuat...</td></tr></tbody></table>
+</div></div>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+</div>
+</div>
+
+<!-- CUTI -->
+<div id="cutiScreen" class="screen">
+<div class="container">
+<div class="app-header"><h1>📅 Pengajuan Cuti</h1></div>
+<div class="card">
+<div class="form-group"><label class="form-label">Jenis Cuti *</label><select id="cutiKode" class="form-control" onchange="handleCutiChange()"><option value="">Pilih jenis cuti...</option></select></div>
+<div id="sisaCutiInfo" class="hidden" style="background:#e3f2fd;padding:12px;border-radius:8px;margin-bottom:16px;font-size:14px"></div>
+<div class="form-group"><label class="form-label">Tanggal Mulai *</label><input type="date" id="cutiMulai" class="form-control"></div>
+<div class="form-group"><label class="form-label">Tanggal Selesai *</label><input type="date" id="cutiSelesai" class="form-control"></div>
+<div class="form-group"><label class="form-label">Alasan *</label><textarea id="cutiAlasan" class="form-control" rows="3"></textarea></div>
+<div class="form-group hidden" id="cutiDokumenGroup"><label class="form-label">Dokumen Pendukung (Wajib) *</label><input type="file" id="cutiDokumen" class="form-control" accept="image/*"></div>
+<button type="button" class="btn btn-primary btn-block" onclick="submitPengajuanCuti()">📤 Kirim Pengajuan</button>
+</div>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+</div>
+</div>
+
+<!-- RIWAYAT CUTI -->
+<div id="riwayatCutiScreen" class="screen">
+<div class="container">
+<div class="app-header"><h1>📄 Riwayat Cuti</h1></div>
+<div id="riwayatCutiList"></div>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+</div>
+</div>
+
+<!-- APPROVAL -->
+<div id="approvalScreen" class="screen">
+<div class="container">
+<div class="app-header"><h1>✅ Pending Approval</h1></div>
+<div id="approvalList"></div>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardScreen" class="screen">
+<div class="container">
+<div class="app-header"><h1>📊 Dashboard</h1></div>
+<div class="stat-grid" id="dashboardStats"></div>
+<div class="card">
+<h3 class="card-title">Detail Kehadiran Hari Ini</h3>
+<div class="table-responsive">
+<table><thead><tr><th>NIK</th><th>Nama</th><th>In</th><th>Out</th><th>Status</th></tr></thead>
+<tbody id="dashboardBody"><tr><td colspan="5" class="text-center">Memuat...</td></tr></tbody></table>
+</div></div>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+</div>
+</div>
+
+<!-- DATA KARYAWAN -->
+<div id="dataKaryawanScreen" class="screen">
+<div class="container">
+<div class="app-header"><h1>👥 Data Karyawan</h1></div>
+<div class="card"><div class="table-responsive" id="dataKaryawanTable">Memuat...</div></div>
+<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+</div>
+</div>
+
+<!-- MODAL KAMERA -->
+<div id="cameraModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3 id="cameraTitle">Verifikasi Wajah</h3><button type="button" class="icon-btn" onclick="closeCamera()">✕</button></div>
+<div class="modal-body">
+<div class="liveness-instruction" id="livenessInstruction">Menyiapkan kamera...</div>
+<div class="camera-container"><video id="cameraVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
+<div class="text-center" id="livenessStatus" style="margin-bottom:16px;color:var(--gray);font-size:14px"></div>
+<button type="button" id="retryCameraBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
+<button type="button" id="verifyBtn" class="btn btn-success btn-block" disabled onclick="handleVerify()">✅ Verifikasi & Absen</button>
+</div>
+</div>
+</div>
+
+<!-- MODAL TAMBAH KARYAWAN -->
+<div id="addEmployeeModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3>Tambah Karyawan</h3><button type="button" class="icon-btn" onclick="closeModal('addEmployeeModal')">✕</button></div>
+<div class="modal-body">
+<div class="form-group"><label class="form-label">Employee ID *</label><input type="text" id="empId" class="form-control" placeholder="Contoh: ST 260505"></div>
+<div class="form-group"><label class="form-label">Nama Lengkap *</label><input type="text" id="empNama" class="form-control"></div>
+<div class="form-group"><label class="form-label">Branch *</label><select id="empBranch" class="form-control"><option value="Pusat">Pusat</option><option value="Pasuruan">Pasuruan</option><option value="Surabaya">Surabaya</option></select></div>
+<div class="form-group"><label class="form-label">Organisasi</label><input type="text" id="empOrg" class="form-control"></div>
+<div class="form-group"><label class="form-label">Jabatan</label><input type="text" id="empPosisi" class="form-control"></div>
+<div class="form-group"><label class="form-label">NIK Atasan Langsung</label><input type="text" id="empAtasanId" class="form-control"></div>
+<div class="form-group"><label class="form-label">Nama Atasan</label><input type="text" id="empAtasanNama" class="form-control"></div>
+<div class="form-group"><label class="form-label">Status Kerja</label><select id="empStatus" class="form-control"><option value="Contract">Contract</option><option value="Permanent">Permanent</option></select></div>
+<button type="button" class="btn btn-success btn-block" onclick="saveNewEmployee()">💾 Simpan</button>
+<div id="addEmpResult"></div>
+</div>
+</div>
+</div>
+
+<!-- MODAL FACE ID -->
+<div id="faceModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3>Registrasi Face ID</h3><button type="button" class="icon-btn" onclick="closeFaceRegistration()">✕</button></div>
+<div class="modal-body">
+<div class="form-group"><label class="form-label">NIK Karyawan</label><input type="text" id="faceNik" class="form-control" placeholder="Contoh: ST 260505"></div>
+<div class="camera-container"><video id="faceVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
+<div id="faceStatus" class="text-center" style="margin-bottom:16px;font-size:14px;color:var(--gray)"></div>
+<button type="button" id="retryFaceBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
+<button type="button" id="faceCaptureBtn" class="btn btn-success btn-block" disabled onclick="captureAndSaveFace()">📷 Simpan Face ID</button>
+</div>
+</div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+/* ================================================================
+   v4.4 DUAL MODE - KONFIGURASI WAJIB
+   GANTI API_URL DENGAN URL /exec DEPLOYMENT ANDA
+   ================================================================ */
+var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
+var APP_VERSION='4.4';
+
+/* Deteksi mode: di dalam Apps Script ada google.script.run; di hosting statis tidak ada */
+var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
+
+var currentUser=null,currentPosition=null,currentStatus=null,masterCuti=[],currentAbsensiType='MASUK';
+var faceData={descriptor:null,photo:null};
+var cameraStream=null,livenessMode=null,videoElement=null,detectionLoop=null;
+var blinkCount=0,livenessStep=0,wasEyesClosed=false,modelsLoaded=false,faceApiLoaded=false;
+var lastCameraError='';
+var MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+var FACE_API_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
+
+/* ================================================================
+   callServer: google.script.run (mode GAS) ATAU fetch (mode statis)
+   ================================================================ */
+function callServer(fn,args,onOk,onFail,timeoutMs){
+  var ms=timeoutMs||30000,done=false;
+  var timer=setTimeout(function(){if(!done){done=true;onFail({message:'Server tidak merespons (>'+Math.round(ms/1000)+' dtk). Coba lagi.'})}},ms);
+  function ok(res){if(done)return;done=true;clearTimeout(timer);onOk(res)}
+  function fail(err){if(done)return;done=true;clearTimeout(timer);onFail(err)}
+  if(!IS_STATIC){
+    var r=google.script.run.withSuccessHandler(ok).withFailureHandler(fail);
+    r[fn].apply(r,args);
+  }else{
+    fetch(API_URL,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn:fn,args:args})})
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()})
+      .then(function(j){if(j&&j.ok)ok(j.result);else fail({message:(j&&j.error)||'Respons tidak valid'})})
+      .catch(function(err){fail({message:'Jaringan: '+(err&&err.message?err.message:err)})});
+  }
+}
+function retryHtml(fn){return '<br><button type="button" class="btn btn-outline btn-sm" style="margin-top:10px" onclick="'+fn+'">🔄 Coba Lagi</button>'}
+
+/* ================= INIT ================= */
+document.addEventListener('DOMContentLoaded',function(){
+  var ls=document.getElementById('loadingScreen');if(ls)ls.style.display='none';
+  var mb=document.getElementById('modeBadge');
+  if(mb)mb.textContent=IS_STATIC?'MODE MOBILE/STATIS':'MODE APPS SCRIPT';
+
+  var u=loadSession();
+  if(u){currentUser=u;try{enterMainScreen()}catch(e){clearSession();showScreen('login')}}
+  else showScreen('login');
+
+  var lp=document.getElementById('loginPin');
+  var ln=document.getElementById('loginNik');
+  if(lp)lp.addEventListener('keypress',function(e){if(e.key==='Enter')doLogin()});
+  if(ln)ln.addEventListener('keypress',function(e){if(e.key==='Enter'){var p=document.getElementById('loginPin');if(p)p.focus()}});
+  getCurrentLocation();
+  checkAppVersion();
+});
+
+function checkAppVersion(){
+  callServer('getAppVersion',[],function(v){
+    if(v&&v!==APP_VERSION){
+      var flag=null;try{flag=sessionStorage.getItem('absensiReloaded')}catch(e){}
+      if(flag==='1'){try{sessionStorage.removeItem('absensiReloaded')}catch(e){}return}
+      try{sessionStorage.setItem('absensiReloaded','1')}catch(e){}
+      var sep=location.search?'&':'?';
+      location.replace(location.pathname+location.search+sep+'v='+Date.now());
+    }else{try{sessionStorage.removeItem('absensiReloaded')}catch(e){}}
+  },function(){});
+}
+
+function loadSession(){
+  try{
+    var raw=localStorage.getItem('absensiUser');if(!raw)return null;
+    var u=JSON.parse(raw);
+    if(u&&u.role&&((u.employee&&u.employee.nik)||u.nik))return u;
+    clearSession();return null;
+  }catch(e){clearSession();return null}
+}
+function clearSession(){try{localStorage.removeItem('absensiUser')}catch(e){}}
+
+/* ================= NAVIGASI ================= */
+function showScreen(n){var s=document.querySelectorAll('.screen');for(var i=0;i<s.length;i++)s[i].classList.remove('active');var t=document.getElementById(n+'Screen');if(t)t.classList.add('active');window.scrollTo(0,0)}
+function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3500)}
+function closeModal(id){var m=document.getElementById(id);if(m)m.classList.remove('active')}
+
+/* ================= LOGIN ================= */
+function doLogin(){
+  var nik=document.getElementById('loginNik').value.trim();
+  var pin=document.getElementById('loginPin').value.trim();
+  if(!nik||!pin){document.getElementById('loginError').textContent='NIK dan PIN wajib diisi.';return}
+  var btn=document.getElementById('loginBtn');btn.disabled=true;btn.innerHTML='⏳ Memproses...';
+  callServer('login',[nik,pin],function(res){
+    btn.disabled=false;btn.innerHTML='Masuk';
+    if(res.success){
+      currentUser={nik:res.user?res.user.nik:res.employee.nik,nama:res.user?res.user.nama:res.employee.nama,role:res.role,employee:res.employee};
+      try{localStorage.setItem('absensiUser',JSON.stringify(currentUser))}catch(e){}
+      document.getElementById('loginError').textContent='';
+      enterMainScreen();
+    }else document.getElementById('loginError').textContent=res.message||'Login gagal.';
+  },function(err){btn.disabled=false;btn.innerHTML='Masuk';document.getElementById('loginError').textContent=err.message||'Terjadi kesalahan.'});
+}
+function handleLogout(){if(confirm('Yakin ingin keluar?')){clearSession();currentUser=null;showScreen('login')}}
+
+/* ================= MAIN ================= */
+function enterMainScreen(){
+  showScreen('main');
+  var emp=currentUser.employee;
+  document.getElementById('userNama').textContent=emp?emp.nama:currentUser.nama;
+  document.getElementById('userJabatan').textContent=emp?(emp.position||emp.organization||currentUser.role):currentUser.role;
+  var isAdmin=(currentUser.role==='HR'||currentUser.role==='ADMIN');
+  document.getElementById('menuAdmin').classList.toggle('hidden',!isAdmin);
+  document.getElementById('menuApproval').classList.remove('hidden');
+  loadStatusHariIni();loadApprovalCount();preloadModelsInBackground();
+}
+function loadStatusHariIni(){
+  if(!currentUser||!currentUser.employee)return;
+  callServer('getStatusHariIni',[currentUser.employee.nik],function(status){
+    currentStatus=status;
+    document.getElementById('clockInTime').textContent=status.masuk?status.jamMasuk:'--:--';
+    document.getElementById('clockOutTime').textContent=status.pulang?status.jamPulang:'--:--';
+    document.getElementById('clockInBtn').disabled=status.masuk;
+    document.getElementById('clockOutBtn').disabled=!status.masuk||status.pulang;
+  },function(e){console.error(e)});
+}
+function loadApprovalCount(){
+  if(!currentUser)return;
+  var nik=currentUser.employee?currentUser.employee.nik:currentUser.nik;
+  callServer('getPendingApprovalsFull',[currentUser.role,nik],function(data){
+    var b=document.getElementById('approvalBadge');
+    if(data&&data.total>0){b.textContent=data.total;b.style.display='inline-block'}else b.style.display='none';
+  },function(e){console.error(e)});
+}
+
+/* ================= GPS ================= */
+function getCurrentLocation(){
+  var el=document.getElementById('locationStatus');if(!el)return;
+  if(!navigator.geolocation){el.innerHTML='<span style="color:var(--danger)">GPS tidak didukung</span>';return}
+  el.innerHTML='⏳ Mengambil lokasi...';
+  navigator.geolocation.getCurrentPosition(
+    function(pos){currentPosition={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy:pos.coords.accuracy};el.innerHTML='<span style="color:var(--success)">✅ Lokasi OK (±'+Math.round(pos.coords.accuracy)+'m)</span>'},
+    function(err){el.innerHTML='<span style="color:var(--danger)">❌ Gagal: '+err.message+'</span>'},
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+
+/* ================= KAMERA & LIVENESS ================= */
+function requestCamera(video){
+  return new Promise(function(resolve){
+    var md=navigator.mediaDevices;
+    if(!md||!md.getUserMedia){lastCameraError='Browser tidak mendukung kamera. Gunakan Chrome terbaru.';resolve(false);return}
+    md.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false})
+      .then(function(stream){cameraStream=stream;video.srcObject=stream;video.play().then(function(){resolve(true)}).catch(function(){resolve(true)})})
+      .catch(function(err){lastCameraError=mapCameraError(err);resolve(false)});
+  });
+}
+function mapCameraError(err){
+  var n=err&&err.name;
+  if(n==='NotAllowedError'||n==='PermissionDeniedError')return 'IZIN KAMERA DITOLAK. Klik ikon gembok/kamera di address bar → Izinkan → 🔄 Coba Lagi.';
+  if(n==='NotFoundError'||n==='DevicesNotFoundError')return 'Kamera tidak ditemukan di perangkat ini.';
+  if(n==='NotReadableError'||n==='TrackStartError')return 'Kamera dipakai aplikasi lain. Tutup lalu 🔄 Coba Lagi.';
+  if(n==='SecurityError')return 'Kamera diblokir kebijakan browser. Buka URL di tab baru.';
+  return 'Gagal akses kamera: '+(err&&err.message?err.message:err);
+}
+function showFlowError(msg){
+  var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
+  if(ie){ie.textContent='❌ '+msg;ie.classList.add('err')}
+  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');
+  if(rb)rb.classList.remove('hidden');
+  stopCamera();
+}
+function retryCurrentFlow(){
+  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
+  var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');if(ie)ie.classList.remove('err');
+  var v=document.getElementById(livenessMode==='attendance'?'cameraVideo':'faceVideo');
+  startLivenessFlow(v,livenessMode);
+}
+async function startLivenessFlow(video,mode){
+  videoElement=video;livenessMode=mode;
+  blinkCount=0;livenessStep=0;wasEyesClosed=false;
+  faceData.descriptor=null;faceData.photo=null;lastCameraError='';
+  var rb=document.getElementById(mode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
+  document.getElementById('verifyBtn').disabled=true;
+  document.getElementById('faceCaptureBtn').disabled=true;
+  var ie=document.getElementById(mode==='attendance'?'livenessInstruction':'faceStatus');
+  if(ie){ie.classList.remove('err');ie.textContent='📷 Meminta izin kamera...'}
+  var camOk=await requestCamera(video);
+  if(!camOk){showFlowError(lastCameraError);return}
+  if(ie)ie.textContent='⏳ Memuat model AI (sekali saja)...';
+  var ok=await loadFaceModels();
+  if(!ok){showFlowError('Model AI gagal dimuat. Periksa koneksi, lalu 🔄 Coba Lagi.');return}
+  if(ie){ie.classList.remove('err');ie.textContent='Posisikan wajah dalam lingkaran. Kedipkan mata 2x.'}
+  detectionLoop=requestAnimationFrame(detectLiveness);
+}
+function loadFaceApiScript(){
+  return new Promise(function(resolve,reject){
+    if(faceApiLoaded||typeof faceapi!=='undefined'){faceApiLoaded=true;resolve();return}
+    var s=document.createElement('script');s.src=FACE_API_URL;
+    s.onload=function(){faceApiLoaded=true;resolve()};
+    s.onerror=function(){reject(new Error('Gagal memuat face-api.js'))};
+    document.head.appendChild(s);
+  });
+}
+async function loadFaceModels(){
+  if(modelsLoaded)return true;
+  try{
+    await loadFaceApiScript();
+    await Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+      faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL)]);
+    modelsLoaded=true;return true;
+  }catch(err){console.error(err);return false}
+}
+function preloadModelsInBackground(){
+  var run=function(){loadFaceModels()};
+  if(window.requestIdleCallback)requestIdleCallback(run,{timeout:8000});else setTimeout(run,3000);
+}
+function stopCamera(){
+  if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop()});cameraStream=null}
+  if(detectionLoop){cancelAnimationFrame(detectionLoop);detectionLoop=null}
+}
+async function detectLiveness(){
+  if(!videoElement||videoElement.paused||videoElement.ended)return;
+  try{
+    var d=await faceapi.detectSingleFace(videoElement,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5}))
+      .withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
+    var se=document.getElementById(livenessMode==='attendance'?'livenessStatus':'faceStatus');
+    if(!d){if(se)se.innerHTML='<span style="color:var(--warning)">Wajah tidak terdeteksi</span>';detectionLoop=requestAnimationFrame(detectLiveness);return}
+    if(livenessStep===0){
+      var o=calcEye(d.landmarks);
+      if(o<0.2&&!wasEyesClosed){blinkCount++;wasEyesClosed=true}else if(o>0.3)wasEyesClosed=false;
+      if(se)se.textContent='Kedipan: '+blinkCount+'/2';
+      if(blinkCount>=2){livenessStep=1;var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');if(ie)ie.textContent='Bagus! Sekarang tersenyumlah.'}
+    }else if(livenessStep===1){
+      var h=d.expressions.happy;
+      if(se)se.textContent='Tingkat senyum: '+Math.round(h*100)+'%';
+      if(h>0.6){
+        livenessStep=2;
+        faceData.descriptor=Array.from(d.descriptor);
+        faceData.photo=captureFrame(videoElement);
+        var ie2=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
+        if(ie2){ie2.classList.remove('err');ie2.innerHTML='<span style="color:var(--success)">✅ Verifikasi berhasil!</span>'}
+        if(livenessMode==='attendance')document.getElementById('verifyBtn').disabled=false;
+        else document.getElementById('faceCaptureBtn').disabled=false;
+        stopCamera();return;
+      }
+    }
+  }catch(err){console.error(err)}
+  detectionLoop=requestAnimationFrame(detectLiveness);
+}
+function calcEye(lm){
+  function op(e){var v1=Math.hypot(e[1].x-e[5].x,e[1].y-e[5].y);var v2=Math.hypot(e[2].x-e[4].x,e[2].y-e[4].y);var h=Math.hypot(e[0].x-e[3].x,e[0].y-e[3].y);return h>0?(v1+v2)/(2*h):0}
+  return(op(lm.getLeftEye())+op(lm.getRightEye()))/2;
+}
+function captureFrame(video){
+  var maxW=640,w=video.videoWidth,h=video.videoHeight,s=Math.min(1,maxW/w);
+  var c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);
+  c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',0.7);
+}
+function openCamera(type){
+  currentAbsensiType=type;
+  if(!currentPosition){showToast('Menunggu GPS. Coba refresh lokasi.');getCurrentLocation();return}
+  document.getElementById('cameraTitle').textContent=type==='MASUK'?'🟢 Verifikasi Clock In':'🔴 Verifikasi Clock Out';
+  document.getElementById('cameraModal').classList.add('active');
+  startLivenessFlow(document.getElementById('cameraVideo'),'attendance');
+}
+function closeCamera(){stopCamera();closeModal('cameraModal')}
+function handleVerify(){
+  if(!faceData.descriptor){showToast('Wajah belum terverifikasi.');return}
+  var btn=document.getElementById('verifyBtn');btn.disabled=true;btn.innerHTML='⏳ Menyimpan...';
+  var p={nik:currentUser.employee.nik,tipe:currentAbsensiType,latitude:currentPosition.latitude,longitude:currentPosition.longitude,accuracy:currentPosition.accuracy,address:'',faceDescriptor:faceData.descriptor,foto:faceData.photo};
+  callServer('simpanAbsensi',[p],function(res){btn.disabled=false;btn.innerHTML='✅ Verifikasi & Absen';closeCamera();showToast(res.message);loadStatusHariIni()},
+  function(err){btn.disabled=false;btn.innerHTML='✅ Verifikasi & Absen';showToast('Gagal: '+err.message)});
+}
+function openFaceRegistrationModal(){
+  document.getElementById('faceModal').classList.add('active');
+  document.getElementById('faceNik').value='';
+  startLivenessFlow(document.getElementById('faceVideo'),'registration');
+}
+function closeFaceRegistration(){stopCamera();closeModal('faceModal')}
+function captureAndSaveFace(){
+  var nik=document.getElementById('faceNik').value.trim();
+  if(!nik){showToast('NIK wajib diisi.');return}
+  if(!faceData.descriptor){showToast('Wajah belum terverifikasi.');return}
+  var btn=document.getElementById('faceCaptureBtn');btn.disabled=true;btn.innerHTML='⏳ Menyimpan...';
+  callServer('saveFaceDescriptor',[currentUser.role,nik,faceData.descriptor],
+    function(res){btn.disabled=false;btn.innerHTML='📷 Simpan Face ID';showToast(res.message);closeFaceRegistration()},
+    function(err){btn.disabled=false;btn.innerHTML='📷 Simpan Face ID';showToast('Gagal: '+err.message)});
+}
+
+/* ================= RIWAYAT ================= */
+function loadRiwayat(){
+  var body=document.getElementById('riwayatBody');
+  body.innerHTML='<tr><td colspan="4" class="text-center">Memuat...</td></tr>';
+  var now=new Date();
+  callServer('getRiwayatKehadiran',[currentUser.employee.nik,now.getFullYear(),now.getMonth()+1],function(data){
+    if(!data||data.length===0){body.innerHTML='<tr><td colspan="4" class="text-center">Belum ada riwayat</td></tr>';return}
+    var html='';
+    for(var i=0;i<data.length;i++){var r=data[i];var bc=r.status==='HADIR'?'badge-success':r.status==='BELUM CLOCK OUT'?'badge-warning':'badge-danger';
+      html+='<tr><td>'+r.tanggal+'</td><td>'+(r.masuk?r.masuk.jam:'-')+'</td><td>'+(r.pulang?r.pulang.jam:'-')+'</td><td><span class="badge '+bc+'">'+r.status+'</span></td></tr>'}
+    body.innerHTML=html;
+  },function(err){body.innerHTML='<tr><td colspan="4" class="text-center" style="color:var(--danger)">❌ '+(err&&err.message?err.message:'Gagal')+'</td></tr><tr><td colspan="4" class="text-center">'+retryHtml('loadRiwayat()')+'</td></tr>'},20000);
+}
+
+/* ================= CUTI ================= */
+function loadMasterCuti(){
+  if(masterCuti.length>0)return;
+  callServer('getMasterCuti',[],function(data){
+    masterCuti=data;var s=document.getElementById('cutiKode');
+    s.innerHTML='<option value="">Pilih jenis cuti...</option>';
+    for(var i=0;i<data.length;i++){var c=data[i];var o=document.createElement('option');o.value=c.kode;o.textContent=c.kode+' - '+c.keterangan;o.setAttribute('data-wajib',c.wajibDokumen?'true':'false');s.appendChild(o)}
+  },function(e){console.error(e)});
+}
+function handleCutiChange(){
+  var s=document.getElementById('cutiKode');var o=s.options[s.selectedIndex];
+  var w=o&&o.getAttribute('data-wajib')==='true';
+  document.getElementById('cutiDokumenGroup').classList.toggle('hidden',!w);
+  var info=document.getElementById('sisaCutiInfo');
+  if(s.value==='CT'){info.classList.remove('hidden');
+    callServer('getSisaCuti',[currentUser.employee.nik,'CT'],function(sisa){info.innerHTML='ℹ️ Sisa cuti tahunan Anda: <strong>'+sisa+' hari</strong>'},function(e){console.error(e)});
+  }else info.classList.add('hidden');
+}
+function submitPengajuanCuti(){
+  var kode=document.getElementById('cutiKode').value;
+  var mulai=document.getElementById('cutiMulai').value;
+  var selesai=document.getElementById('cutiSelesai').value;
+  var alasan=document.getElementById('cutiAlasan').value.trim();
+  var fi=document.getElementById('cutiDokumen');
+  if(!kode||!mulai||!selesai||!alasan){showToast('Lengkapi semua field wajib.');return}
+  var o=document.getElementById('cutiKode').selectedOptions[0];
+  var w=o&&o.getAttribute('data-wajib')==='true';
+  function proceed(dok){
+    callServer('submitCuti',[{nik:currentUser.employee.nik,kode:kode,tanggalMulai:mulai,tanggalSelesai:selesai,alasan:alasan,dokumen:dok}],
+      function(res){showToast(res.message);showScreen('main');
+        document.getElementById('cutiKode').value='';document.getElementById('cutiMulai').value='';
+        document.getElementById('cutiSelesai').value='';document.getElementById('cutiAlasan').value='';fi.value=''},
+      function(err){showToast('Gagal: '+err.message)});
+  }
+  if(w&&fi.files.length>0){var r=new FileReader();r.onload=function(e){proceed(e.target.result)};r.readAsDataURL(fi.files[0])}
+  else if(w){showToast('Dokumen wajib dilampirkan.');return}
+  else proceed(null);
+}
+function loadRiwayatCuti(){
+  var c=document.getElementById('riwayatCutiList');
+  c.innerHTML='<div class="card text-center">Memuat...</div>';
+  callServer('getRiwayatCuti',[currentUser.employee.nik],function(data){
+    if(!data||data.length===0){c.innerHTML='<div class="card text-center">Belum ada pengajuan cuti.</div>';return}
+    var html='';
+    for(var i=0;i<data.length;i++){var x=data[i];var sf;
+      if(x.statusAtasan==='DITOLAK'||x.statusHR==='DITOLAK')sf='<span class="badge badge-danger">DITOLAK</span>';
+      else if(x.statusHR==='DISETUJUI')sf='<span class="badge badge-success">DISETUJUI</span>';
+      else if(x.statusAtasan==='DISETUJUI')sf='<span class="badge badge-info">Menunggu HR</span>';
+      else sf='<span class="badge badge-warning">Menunggu Atasan</span>';
+      html+='<div class="card"><div class="d-flex justify-between align-center"><strong>'+x.keterangan+'</strong>'+sf+'</div><div style="font-size:13px;color:var(--gray);margin-top:8px">'+x.tanggalMulai+' s/d '+x.tanggalSelesai+' ('+x.totalHari+' hari)<br>Atasan: '+x.statusAtasan+' | HR: '+x.statusHR+'</div></div>'}
+    c.innerHTML=html;
+  },function(err){c.innerHTML='<div class="card text-center" style="color:var(--danger)">❌ '+(err&&err.message?err.message:'Gagal')+'</div><div class="text-center">'+retryHtml('loadRiwayatCuti()')+'</div>'},20000);
+}
+
+/* ================= APPROVAL ================= */
+function loadApprovals(){
+  var c=document.getElementById('approvalList');
+  c.innerHTML='<div class="card text-center">Memuat...</div>';
+  var nik=currentUser.employee?currentUser.employee.nik:currentUser.nik;
+  callServer('getPendingApprovalsFull',[currentUser.role,nik],function(data){
+    var html='';
+    if(data.absensi&&data.absensi.length>0){
+      html+='<div class="card"><h3 class="card-title">📍 Absensi Luar Lokasi</h3>';
+      for(var i=0;i<data.absensi.length;i++){var a=data.absensi[i];
+        html+='<div class="approval-item"><strong>'+a.nama+'</strong> ('+a.nik+')<br><span style="font-size:13px;color:var(--gray)">'+a.tipe+' - '+a.tanggal+' '+a.jam+'</span><br><span style="font-size:13px">'+(a.address||'Lokasi luar kantor')+'</span><div class="btn-group"><button type="button" class="btn btn-success btn-sm" onclick="approveAbsensi(\''+a.id+'\')">✅ Setujui</button><button type="button" class="btn btn-danger btn-sm" onclick="rejectAbsensi(\''+a.id+'\')">❌ Tolak</button></div></div>'}
+      html+='</div>'}
+    if(data.cuti&&data.cuti.length>0){
+      html+='<div class="card"><h3 class="card-title">📅 Pengajuan Cuti</h3>';
+      for(var j=0;j<data.cuti.length;j++){var x=data.cuti[j];
+        html+='<div class="approval-item"><strong>'+x.nama+'</strong> ('+x.nik+')<br><span style="font-size:13px;color:var(--gray)">'+x.keterangan+'</span><br><span style="font-size:13px">'+x.tanggalMulai+' s/d '+x.tanggalSelesai+' ('+x.totalHari+' hari)</span><br><span style="font-size:13px">Alasan: '+x.alasan+'</span><div class="btn-group"><button type="button" class="btn btn-success btn-sm" onclick="approveCuti(\''+x.id+'\')">✅ Setujui</button><button type="button" class="btn btn-danger btn-sm" onclick="rejectCuti(\''+x.id+'\')">❌ Tolak</button></div></div>'}
+      html+='</div>'}
+    if(!html)html='<div class="card text-center" style="font-size:40px;padding:30px">✅<br><span style="font-size:14px">Tidak ada pending approval.</span></div>';
+    c.innerHTML=html;
+  },function(err){c.innerHTML='<div class="card text-center" style="color:var(--danger)">❌ '+(err&&err.message?err.message:'Gagal')+'</div><div class="text-center">'+retryHtml('loadApprovals()')+'</div>'},20000);
+}
+function approveAbsensi(id){if(!confirm('Setujui absensi ini?'))return;processApprovalGeneric('processApproval',id,'APPROVE','')}
+function rejectAbsensi(id){var a=prompt('Alasan penolakan:');if(a===null)return;processApprovalGeneric('processApproval',id,'REJECT',a)}
+function approveCuti(id){if(!confirm('Setujui cuti ini?'))return;processApprovalGeneric('processCutiApproval',id,'APPROVE','')}
+function rejectCuti(id){var a=prompt('Alasan penolakan:');if(a===null)return;processApprovalGeneric('processCutiApproval',id,'REJECT',a)}
+function processApprovalGeneric(fn,id,action,alasan){
+  var nik=currentUser.employee?currentUser.employee.nik:currentUser.nik;
+  callServer(fn,[currentUser.role,nik,id,action,alasan],
+    function(res){showToast(res.message);loadApprovals();loadApprovalCount()},
+    function(err){showToast('Gagal: '+err.message)});
+}
+
+/* ================= DASHBOARD ================= */
+function loadDashboard(){
+  var body=document.getElementById('dashboardBody');
+  body.innerHTML='<tr><td colspan="5" class="text-center">Memuat...</td></tr>';
+  callServer('getDashboardAdmin',[currentUser.role],function(data){
+    document.getElementById('dashboardStats').innerHTML=
+      '<div class="stat-card"><div class="value">'+data.totalKaryawan+'</div><div class="label">Total Karyawan</div></div>'+
+      '<div class="stat-card"><div class="value">'+data.karyawanAktif+'</div><div class="label">Karyawan Aktif</div></div>'+
+      '<div class="stat-card"><div class="value">'+data.clockInHariIni+'</div><div class="label">Clock In</div></div>'+
+      '<div class="stat-card"><div class="value">'+data.clockOutHariIni+'</div><div class="label">Clock Out</div></div>'+
+      '<div class="stat-card"><div class="value">'+data.belumClockIn+'</div><div class="label">Belum In</div></div>'+
+      '<div class="stat-card"><div class="value">'+data.persentase+'%</div><div class="label">Kehadiran</div></div>';
+    var html='';
+    for(var i=0;i<data.detail.length;i++){var d=data.detail[i];var bc=d.status==='HADIR'?'badge-success':d.status==='BELUM CLOCK OUT'?'badge-warning':'badge-danger';
+      html+='<tr><td>'+d.nik+'</td><td>'+d.nama+'</td><td>'+(d.clockIn||'-')+'</td><td>'+(d.clockOut||'-')+'</td><td><span class="badge '+bc+'">'+d.status+'</span></td></tr>'}
+    body.innerHTML=html||'<tr><td colspan="5" class="text-center">Tidak ada data</td></tr>';
+  },function(err){body.innerHTML='<tr><td colspan="5" class="text-center" style="color:var(--danger)">❌ '+(err&&err.message?err.message:'Gagal')+'</td></tr><tr><td colspan="5" class="text-center">'+retryHtml('loadDashboard()')+'</td></tr>'},20000);
+}
+
+/* ================= DATA KARYAWAN ================= */
+function loadDataKaryawan(){
+  var c=document.getElementById('dataKaryawanTable');
+  c.innerHTML='⏳ Memuat data karyawan...';
+  callServer('getKaryawanSummary',[currentUser.role],function(res){
+    if(!res||res.ok===false){c.innerHTML='<span style="color:var(--danger)">❌ '+((res&&res.error)||'Gagal')+'</span>'+retryHtml('loadDataKaryawan()');return}
+    var list=res.list||[];
+    if(!list.length){c.innerHTML='Tidak ada data.';return}
+    var html='<table><thead><tr><th>NIK</th><th>Nama</th><th>Branch</th><th>Organisasi</th><th>Jabatan</th><th>Face</th><th>Status</th></tr></thead><tbody>';
+    for(var i=0;i<list.length;i++){var d=list[i];
+      html+='<tr><td>'+d.nik+'</td><td>'+d.nama+'</td><td>'+d.branch+'</td><td>'+d.org+'</td><td>'+d.posisi+'</td><td>'+d.face+'</td><td>'+d.akun+'</td></tr>'}
+    html+='</tbody></table>';c.innerHTML=html;
+  },function(err){c.innerHTML='<span style="color:var(--danger)">❌ '+(err&&err.message?err.message:'Gagal')+'</span>'+retryHtml('loadDataKaryawan()')},20000);
+}
+
+/* ================= TAMBAH KARYAWAN ================= */
+function openAddEmployeeModal(){document.getElementById('addEmployeeModal').classList.add('active')}
+function saveNewEmployee(){
+  var data={employeeId:document.getElementById('empId').value.trim(),nama:document.getElementById('empNama').value.trim(),
+    branch:document.getElementById('empBranch').value,organization:document.getElementById('empOrg').value.trim(),
+    position:document.getElementById('empPosisi').value.trim(),atasanId:document.getElementById('empAtasanId').value.trim(),
+    atasanNama:document.getElementById('empAtasanNama').value.trim(),statusKerja:document.getElementById('empStatus').value};
+  if(!data.employeeId||!data.nama){showToast('Employee ID dan Nama wajib diisi.');return}
+  callServer('addKaryawan',[currentUser.role,data],function(res){
+    document.getElementById('addEmpResult').innerHTML='<div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px;margin-top:12px">'+res.message+'<br><strong>PIN Sementara: '+res.pin+'</strong></div>';
+    showToast('Karyawan ditambahkan. PIN: '+res.pin);
+  },function(err){document.getElementById('addEmpResult').innerHTML='<div style="background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;margin-top:12px">'+err.message+'</div>'});
+}
+
+window.addEventListener('error',function(e){
+  console.error('Global error:',e.message);
+  var ls=document.getElementById('loadingScreen');
+  if(ls&&ls.style.display!=='none')ls.style.display='none';
+});
+</script>
+</body>
+</html>
