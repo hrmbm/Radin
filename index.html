@@ -55,11 +55,17 @@ input,select,textarea,button{font-size:16px!important}
 .modal-header{padding:14px 16px;background:var(--primary);color:#fff;display:flex;justify-content:space-between;align-items:center}
 .modal-body{padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .icon-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:8px}
-.camera-container{position:relative;width:100%;height:280px;background:#000;border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
-.camera-container video{width:100%;height:100%;object-fit:cover}
-.face-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:180px;height:180px;border:3px dashed rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
+.camera-container{position:relative;width:100%;height:320px;background:#000;border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
+.camera-container video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scaleX(-1); /* MIRROR EFFECT - seperti cermin */
+}
+.face-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px dashed rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
 .liveness-instruction{text-align:center;padding:12px;background:#e3f2fd;border-radius:var(--radius);margin-bottom:12px;font-weight:500;font-size:14px}
 .liveness-instruction.err{background:#f8d7da;color:#721c24}
+.liveness-instruction.success{background:#d4edda;color:#155724}
 .table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #eee}
@@ -85,6 +91,32 @@ th{background:#f8f9fa;font-weight:600}
 .spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.3);border-top:4px solid #fff;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .mode-badge{position:fixed;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:4px 8px;border-radius:10px;z-index:99998}
+
+/* Progress indicator untuk liveness */
+.liveness-progress{
+  display:flex;
+  gap:8px;
+  justify-content:center;
+  margin:12px 0;
+}
+.liveness-step{
+  width:40px;
+  height:6px;
+  background:#e0e0e0;
+  border-radius:3px;
+  transition:background .3s;
+}
+.liveness-step.active{background:var(--primary)}
+.liveness-step.done{background:var(--success)}
+
+/* Debug info */
+.debug-info{
+  font-size:11px;
+  color:var(--gray);
+  text-align:center;
+  margin-top:8px;
+  font-family:monospace;
+}
 </style>
 </head>
 <body>
@@ -141,20 +173,20 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 <div class="card" id="menuKaryawan">
 <h3 class="card-title">📋 Menu</h3>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('riwayat');loadRiwayat()">🕘 Riwayat Kehadiran</button>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('cuti');loadMasterCuti()">📅 Pengajuan Cuti</button>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('riwayatCuti');loadRiwayatCuti()">📄 Riwayat Cuti Saya</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('riwayat')">🕘 Riwayat Kehadiran</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('cuti')">📅 Pengajuan Cuti</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('riwayatCuti')">📄 Riwayat Cuti Saya</button>
 </div>
 <div class="card hidden" id="menuApproval">
 <h3 class="card-title">✅ Persetujuan</h3>
-<button type="button" class="btn btn-warning btn-block" onclick="showScreen('approval');loadApprovals()">📋 Pending Approval <span class="badge badge-danger" id="approvalBadge" style="display:none">0</span></button>
+<button type="button" class="btn btn-warning btn-block" onclick="navigateTo('approval')">📋 Pending Approval <span class="badge badge-danger" id="approvalBadge" style="display:none">0</span></button>
 </div>
 <div class="card hidden" id="menuAdmin">
 <h3 class="card-title">⚙️ Menu HR/Admin</h3>
-<button type="button" class="btn btn-info btn-block" onclick="showScreen('dashboard');loadDashboard()">📊 Dashboard</button>
+<button type="button" class="btn btn-info btn-block" onclick="navigateTo('dashboard')">📊 Dashboard</button>
 <button type="button" class="btn btn-outline btn-block" onclick="openAddEmployeeModal()">👤 Tambah Karyawan</button>
 <button type="button" class="btn btn-outline btn-block" onclick="openFaceRegistrationModal()">📷 Daftarkan Face ID</button>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('dataKaryawan');loadDataKaryawan()">👥 Data Karyawan</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('dataKaryawan')">👥 Data Karyawan</button>
 </div>
 </div>
 </div>
@@ -167,7 +199,7 @@ th{background:#f8f9fa;font-weight:600}
 <table><thead><tr><th>Tanggal</th><th>In</th><th>Out</th><th>Status</th></tr></thead>
 <tbody id="riwayatBody"><tr><td colspan="4" class="text-center">Memuat...</td></tr></tbody></table>
 </div></div>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
 </div>
 </div>
 
@@ -184,7 +216,7 @@ th{background:#f8f9fa;font-weight:600}
 <div class="form-group hidden" id="cutiDokumenGroup"><label class="form-label">Dokumen Pendukung (Wajib) *</label><input type="file" id="cutiDokumen" class="form-control" accept="image/*"></div>
 <button type="button" class="btn btn-primary btn-block" onclick="submitPengajuanCuti()">📤 Kirim Pengajuan</button>
 </div>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
 </div>
 </div>
 
@@ -193,7 +225,7 @@ th{background:#f8f9fa;font-weight:600}
 <div class="container">
 <div class="app-header"><h1>📄 Riwayat Cuti</h1></div>
 <div id="riwayatCutiList"></div>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
 </div>
 </div>
 
@@ -202,7 +234,7 @@ th{background:#f8f9fa;font-weight:600}
 <div class="container">
 <div class="app-header"><h1>✅ Pending Approval</h1></div>
 <div id="approvalList"></div>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
 </div>
 </div>
 
@@ -217,7 +249,7 @@ th{background:#f8f9fa;font-weight:600}
 <table><thead><tr><th>NIK</th><th>Nama</th><th>In</th><th>Out</th><th>Status</th></tr></thead>
 <tbody id="dashboardBody"><tr><td colspan="5" class="text-center">Memuat...</td></tr></tbody></table>
 </div></div>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
 </div>
 </div>
 
@@ -226,7 +258,7 @@ th{background:#f8f9fa;font-weight:600}
 <div class="container">
 <div class="app-header"><h1>👥 Data Karyawan</h1></div>
 <div class="card"><div class="table-responsive" id="dataKaryawanTable">Memuat...</div></div>
-<button type="button" class="btn btn-outline btn-block" onclick="showScreen('main')">← Kembali</button>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
 </div>
 </div>
 
@@ -236,8 +268,14 @@ th{background:#f8f9fa;font-weight:600}
 <div class="modal-header"><h3 id="cameraTitle">Verifikasi Wajah</h3><button type="button" class="icon-btn" onclick="closeCamera()">✕</button></div>
 <div class="modal-body">
 <div class="liveness-instruction" id="livenessInstruction">Menyiapkan kamera...</div>
+<div class="liveness-progress">
+<div class="liveness-step" id="step1"></div>
+<div class="liveness-step" id="step2"></div>
+<div class="liveness-step" id="step3"></div>
+</div>
 <div class="camera-container"><video id="cameraVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
 <div class="text-center" id="livenessStatus" style="margin-bottom:16px;color:var(--gray);font-size:14px"></div>
+<div class="debug-info" id="debugInfo"></div>
 <button type="button" id="retryCameraBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
 <button type="button" id="verifyBtn" class="btn btn-success btn-block" disabled onclick="handleVerify()">✅ Verifikasi & Absen</button>
 </div>
@@ -281,13 +319,12 @@ th{background:#f8f9fa;font-weight:600}
 
 <script>
 /* ================================================================
-   v4.4 DUAL MODE - KONFIGURASI WAJIB
+   v4.5 - KONFIGURASI WAJIB
    GANTI API_URL DENGAN URL /exec DEPLOYMENT ANDA
    ================================================================ */
 var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
-var APP_VERSION='4.4';
+var APP_VERSION='4.5';
 
-/* Deteksi mode: di dalam Apps Script ada google.script.run; di hosting statis tidak ada */
 var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
 
 var currentUser=null,currentPosition=null,currentStatus=null,masterCuti=[],currentAbsensiType='MASUK';
@@ -299,7 +336,50 @@ var MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 var FACE_API_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
 
 /* ================================================================
-   callServer: google.script.run (mode GAS) ATAU fetch (mode statis)
+   HISTORY MANAGEMENT - BACK BUTTON HP
+   ================================================================ */
+var screenHistory = ['login']; // Stack untuk navigasi
+
+function navigateTo(screenName) {
+  // Push ke history stack
+  screenHistory.push(screenName);
+  history.pushState({screen: screenName}, '', '#' + screenName);
+  
+  // Tampilkan screen
+  showScreen(screenName);
+  
+  // Load data untuk screen tertentu
+  if (screenName === 'riwayat') loadRiwayat();
+  else if (screenName === 'cuti') loadMasterCuti();
+  else if (screenName === 'riwayatCuti') loadRiwayatCuti();
+  else if (screenName === 'approval') loadApprovals();
+  else if (screenName === 'dashboard') loadDashboard();
+  else if (screenName === 'dataKaryawan') loadDataKaryawan();
+}
+
+function goBack() {
+  // Pop dari history stack
+  if (screenHistory.length > 1) {
+    screenHistory.pop(); // Hapus current
+    var prevScreen = screenHistory[screenHistory.length - 1];
+    
+    // Kembali ke screen sebelumnya
+    history.back();
+    showScreen(prevScreen);
+  }
+}
+
+// Handle tombol back HP
+window.addEventListener('popstate', function(e) {
+  if (screenHistory.length > 1) {
+    screenHistory.pop();
+    var prevScreen = screenHistory[screenHistory.length - 1];
+    showScreen(prevScreen);
+  }
+});
+
+/* ================================================================
+   callServer: google.script.run ATAU fetch
    ================================================================ */
 function callServer(fn,args,onOk,onFail,timeoutMs){
   var ms=timeoutMs||30000,done=false;
@@ -324,8 +404,16 @@ document.addEventListener('DOMContentLoaded',function(){
   var mb=document.getElementById('modeBadge');
   if(mb)mb.textContent=IS_STATIC?'MODE MOBILE/STATIS':'MODE APPS SCRIPT';
 
+  // Initialize history state
+  history.replaceState({screen: 'login'}, '', '#login');
+
   var u=loadSession();
-  if(u){currentUser=u;try{enterMainScreen()}catch(e){clearSession();showScreen('login')}}
+  if(u){
+    currentUser=u;
+    screenHistory = ['login', 'main'];
+    history.replaceState({screen: 'main'}, '', '#main');
+    try{enterMainScreen()}catch(e){clearSession();showScreen('login')}
+  }
   else showScreen('login');
 
   var lp=document.getElementById('loginPin');
@@ -359,7 +447,13 @@ function loadSession(){
 function clearSession(){try{localStorage.removeItem('absensiUser')}catch(e){}}
 
 /* ================= NAVIGASI ================= */
-function showScreen(n){var s=document.querySelectorAll('.screen');for(var i=0;i<s.length;i++)s[i].classList.remove('active');var t=document.getElementById(n+'Screen');if(t)t.classList.add('active');window.scrollTo(0,0)}
+function showScreen(n){
+  var s=document.querySelectorAll('.screen');
+  for(var i=0;i<s.length;i++)s[i].classList.remove('active');
+  var t=document.getElementById(n+'Screen');
+  if(t)t.classList.add('active');
+  window.scrollTo(0,0);
+}
 function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3500)}
 function closeModal(id){var m=document.getElementById(id);if(m)m.classList.remove('active')}
 
@@ -375,11 +469,13 @@ function doLogin(){
       currentUser={nik:res.user?res.user.nik:res.employee.nik,nama:res.user?res.user.nama:res.employee.nama,role:res.role,employee:res.employee};
       try{localStorage.setItem('absensiUser',JSON.stringify(currentUser))}catch(e){}
       document.getElementById('loginError').textContent='';
+      screenHistory = ['login', 'main'];
+      history.replaceState({screen: 'main'}, '', '#main');
       enterMainScreen();
     }else document.getElementById('loginError').textContent=res.message||'Login gagal.';
   },function(err){btn.disabled=false;btn.innerHTML='Masuk';document.getElementById('loginError').textContent=err.message||'Terjadi kesalahan.'});
 }
-function handleLogout(){if(confirm('Yakin ingin keluar?')){clearSession();currentUser=null;showScreen('login')}}
+function handleLogout(){if(confirm('Yakin ingin keluar?')){clearSession();currentUser=null;screenHistory=['login'];history.replaceState({screen:'login'},'','#login');showScreen('login')}}
 
 /* ================= MAIN ================= */
 function enterMainScreen(){
@@ -422,13 +518,17 @@ function getCurrentLocation(){
     {enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 
-/* ================= KAMERA & LIVENESS ================= */
+/* ================= KAMERA & LIVENESS - PERBAIKAN FUNDAMENTAL ================= */
 function requestCamera(video){
   return new Promise(function(resolve){
     var md=navigator.mediaDevices;
     if(!md||!md.getUserMedia){lastCameraError='Browser tidak mendukung kamera. Gunakan Chrome terbaru.';resolve(false);return}
     md.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false})
-      .then(function(stream){cameraStream=stream;video.srcObject=stream;video.play().then(function(){resolve(true)}).catch(function(){resolve(true)})})
+      .then(function(stream){
+        cameraStream=stream;
+        video.srcObject=stream;
+        video.play().then(function(){resolve(true)}).catch(function(){resolve(true)});
+      })
       .catch(function(err){lastCameraError=mapCameraError(err);resolve(false)});
   });
 }
@@ -453,6 +553,17 @@ function retryCurrentFlow(){
   var v=document.getElementById(livenessMode==='attendance'?'cameraVideo':'faceVideo');
   startLivenessFlow(v,livenessMode);
 }
+
+function updateLivenessProgress(){
+  var step1=document.getElementById('step1');
+  var step2=document.getElementById('step2');
+  var step3=document.getElementById('step3');
+  
+  step1.className='liveness-step' + (livenessStep>0?' done':'') + (livenessStep===0?' active':'');
+  step2.className='liveness-step' + (livenessStep>1?' done':'') + (livenessStep===1?' active':'');
+  step3.className='liveness-step' + (livenessStep>2?' done':'') + (livenessStep===2?' active':'');
+}
+
 async function startLivenessFlow(video,mode){
   videoElement=video;livenessMode=mode;
   blinkCount=0;livenessStep=0;wasEyesClosed=false;
@@ -462,6 +573,9 @@ async function startLivenessFlow(video,mode){
   document.getElementById('faceCaptureBtn').disabled=true;
   var ie=document.getElementById(mode==='attendance'?'livenessInstruction':'faceStatus');
   if(ie){ie.classList.remove('err');ie.textContent='📷 Meminta izin kamera...'}
+  
+  updateLivenessProgress();
+  
   var camOk=await requestCamera(video);
   if(!camOk){showFlowError(lastCameraError);return}
   if(ie)ie.textContent='⏳ Memuat model AI (sekali saja)...';
@@ -470,6 +584,7 @@ async function startLivenessFlow(video,mode){
   if(ie){ie.classList.remove('err');ie.textContent='Posisikan wajah dalam lingkaran. Kedipkan mata 2x.'}
   detectionLoop=requestAnimationFrame(detectLiveness);
 }
+
 function loadFaceApiScript(){
   return new Promise(function(resolve,reject){
     if(faceApiLoaded||typeof faceapi!=='undefined'){faceApiLoaded=true;resolve();return}
@@ -479,6 +594,7 @@ function loadFaceApiScript(){
     document.head.appendChild(s);
   });
 }
+
 async function loadFaceModels(){
   if(modelsLoaded)return true;
   try{
@@ -491,53 +607,109 @@ async function loadFaceModels(){
     modelsLoaded=true;return true;
   }catch(err){console.error(err);return false}
 }
+
 function preloadModelsInBackground(){
   var run=function(){loadFaceModels()};
   if(window.requestIdleCallback)requestIdleCallback(run,{timeout:8000});else setTimeout(run,3000);
 }
+
 function stopCamera(){
   if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop()});cameraStream=null}
   if(detectionLoop){cancelAnimationFrame(detectionLoop);detectionLoop=null}
 }
+
 async function detectLiveness(){
   if(!videoElement||videoElement.paused||videoElement.ended)return;
   try{
-    var d=await faceapi.detectSingleFace(videoElement,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5}))
+    var d=await faceapi.detectSingleFace(videoElement,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.4}))
       .withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
     var se=document.getElementById(livenessMode==='attendance'?'livenessStatus':'faceStatus');
-    if(!d){if(se)se.innerHTML='<span style="color:var(--warning)">Wajah tidak terdeteksi</span>';detectionLoop=requestAnimationFrame(detectLiveness);return}
+    var debug=document.getElementById('debugInfo');
+    
+    if(!d){
+      if(se)se.innerHTML='<span style="color:var(--warning)">⚠️ Wajah tidak terdeteksi</span>';
+      if(debug)debug.textContent='';
+      detectionLoop=requestAnimationFrame(detectLiveness);return
+    }
+    
+    // Debug info
+    if(debug){
+      debug.textContent='Face detected | Confidence: '+(d.detection.score*100).toFixed(1)+'%';
+    }
+    
     if(livenessStep===0){
+      // STEP 1: Kedip mata
       var o=calcEye(d.landmarks);
-      if(o<0.2&&!wasEyesClosed){blinkCount++;wasEyesClosed=true}else if(o>0.3)wasEyesClosed=false;
-      if(se)se.textContent='Kedipan: '+blinkCount+'/2';
-      if(blinkCount>=2){livenessStep=1;var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');if(ie)ie.textContent='Bagus! Sekarang tersenyumlah.'}
+      if(debug)debug.textContent+=' | Eye: '+(o*100).toFixed(1)+'%';
+      
+      if(o<0.25&&!wasEyesClosed){
+        blinkCount++;
+        wasEyesClosed=true;
+        if(debug)debug.textContent+=' | BLINK!';
+      }else if(o>0.35){
+        wasEyesClosed=false;
+      }
+      
+      if(se)se.textContent='👁️ Kedipan: '+blinkCount+'/2';
+      updateLivenessProgress();
+      
+      if(blinkCount>=2){
+        livenessStep=1;
+        var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
+        if(ie)ie.textContent='✅ Bagus! Sekarang tersenyumlah.';
+        updateLivenessProgress();
+      }
     }else if(livenessStep===1){
+      // STEP 2: Senyum
       var h=d.expressions.happy;
-      if(se)se.textContent='Tingkat senyum: '+Math.round(h*100)+'%';
-      if(h>0.6){
+      if(debug)debug.textContent+=' | Smile: '+(h*100).toFixed(1)+'%';
+      
+      if(se)se.textContent='😊 Senyum: '+Math.round(h*100)+'%';
+      updateLivenessProgress();
+      
+      if(h>0.5){
         livenessStep=2;
         faceData.descriptor=Array.from(d.descriptor);
         faceData.photo=captureFrame(videoElement);
         var ie2=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
-        if(ie2){ie2.classList.remove('err');ie2.innerHTML='<span style="color:var(--success)">✅ Verifikasi berhasil!</span>'}
+        if(ie2){ie2.classList.remove('err');ie2.classList.add('success');ie2.innerHTML='✅ Verifikasi berhasil!'}
+        updateLivenessProgress();
         if(livenessMode==='attendance')document.getElementById('verifyBtn').disabled=false;
         else document.getElementById('faceCaptureBtn').disabled=false;
         stopCamera();return;
       }
     }
-  }catch(err){console.error(err)}
+  }catch(err){
+    console.error('Detection error:',err);
+    var debug=document.getElementById('debugInfo');
+    if(debug)debug.textContent='Error: '+err.message;
+  }
   detectionLoop=requestAnimationFrame(detectLiveness);
 }
+
 function calcEye(lm){
-  function op(e){var v1=Math.hypot(e[1].x-e[5].x,e[1].y-e[5].y);var v2=Math.hypot(e[2].x-e[4].x,e[2].y-e[4].y);var h=Math.hypot(e[0].x-e[3].x,e[0].y-e[3].y);return h>0?(v1+v2)/(2*h):0}
-  return(op(lm.getLeftEye())+op(lm.getRightEye()))/2;
+  // Eye Aspect Ratio (EAR) - lebih akurat
+  function ear(eye){
+    // Vertical distances
+    var v1=Math.hypot(eye[1].x-eye[5].x,eye[1].y-eye[5].y);
+    var v2=Math.hypot(eye[2].x-eye[4].x,eye[2].y-eye[4].y);
+    // Horizontal distance
+    var h=Math.hypot(eye[0].x-eye[3].x,eye[0].y-eye[3].y);
+    // EAR = (v1 + v2) / (2 * h)
+    return h>0?(v1+v2)/(2*h):0;
+  }
+  // Average of both eyes
+  return(ear(lm.getLeftEye())+ear(lm.getRightEye()))/2;
 }
+
 function captureFrame(video){
   var maxW=640,w=video.videoWidth,h=video.videoHeight,s=Math.min(1,maxW/w);
-  var c=document.createElement('canvas');c.width=Math.round(w*s);c.height=Math.round(h*s);
+  var c=document.createElement('canvas');
+  c.width=Math.round(w*s);c.height=Math.round(h*s);
   c.getContext('2d').drawImage(video,0,0,c.width,c.height);
   return c.toDataURL('image/jpeg',0.7);
 }
+
 function openCamera(type){
   currentAbsensiType=type;
   if(!currentPosition){showToast('Menunggu GPS. Coba refresh lokasi.');getCurrentLocation();return}
@@ -612,7 +784,7 @@ function submitPengajuanCuti(){
   var w=o&&o.getAttribute('data-wajib')==='true';
   function proceed(dok){
     callServer('submitCuti',[{nik:currentUser.employee.nik,kode:kode,tanggalMulai:mulai,tanggalSelesai:selesai,alasan:alasan,dokumen:dok}],
-      function(res){showToast(res.message);showScreen('main');
+      function(res){showToast(res.message);navigateTo('main');
         document.getElementById('cutiKode').value='';document.getElementById('cutiMulai').value='';
         document.getElementById('cutiSelesai').value='';document.getElementById('cutiAlasan').value='';fi.value=''},
       function(err){showToast('Gagal: '+err.message)});
