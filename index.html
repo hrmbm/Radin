@@ -86,11 +86,6 @@ th{background:#f8f9fa;font-weight:600}
 .error-text{color:var(--danger);font-size:13px;margin-top:10px;text-align:center}
 .hidden{display:none!important}
 .text-center{text-align:center}
-.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.profile-item{background:#f8f9fa;border-radius:10px;padding:12px}
-.profile-label{font-size:12px;color:var(--gray);margin-bottom:5px}
-.profile-value{font-size:14px;font-weight:600;word-break:break-word}
-@media(max-width:380px){.profile-grid{grid-template-columns:1fr}}
 .d-flex{display:flex}
 .justify-between{justify-content:space-between}
 .align-center{align-items:center}
@@ -119,7 +114,7 @@ th{background:#f8f9fa;font-weight:600}
 <p class="subtitle">Face Recognition & GPS</p>
 </div>
 <div class="card">
-<div class="form-group"><label class="form-label">NIK / Email</label><input type="text" id="loginNik" class="form-control" placeholder="Contoh: ST 260505" autocomplete="username"></div>
+<div class="form-group"><label class="form-label">NIK</label><input type="text" id="loginNik" class="form-control" placeholder="Masukkan NIK" autocomplete="username"></div>
 <div class="form-group"><label class="form-label">PIN</label><input type="password" id="loginPin" class="form-control" placeholder="Masukkan PIN" inputmode="numeric" autocomplete="current-password"></div>
 <button type="button" id="loginBtn" class="btn btn-primary btn-block" onclick="doLogin()">Masuk</button>
 <div id="loginError" class="error-text"></div>
@@ -154,11 +149,12 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 <div class="card" id="menuKaryawan">
 <h3 class="card-title">📋 Menu</h3>
-<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('profile')">👤 Profil Saya</button>
-<button type="button" class="btn btn-outline btn-block" onclick="openChangePasswordModal()">🔐 Ganti Password</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('riwayat')">🕘 Riwayat Kehadiran</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('cuti')">📅 Pengajuan Cuti</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('riwayatCuti')">📄 Riwayat Cuti Saya</button>
+<button type="button" id="faceSelfBtn" class="btn btn-outline btn-block hidden" onclick="openSelfFaceRegistration()">📷 Daftar Face ID</button>
+<button type="button" class="btn btn-outline btn-block" onclick="openProfileModal()">👤 Profil Saya</button>
+<button type="button" class="btn btn-outline btn-block" onclick="openPasswordModal()">🔐 Ganti PIN</button>
 </div>
 <div class="card hidden" id="menuApproval">
 <h3 class="card-title">✅ Persetujuan</h3>
@@ -168,46 +164,8 @@ th{background:#f8f9fa;font-weight:600}
 <h3 class="card-title">⚙️ Menu HR/Admin</h3>
 <button type="button" class="btn btn-info btn-block" onclick="navigateTo('dashboard')">📊 Dashboard</button>
 <button type="button" class="btn btn-outline btn-block" onclick="openAddEmployeeModal()">👤 Tambah Karyawan</button>
-<button type="button" class="btn btn-outline btn-block" onclick="openFaceRegistrationModal()">📷 Daftarkan Face ID</button>
+<button type="button" class="btn btn-outline btn-block" onclick="openFaceManagementModal()">📷 Kelola Face ID</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('dataKaryawan')">👥 Data Karyawan</button>
-</div>
-</div>
-</div>
-
-<!-- PROFIL SAYA -->
-<div id="profileScreen" class="screen">
-<div class="container">
-<div class="app-header">
-<div class="d-flex justify-between align-center">
-<div><h1>👤 Profil Saya</h1><p class="subtitle">Informasi akun dan data kepegawaian</p></div>
-<button type="button" class="icon-btn" onclick="navigateTo('main')">←</button>
-</div>
-</div>
-<div class="card">
-<div id="profileLoading" class="text-center" style="padding:20px">⏳ Memuat profil...</div>
-<div id="profileError" class="error-text"></div>
-<div id="profileContent" class="hidden">
-<div class="profile-grid">
-<div class="profile-item"><div class="profile-label">NIK</div><div class="profile-value" id="profileNik">-</div></div>
-<div class="profile-item"><div class="profile-label">Role</div><div class="profile-value" id="profileRole">-</div></div>
-<div class="profile-item" style="grid-column:1/-1"><div class="profile-label">Nama Lengkap</div><div class="profile-value" id="profileNama">-</div></div>
-<div class="profile-item"><div class="profile-label">Jabatan</div><div class="profile-value" id="profilePosition">-</div></div>
-<div class="profile-item"><div class="profile-label">Organisasi</div><div class="profile-value" id="profileOrganization">-</div></div>
-<div class="profile-item"><div class="profile-label">Branch</div><div class="profile-value" id="profileBranch">-</div></div>
-<div class="profile-item"><div class="profile-label">Job Level</div><div class="profile-value" id="profileLevel">-</div></div>
-<div class="profile-item"><div class="profile-label">Grade</div><div class="profile-value" id="profileGrade">-</div></div>
-<div class="profile-item"><div class="profile-label">Class</div><div class="profile-value" id="profileClass">-</div></div>
-<div class="profile-item"><div class="profile-label">Status Kerja</div><div class="profile-value" id="profileStatusKerja">-</div></div>
-<div class="profile-item"><div class="profile-label">Tanggal Bergabung</div><div class="profile-value" id="profileJoinDate">-</div></div>
-<div class="profile-item"><div class="profile-label">Status Akun</div><div class="profile-value" id="profileStatusAkun">-</div></div>
-<div class="profile-item"><div class="profile-label">NIK Atasan</div><div class="profile-value" id="profileAtasanId">-</div></div>
-<div class="profile-item" style="grid-column:1/-1"><div class="profile-label">Atasan Langsung</div><div class="profile-value" id="profileAtasan">-</div></div>
-<div class="profile-item" style="grid-column:1/-1"><div class="profile-label">Email</div><div class="profile-value" id="profileEmail">-</div></div>
-</div>
-<div style="margin-top:16px">
-<button type="button" class="btn btn-primary btn-block" onclick="openChangePasswordModal()">🔐 Ganti Password</button>
-</div>
-</div>
 </div>
 </div>
 </div>
@@ -283,21 +241,6 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 </div>
 
-<!-- MODAL GANTI PASSWORD -->
-<div id="changePasswordModal" class="modal">
-<div class="modal-content">
-<div class="modal-header"><h3>🔐 Ganti Password</h3><button type="button" class="icon-btn" onclick="closeModal('changePasswordModal')">✕</button></div>
-<div class="modal-body">
-<div style="background:#e3f2fd;color:#0c5460;padding:12px;border-radius:10px;margin-bottom:16px;font-size:13px">Password baru akan langsung disimpan ke spreadsheet dan dapat digunakan untuk login berikutnya.</div>
-<div class="form-group"><label class="form-label">Password / PIN Lama</label><input type="password" id="oldPassword" class="form-control" placeholder="Masukkan password lama" autocomplete="current-password"></div>
-<div class="form-group"><label class="form-label">Password / PIN Baru</label><input type="password" id="newPassword" class="form-control" placeholder="Minimal 4 karakter" autocomplete="new-password"></div>
-<div class="form-group"><label class="form-label">Konfirmasi Password / PIN Baru</label><input type="password" id="confirmPassword" class="form-control" placeholder="Ulangi password baru" autocomplete="new-password"></div>
-<div id="changePasswordError" class="error-text"></div>
-<button type="button" id="changePasswordBtn" class="btn btn-primary btn-block" onclick="submitChangePassword()">🔐 Simpan Password Baru</button>
-</div>
-</div>
-</div>
-
 <!-- MODAL KAMERA ABSENSI -->
 <div id="cameraModal" class="modal">
 <div class="modal-content">
@@ -325,7 +268,7 @@ th{background:#f8f9fa;font-weight:600}
 
 <!-- LANGKAH 1: FORM LENGKAP -->
 <div id="addEmpStep1">
-<div class="form-group"><label class="form-label">Employee ID *</label><input type="text" id="empId" class="form-control" placeholder="Contoh: ST 260505"></div>
+<div class="form-group"><label class="form-label">Employee ID *</label><input type="text" id="empId" class="form-control" placeholder="Masukkan NIK"></div>
 <div class="form-group"><label class="form-label">Nama Lengkap *</label><input type="text" id="empNama" class="form-control"></div>
 <div class="form-group"><label class="form-label">Branch *</label><select id="empBranch" class="form-control"><option value="Pusat">Pusat</option><option value="Pasuruan">Pasuruan</option><option value="Surabaya">Surabaya</option></select></div>
 <div class="form-group"><label class="form-label">Organisasi / Department</label><input type="text" id="empOrg" class="form-control"></div>
@@ -335,9 +278,8 @@ th{background:#f8f9fa;font-weight:600}
 <div class="form-group"><label class="form-label">Class</label><input type="text" id="empClass" class="form-control"></div>
 <div class="form-group"><label class="form-label">Status Kerja</label><select id="empStatus" class="form-control"><option value="Contract">Contract</option><option value="Permanent">Permanent</option></select></div>
 <div class="form-group"><label class="form-label">Tanggal Bergabung</label><input type="date" id="empJoinDate" class="form-control"></div>
-<div class="form-group"><label class="form-label">NIK Atasan Langsung *</label><input type="text" id="empAtasanId" class="form-control" placeholder="Wajib - untuk approval cuti/absensi"></div>
-<div class="form-group"><label class="form-label">Nama Atasan *</label><input type="text" id="empAtasanNama" class="form-control"></div>
-<div class="form-group"><label class="form-label">Role</label><select id="empRole" class="form-control"><option value="KARYAWAN">Karyawan</option><option value="ATASAN">Atasan (dapat approve)</option></select></div>
+<div class="form-group"><label class="form-label">Atasan Langsung</label><select id="empAtasanId" class="form-control"><option value="">-- Tidak ada / pilih atasan --</option></select><small style="color:var(--gray)">Pilih dari daftar karyawan aktif. Sistem menyimpan NIK atasan sebagai sumber data.</small></div>
+<div class="form-group"><label class="form-label">Role</label><select id="empRole" class="form-control"><option value="KARYAWAN">Karyawan</option><option value="HR">HR</option><option value="ADMIN">ADMIN</option></select></div>
 <button type="button" class="btn btn-success btn-block" onclick="saveNewEmployee()">💾 Simpan &amp; Lanjut</button>
 <div id="addEmpError" class="error-text"></div>
 </div>
@@ -346,14 +288,23 @@ th{background:#f8f9fa;font-weight:600}
 <div id="addEmpStep2" class="hidden">
 <div id="addEmpResult"></div>
 <div class="text-center" style="margin:16px 0;font-size:40px">📷</div>
-<p class="text-center" style="margin-bottom:16px;color:var(--gray);font-size:14px">Lengkapi pendaftaran dengan merekam <strong>Face ID</strong> karyawan ini sekarang. Tanpa Face ID, karyawan <strong>belum bisa absen</strong>.</p>
-<button type="button" class="btn btn-primary btn-block" onclick="wizardGoToFaceId()">📷 Daftarkan Face ID Sekarang</button>
+<p class="text-center" style="margin-bottom:16px;color:var(--gray);font-size:14px">Setelah akun dibuat, HR dapat memberikan akses registrasi <strong>Face ID</strong>. Karyawan melakukan registrasi sendiri dari HP miliknya.</p>
+<button type="button" class="btn btn-primary btn-block" onclick="wizardGoToFaceId()">🔑 Berikan Akses Face ID 30 Menit</button>
 <button type="button" class="btn btn-outline btn-block" onclick="wizardFinishLater()">⏭️ Nanti Saja (Face ID belum aktif)</button>
 </div>
 
 </div>
 </div>
 </div>
+
+<!-- MODAL PROFIL -->
+<div id="profileModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Profil Saya</h3><button type="button" class="icon-btn" onclick="closeModal('profileModal')">✕</button></div><div class="modal-body"><div id="profileBody">Memuat...</div></div></div></div>
+<!-- MODAL GANTI PIN -->
+<div id="passwordModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Ganti PIN</h3><button type="button" class="icon-btn" onclick="closeModal('passwordModal')">✕</button></div><div class="modal-body"><div class="form-group"><label class="form-label">PIN Lama</label><input id="oldPin" type="password" inputmode="numeric" class="form-control"></div><div class="form-group"><label class="form-label">PIN Baru</label><input id="newPin" type="password" inputmode="numeric" class="form-control"></div><div class="form-group"><label class="form-label">Konfirmasi PIN Baru</label><input id="newPin2" type="password" inputmode="numeric" class="form-control"></div><button class="btn btn-primary btn-block" onclick="changeMyPasswordUi()">Simpan PIN Baru</button><div id="passwordError" class="error-text"></div></div></div></div>
+<!-- MODAL REGISTRASI FACE ID SENDIRI -->
+<div id="faceSelfModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Daftar Face ID</h3><button type="button" class="icon-btn" onclick="closeSelfFaceRegistration()">✕</button></div><div class="modal-body"><p class="liveness-instruction">Pastikan wajah terlihat jelas dan pencahayaan cukup.</p><div class="liveness-progress"><div class="liveness-step" id="sstep1"></div><div class="liveness-step" id="sstep2"></div></div><div class="camera-container"><div class="camera-debug" id="selfFaceCamDebug"></div><video id="selfFaceVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div><div id="selfFaceStatus" class="text-center"></div><div id="selfFaceDebug" class="debug-info"></div><button id="selfFaceRetryBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button><button id="selfFaceSaveBtn" class="btn btn-success btn-block" disabled onclick="saveSelfFace()">📷 Simpan Face ID</button></div></div></div>
+<!-- MODAL KELOLA FACE ID HR -->
+<div id="faceManageModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>Kelola Face ID</h3><button type="button" class="icon-btn" onclick="closeModal('faceManageModal')">✕</button></div><div class="modal-body"><div class="card" style="background:#f8f9fa"><strong>Sesi Registrasi Massal</strong><p id="faceProgress" style="font-size:13px;margin:8px 0">Memuat progres...</p><div class="btn-group"><button class="btn btn-primary btn-sm" onclick="grantMassFaceUi(60)">Aktifkan 60 Menit</button><button class="btn btn-outline btn-sm" onclick="loadFaceProgress()">Refresh</button></div></div><div class="form-group"><label class="form-label">Registrasi Personal</label><input id="faceTargetSearch" class="form-control" placeholder="Cari nama / NIK" oninput="filterFaceTargets()"></div><select id="faceTargetSelect" class="form-control" size="6"></select><button class="btn btn-success btn-block" style="margin-top:10px" onclick="grantPersonalFaceUi()">🔑 Berikan Akses 30 Menit</button><div id="faceManageMsg" class="error-text"></div></div></div></div>
 
 <!-- MODAL REGISTRASI FACE ID -->
 <div id="faceModal" class="modal">
@@ -385,8 +336,8 @@ th{background:#f8f9fa;font-weight:600}
 <script>
 /* ================= KONFIGURASI ================= */
 var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
-var APP_VERSION='4.11';
-var LIVENESS_MODE='challenge';
+var APP_VERSION='5.0';
+var LIVENESS_MODE='challenge'; // internal only; no technical challenge label shown to user
 var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
 
 var currentUser=null,currentPosition=null,currentStatus=null,masterCuti=[],currentAbsensiType='MASUK';
@@ -443,8 +394,7 @@ function navigateTo(name){
   screenHistory.push(name);
   history.pushState({screen:name},'','#'+name);
   showScreen(name);
-  if(name==='profile')loadProfile();
-  else if(name==='riwayat')loadRiwayat();
+  if(name==='riwayat')loadRiwayat();
   else if(name==='cuti')loadMasterCuti();
   else if(name==='riwayatCuti')loadRiwayatCuti();
   else if(name==='approval')loadApprovals();
@@ -472,16 +422,16 @@ function callServer(fn,args,onOk,onFail,timeoutMs){
   }
 }
 function retryHtml(fn){return '<br><button type="button" class="btn btn-outline btn-sm" style="margin-top:10px" onclick="'+fn+'">🔄 Coba Lagi</button>'}
-function getDebugEl(){return document.getElementById(livenessMode==='attendance'?'debugInfo':'faceDebugInfo')}
-function getCamDebugEl(){return document.getElementById(livenessMode==='attendance'?'camDebug':'faceCamDebug')}
-function getInstrEl(){return document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus')}
-function getStatusEl(){return document.getElementById(livenessMode==='attendance'?'livenessStatus':'faceStatus')}
+function getDebugEl(){return document.getElementById(livenessMode==='attendance'?'debugInfo':(livenessMode==='selfRegistration'?'selfFaceDebug':'faceDebugInfo'))}
+function getCamDebugEl(){return document.getElementById(livenessMode==='attendance'?'camDebug':(livenessMode==='selfRegistration'?'selfFaceCamDebug':'faceCamDebug'))}
+function getInstrEl(){return document.getElementById(livenessMode==='attendance'?'livenessInstruction':(livenessMode==='selfRegistration'?'selfFaceStatus':'faceStatus'))}
+function getStatusEl(){return document.getElementById(livenessMode==='attendance'?'livenessStatus':(livenessMode==='selfRegistration'?'selfFaceStatus':'faceStatus'))}
 
 /* ================= INIT ================= */
 document.addEventListener('DOMContentLoaded',function(){
   var ls=document.getElementById('loadingScreen');if(ls)ls.style.display='none';
   var mb=document.getElementById('modeBadge');
-  if(mb)mb.textContent=(IS_STATIC?'STATIS':'GAS')+' | '+(LIVENESS_MODE==='challenge'?'CHALLENGE':'PASSIVE');
+  if(mb)mb.textContent='';
   history.replaceState({screen:'login'},'','#login');
   var u=loadSession();
   if(u){
@@ -556,9 +506,24 @@ function enterMainScreen(){
   document.getElementById('userJabatan').textContent=emp?(emp.position||emp.organization||currentUser.role):currentUser.role;
   var isAdmin=(currentUser.role==='HR'||currentUser.role==='ADMIN');
   document.getElementById('menuAdmin').classList.toggle('hidden',!isAdmin);
-  document.getElementById('menuApproval').classList.remove('hidden');
+  document.getElementById('menuApproval').classList.add('hidden');
+  loadMyAccessContext();
   loadStatusHariIni();loadApprovalCount();
   preloadEngine();
+}
+function loadMyAccessContext(){
+  var nik=currentUser.employee.nik;
+  callServer('getMyProfile',[nik],function(res){
+    if(!res||!res.profile)return;
+    currentUser.employee=res.profile; currentUser.role=res.profile.role||currentUser.role;
+    try{localStorage.setItem('absensiUser',JSON.stringify(currentUser))}catch(e){}
+    var showApproval=(currentUser.role==='HR'||currentUser.role==='ADMIN'||res.hasSubordinates===true);
+    document.getElementById('menuApproval').classList.toggle('hidden',!showApproval);
+  });
+  callServer('getFaceRegistrationStatus',[nik],function(st){
+    var b=document.getElementById('faceSelfBtn');
+    if(b)b.classList.toggle('hidden',!st.canRegister);
+  });
 }
 function loadStatusHariIni(){
   if(!currentUser||!currentUser.employee)return;
@@ -737,18 +702,18 @@ function mapCameraError(err){
 function showFlowError(msg){
   var ie=getInstrEl();
   if(ie){ie.textContent='❌ '+msg;ie.classList.add('err')}
-  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');
+  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':(livenessMode==='selfRegistration'?'selfFaceRetryBtn':'retryFaceBtn'));
   if(rb)rb.classList.remove('hidden');
   stopCamera();
 }
 function retryCurrentFlow(){
-  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
+  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':(livenessMode==='selfRegistration'?'selfFaceRetryBtn':'retryFaceBtn'));if(rb)rb.classList.add('hidden');
   var ie=getInstrEl();if(ie)ie.classList.remove('err');
-  var v=document.getElementById(livenessMode==='attendance'?'cameraVideo':'faceVideo');
+  var v=document.getElementById(livenessMode==='attendance'?'cameraVideo':(livenessMode==='selfRegistration'?'selfFaceVideo':'faceVideo'));
   startLivenessFlow(v,livenessMode);
 }
 function updateLivenessProgress(){
-  var p=livenessMode==='attendance'?['step1','step2']:['fstep1','fstep2'];
+  var p=livenessMode==='attendance'?['step1','step2']:(livenessMode==='selfRegistration'?['sstep1','sstep2']:['fstep1','fstep2']);
   for(var i=0;i<2;i++){
     var el=document.getElementById(p[i]);
     el.className='liveness-step'+(livenessStep>i?' done':'')+(livenessStep===i?' active':'');
@@ -769,7 +734,8 @@ async function startLivenessFlow(video,mode){
   resetLivenessState();
   faceData.descriptor=null;faceData.photo=null;lastCameraError='';
   document.getElementById('verifyBtn').disabled=true;
-  document.getElementById('faceCaptureBtn').disabled=true;
+  var fcb=document.getElementById('faceCaptureBtn');if(fcb)fcb.disabled=true;
+  var sfb=document.getElementById('selfFaceSaveBtn');if(sfb)sfb.disabled=true;
   var rb=document.getElementById(mode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
   var ie=getInstrEl();
   if(ie){ie.classList.remove('err','success');ie.textContent='📷 Menyalakan kamera...'}
@@ -949,7 +915,7 @@ async function finalizeCapture(lm){
     if(ie)ie.innerHTML='\u2705 Sidik wajah berhasil diambil!';
     if(dbg)dbg.textContent='\u2705 Descriptor 128-d siap';
     if(livenessMode==='attendance')document.getElementById('verifyBtn').disabled=false;
-    else document.getElementById('faceCaptureBtn').disabled=false;
+    else {var fcb=document.getElementById('faceCaptureBtn');if(fcb)fcb.disabled=false;var sfb=document.getElementById('selfFaceSaveBtn');if(sfb)sfb.disabled=false;}
   }catch(err){console.error(err);showFlowError('Gagal menghitung sidik wajah. \ud83d\udd01 Coba Lagi.')}
 }
 function captureFrameCanvas(video){
@@ -1042,88 +1008,6 @@ function closeFaceRegistration(){
     showToast(wizardNewEmployee.nama+': Face ID '+(wizardNewEmployee.faceDone?'\u2705 aktif':'\u26a0\ufe0f belum terdaftar'));
     wizardNewEmployee=null;
   }
-}
-
-/* ================= PROFIL & PASSWORD ================= */
-function profileValue(v){return v===undefined||v===null||String(v).trim()===''?'-':String(v)}
-function setProfileValue(id,v){var el=document.getElementById(id);if(el)el.textContent=profileValue(v)}
-function getCurrentNik(){return currentUser&&currentUser.employee&&currentUser.employee.nik?currentUser.employee.nik:(currentUser?currentUser.nik:'')}
-
-function loadProfile(){
-  var loading=document.getElementById('profileLoading');
-  var content=document.getElementById('profileContent');
-  var error=document.getElementById('profileError');
-  if(loading)loading.classList.remove('hidden');
-  if(content)content.classList.add('hidden');
-  if(error)error.textContent='';
-  var nik=getCurrentNik();
-  if(!nik){
-    if(loading)loading.classList.add('hidden');
-    if(error)error.textContent='NIK akun tidak tersedia.';
-    return;
-  }
-  callServer('getMyProfile',[nik],function(p){
-    if(!p||p.success===false)throw new Error((p&&p.message)||'Profil tidak ditemukan.');
-    setProfileValue('profileNik',p.nik||nik);
-    setProfileValue('profileNama',p.nama||(currentUser?currentUser.nama:''));
-    setProfileValue('profilePosition',p.position);
-    setProfileValue('profileOrganization',p.organization);
-    setProfileValue('profileBranch',p.branch);
-    setProfileValue('profileLevel',p.level);
-    setProfileValue('profileGrade',p.grade);
-    setProfileValue('profileClass',p.class);
-    setProfileValue('profileStatusKerja',p.statusKerja);
-    setProfileValue('profileJoinDate',p.joinDate);
-    setProfileValue('profileStatusAkun',p.statusAkun||'AKTIF');
-    setProfileValue('profileAtasanId',p.atasanId);
-    setProfileValue('profileAtasan',p.atasanNama);
-    setProfileValue('profileEmail',p.email);
-    setProfileValue('profileRole',p.role||(currentUser?currentUser.role:''));
-    if(loading)loading.classList.add('hidden');
-    if(content)content.classList.remove('hidden');
-  },function(err){
-    if(loading)loading.classList.add('hidden');
-    if(error)error.textContent='Gagal memuat profil: '+(err&&err.message?err.message:'Terjadi kesalahan.');
-  },20000);
-}
-
-function openChangePasswordModal(){
-  var modal=document.getElementById('changePasswordModal');
-  if(!modal)return;
-  document.getElementById('oldPassword').value='';
-  document.getElementById('newPassword').value='';
-  document.getElementById('confirmPassword').value='';
-  document.getElementById('changePasswordError').textContent='';
-  var btn=document.getElementById('changePasswordBtn');
-  btn.disabled=false;btn.innerHTML='🔐 Simpan Password Baru';
-  modal.classList.add('active');
-  setTimeout(function(){document.getElementById('oldPassword').focus()},100);
-}
-
-function submitChangePassword(){
-  var oldPin=document.getElementById('oldPassword').value.trim();
-  var newPin=document.getElementById('newPassword').value.trim();
-  var confirmPin=document.getElementById('confirmPassword').value.trim();
-  var error=document.getElementById('changePasswordError');
-  var btn=document.getElementById('changePasswordBtn');
-  error.textContent='';
-  if(!oldPin||!newPin||!confirmPin){error.textContent='Semua kolom wajib diisi.';return}
-  if(newPin.length<4){error.textContent='Password baru minimal 4 karakter.';return}
-  if(newPin.length>20){error.textContent='Password baru maksimal 20 karakter.';return}
-  if(newPin!==confirmPin){error.textContent='Konfirmasi password baru tidak sama.';return}
-  if(oldPin===newPin){error.textContent='Password baru tidak boleh sama dengan password lama.';return}
-  var nik=getCurrentNik();
-  if(!nik){error.textContent='NIK akun tidak tersedia.';return}
-  btn.disabled=true;btn.innerHTML='⏳ Menyimpan...';
-  callServer('changeMyPassword',[nik,oldPin,newPin],function(res){
-    btn.disabled=false;btn.innerHTML='🔐 Simpan Password Baru';
-    if(!res||res.success===false){error.textContent=(res&&res.message)||'Gagal mengganti password.';return}
-    closeModal('changePasswordModal');
-    showToast('✅ Password berhasil diganti dan tersimpan.');
-  },function(err){
-    btn.disabled=false;btn.innerHTML='🔐 Simpan Password Baru';
-    error.textContent=err&&err.message?err.message:'Gagal mengganti password.';
-  },20000);
 }
 
 /* ================= RIWAYAT ================= */
@@ -1266,6 +1150,7 @@ var wizardNewEmployee=null;
 function val(id){var e=document.getElementById(id);return e?String(e.value||'').trim():''}
 function openAddEmployeeModal(){
   wizardNewEmployee=null;
+  loadAtasanOptions();
   document.getElementById('addEmpTitle').textContent='Tambah Karyawan';
   document.getElementById('addEmpStep1').classList.remove('hidden');
   document.getElementById('addEmpStep2').classList.add('hidden');
@@ -1282,31 +1167,22 @@ function closeAddEmployeeWizard(){
 }
 function saveNewEmployee(){
   var btn=event.target;
-  var data={
-    employeeId:val('empId'),nama:val('empNama'),branch:val('empBranch'),
-    organization:val('empOrg'),level:val('empLevel'),position:val('empPosisi'),
-    grade:val('empGrade'),'class':val('empClass'),statusKerja:val('empStatus'),
-    joinDate:val('empJoinDate'),atasanId:val('empAtasanId'),atasanNama:val('empAtasanNama'),
-    role:val('empRole')||'KARYAWAN'};
+  var at=document.getElementById('empAtasanId');
+  var data={employeeId:val('empId'),nama:val('empNama'),branch:val('empBranch'),organization:val('empOrg'),level:val('empLevel'),position:val('empPosisi'),grade:val('empGrade'),'class':val('empClass'),statusKerja:val('empStatus'),joinDate:val('empJoinDate'),atasanId:at?String(at.value||'').trim():'',atasanNama:at&&at.selectedOptions[0]?at.selectedOptions[0].textContent.replace(/^\S+\s-\s/,'').trim():'',role:val('empRole')||'KARYAWAN'};
   document.getElementById('addEmpError').textContent='';
   if(!data.employeeId||!data.nama||!data.branch){document.getElementById('addEmpError').textContent='Employee ID, Nama, dan Branch wajib diisi.';return}
-  if(!data.atasanId||!data.atasanNama){document.getElementById('addEmpError').textContent='NIK & Nama atasan wajib diisi (diperlukan untuk approval).';return}
-  btn.disabled=true;btn.innerHTML='\u23f3 Menyimpan...';
+  btn.disabled=true;btn.innerHTML='⏳ Menyimpan...';
   callServer('addKaryawan',[currentUser.role,data],function(res){
-    btn.disabled=false;btn.innerHTML='\ud83d\udcbe Simpan & Lanjut';
+    btn.disabled=false;btn.innerHTML='💾 Simpan & Lanjut';
     wizardNewEmployee={nik:data.employeeId,nama:data.nama,pin:res.pin,faceDone:false};
-    document.getElementById('addEmpResult').innerHTML='<div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px">'+res.message+'<br>\ud83d\udc64 <strong>'+data.nama+'</strong> ('+data.employeeId+')<br>\ud83d\udd11 PIN sementara: <strong style="font-size:18px;letter-spacing:2px">'+res.pin+'</strong><br><span style="font-size:12px">Sampaikan PIN ini ke karyawan untuk login pertama.</span></div>';
-    document.getElementById('addEmpStep1').classList.add('hidden');
-    document.getElementById('addEmpStep2').classList.remove('hidden');
-  },function(err){
-    btn.disabled=false;btn.innerHTML='\ud83d\udcbe Simpan & Lanjut';
-    document.getElementById('addEmpError').textContent=err.message||'Gagal menyimpan.';
-  });
+    document.getElementById('addEmpResult').innerHTML='<div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px">'+res.message+'<br>👤 <strong>'+data.nama+'</strong> ('+data.employeeId+')<br>🔑 PIN sementara: <strong style="font-size:18px;letter-spacing:2px">'+res.pin+'</strong><br><span style="font-size:12px">Sampaikan PIN ini kepada karyawan. Untuk Face ID, HR berikan akses registrasi melalui menu Kelola Face ID.</span></div>';
+    document.getElementById('addEmpStep1').classList.add('hidden');document.getElementById('addEmpStep2').classList.remove('hidden');
+  },function(err){btn.disabled=false;btn.innerHTML='💾 Simpan & Lanjut';document.getElementById('addEmpError').textContent=err.message||'Gagal menyimpan.';});
 }
 function wizardGoToFaceId(){
   var nik=wizardNewEmployee?wizardNewEmployee.nik:null;
-  closeModal('addEmployeeModal');
-  openFaceRegistrationModal(nik);
+  if(!nik)return;
+  callServer('grantFaceRegistration',[currentUser.role,nik,30],function(r){showToast(r.message);closeModal('addEmployeeModal');wizardNewEmployee=null;},function(e){showToast('Gagal: '+e.message)});
 }
 function wizardFinishLater(){
   var n=wizardNewEmployee;
@@ -1314,6 +1190,33 @@ function wizardFinishLater(){
   if(n)showToast(n.nama+' aktif. \u26a0\ufe0f Tanpa Face ID, karyawan belum bisa absen.');
   wizardNewEmployee=null;
 }
+
+function loadAtasanOptions(){
+  var sel=document.getElementById('empAtasanId'); if(!sel)return;
+  sel.innerHTML='<option value="">Memuat daftar...</option>';
+  callServer('getKaryawanOptions',[currentUser.role],function(list){
+    sel.innerHTML='<option value="">-- Tidak ada / pilih atasan --</option>';
+    (list||[]).forEach(function(x){var o=document.createElement('option');o.value=x.nik;o.textContent=x.nik+' - '+x.nama;sel.appendChild(o);});
+  },function(){sel.innerHTML='<option value="">Gagal memuat daftar atasan</option>';});
+}
+function openProfileModal(){
+  document.getElementById('profileModal').classList.add('active');
+  document.getElementById('profileBody').textContent='Memuat...';
+  callServer('getMyProfile',[currentUser.employee.nik],function(r){var p=r.profile||{};document.getElementById('profileBody').innerHTML='<div class="card" style="background:#f8f9fa">👤 <strong>'+p.nama+'</strong><br>NIK: '+p.nik+'<br>Role: '+p.role+'<br>Jabatan: '+(p.position||'-')+'<br>Organisasi: '+(p.organization||'-')+'<br>Branch: '+(p.branch||'-')+'<br>Atasan: '+(p.atasanNama||'—')+(r.hasSubordinates?'<br><span class="badge badge-info">Memiliki bawahan / approver</span>':'')+'</div>';},function(e){document.getElementById('profileBody').textContent='Gagal: '+e.message;});
+}
+function openPasswordModal(){['oldPin','newPin','newPin2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});document.getElementById('passwordError').textContent='';document.getElementById('passwordModal').classList.add('active');}
+function changeMyPasswordUi(){var a=val('oldPin'),b=val('newPin'),c=val('newPin2'),e=document.getElementById('passwordError');e.textContent='';if(b!==c){e.textContent='Konfirmasi PIN baru tidak sama.';return}callServer('changeMyPassword',[currentUser.employee.nik,a,b],function(r){showToast(r.message);closeModal('passwordModal');},function(x){e.textContent=x.message||'Gagal mengubah PIN.';});}
+function openSelfFaceRegistration(){
+  callServer('getFaceRegistrationStatus',[currentUser.employee.nik],function(st){if(!st.canRegister){showToast('Akses registrasi Face ID belum diberikan HR.');return}document.getElementById('faceSelfModal').classList.add('active');faceData.descriptor=null;faceData.photo=null;startLivenessFlow(document.getElementById('selfFaceVideo'),'selfRegistration');},function(e){showToast(e.message)});
+}
+function closeSelfFaceRegistration(){stopCamera();closeModal('faceSelfModal');}
+function saveSelfFace(){if(!faceData.descriptor){showToast('Wajah belum siap.');return}var b=document.getElementById('selfFaceSaveBtn');b.disabled=true;callServer('saveMyFaceDescriptor',[currentUser.employee.nik,faceData.descriptor],function(r){showToast(r.message);b.disabled=false;closeSelfFaceRegistration();var x=document.getElementById('faceSelfBtn');if(x)x.classList.add('hidden');},function(e){b.disabled=false;showToast('Gagal: '+e.message);});}
+function openFaceManagementModal(){document.getElementById('faceManageModal').classList.add('active');loadFaceProgress();loadFaceTargets();}
+function loadFaceProgress(){callServer('getFaceRegistrationProgress',[currentUser.role],function(r){var e=document.getElementById('faceProgress');if(e)e.textContent='Sudah terdaftar: '+r.registered+' / '+r.total+' | Belum: '+r.remaining;});}
+function loadFaceTargets(){var s=document.getElementById('faceTargetSelect');if(!s)return;s.innerHTML='<option>Memuat...</option>';callServer('getKaryawanSummary',[currentUser.role],function(r){s.innerHTML='';(r.list||[]).filter(function(x){return x.face==='❌'&&String(x.akun||'AKTIF').toUpperCase()==='AKTIF'}).forEach(function(x){var o=document.createElement('option');o.value=x.nik;o.textContent=x.nik+' - '+x.nama;s.appendChild(o);});if(!s.options.length)s.innerHTML='<option value="">Semua sudah terdaftar</option>';});}
+function filterFaceTargets(){var q=val('faceTargetSearch').toLowerCase(),s=document.getElementById('faceTargetSelect');for(var i=0;i<s.options.length;i++)s.options[i].hidden=q&&s.options[i].textContent.toLowerCase().indexOf(q)<0;}
+function grantPersonalFaceUi(){var s=document.getElementById('faceTargetSelect');if(!s||!s.value){showToast('Pilih karyawan.');return}callServer('grantFaceRegistration',[currentUser.role,s.value,30],function(r){showToast(r.message);loadFaceTargets();loadFaceProgress();},function(e){showToast('Gagal: '+e.message);});}
+function grantMassFaceUi(minutes){callServer('grantMassFaceRegistration',[currentUser.role,minutes],function(r){showToast(r.message);loadFaceProgress();loadFaceTargets();},function(e){showToast('Gagal: '+e.message);});}
 
 window.addEventListener('error',function(e){
   console.error('Global error:',e.message);
