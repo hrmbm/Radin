@@ -55,17 +55,18 @@ input,select,textarea,button{font-size:16px!important}
 .modal-header{padding:14px 16px;background:var(--primary);color:#fff;display:flex;justify-content:space-between;align-items:center}
 .modal-body{padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .icon-btn{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:8px}
-.camera-container{position:relative;width:100%;height:320px;background:#000;border-radius:var(--radius);overflow:hidden;margin-bottom:16px}
-.camera-container video{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  transform:scaleX(-1); /* MIRROR EFFECT - seperti cermin */
-}
+.camera-container{position:relative;width:100%;height:320px;background:#1a1a1a;border-radius:var(--radius);overflow:visible;margin-bottom:16px;display:flex;align-items:center;justify-content:center}
+.camera-container video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1);border-radius:var(--radius)}
 .face-overlay{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border:3px dashed rgba(255,255,255,.7);border-radius:50%;pointer-events:none}
 .liveness-instruction{text-align:center;padding:12px;background:#e3f2fd;border-radius:var(--radius);margin-bottom:12px;font-weight:500;font-size:14px}
 .liveness-instruction.err{background:#f8d7da;color:#721c24}
 .liveness-instruction.success{background:#d4edda;color:#155724}
+.liveness-progress{display:flex;gap:8px;justify-content:center;margin:12px 0}
+.liveness-step{width:40px;height:6px;background:#e0e0e0;border-radius:3px;transition:background .3s}
+.liveness-step.active{background:var(--primary)}
+.liveness-step.done{background:var(--success)}
+.debug-info{font-size:11px;color:var(--gray);text-align:center;margin-top:8px;font-family:monospace;word-break:break-all}
+.camera-debug{position:absolute;top:8px;left:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;padding:8px;border-radius:8px;font-size:11px;font-family:monospace;z-index:10;word-break:break-all}
 .table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th,td{padding:10px 8px;text-align:left;border-bottom:1px solid #eee}
@@ -91,32 +92,6 @@ th{background:#f8f9fa;font-weight:600}
 .spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.3);border-top:4px solid #fff;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .mode-badge{position:fixed;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:4px 8px;border-radius:10px;z-index:99998}
-
-/* Progress indicator untuk liveness */
-.liveness-progress{
-  display:flex;
-  gap:8px;
-  justify-content:center;
-  margin:12px 0;
-}
-.liveness-step{
-  width:40px;
-  height:6px;
-  background:#e0e0e0;
-  border-radius:3px;
-  transition:background .3s;
-}
-.liveness-step.active{background:var(--primary)}
-.liveness-step.done{background:var(--success)}
-
-/* Debug info */
-.debug-info{
-  font-size:11px;
-  color:var(--gray);
-  text-align:center;
-  margin-top:8px;
-  font-family:monospace;
-}
 </style>
 </head>
 <body>
@@ -262,7 +237,7 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 </div>
 
-<!-- MODAL KAMERA -->
+<!-- MODAL KAMERA ABSENSI -->
 <div id="cameraModal" class="modal">
 <div class="modal-content">
 <div class="modal-header"><h3 id="cameraTitle">Verifikasi Wajah</h3><button type="button" class="icon-btn" onclick="closeCamera()">✕</button></div>
@@ -273,10 +248,10 @@ th{background:#f8f9fa;font-weight:600}
 <div class="liveness-step" id="step2"></div>
 <div class="liveness-step" id="step3"></div>
 </div>
-<div class="camera-container"><video id="cameraVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
+<div class="camera-container"><div class="camera-debug" id="camDebug"></div><video id="cameraVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
 <div class="text-center" id="livenessStatus" style="margin-bottom:16px;color:var(--gray);font-size:14px"></div>
 <div class="debug-info" id="debugInfo"></div>
-<button type="button" id="retryCameraBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
+<button type="button" id="retryCameraBtn" class="btn btn-warning btn-block" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
 <button type="button" id="verifyBtn" class="btn btn-success btn-block" disabled onclick="handleVerify()">✅ Verifikasi & Absen</button>
 </div>
 </div>
@@ -301,15 +276,27 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 </div>
 
-<!-- MODAL FACE ID -->
+<!-- MODAL REGISTRASI FACE ID (DROPDOWN KARYAWAN) -->
 <div id="faceModal" class="modal">
 <div class="modal-content">
 <div class="modal-header"><h3>Registrasi Face ID</h3><button type="button" class="icon-btn" onclick="closeFaceRegistration()">✕</button></div>
 <div class="modal-body">
-<div class="form-group"><label class="form-label">NIK Karyawan</label><input type="text" id="faceNik" class="form-control" placeholder="Contoh: ST 260505"></div>
-<div class="camera-container"><video id="faceVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
-<div id="faceStatus" class="text-center" style="margin-bottom:16px;font-size:14px;color:var(--gray)"></div>
-<button type="button" id="retryFaceBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
+<div class="form-group">
+<label class="form-label">Pilih Karyawan (Belum Punya Face ID)</label>
+<select id="faceNikSelect" class="form-control" onchange="onFaceEmployeeChange()">
+<option value="">Memuat data karyawan...</option>
+</select>
+</div>
+<div id="faceSelectedInfo" class="hidden" style="background:#e3f2fd;padding:12px;border-radius:8px;margin-bottom:12px;font-size:13px"></div>
+<div class="liveness-progress">
+<div class="liveness-step" id="fstep1"></div>
+<div class="liveness-step" id="fstep2"></div>
+<div class="liveness-step" id="fstep3"></div>
+</div>
+<div class="camera-container"><div class="camera-debug" id="faceCamDebug"></div><video id="faceVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
+<div class="text-center" id="faceStatus" style="margin-bottom:16px;font-size:14px;color:var(--gray)"></div>
+<div class="debug-info" id="faceDebugInfo"></div>
+<button type="button" id="retryFaceBtn" class="btn btn-warning btn-block" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
 <button type="button" id="faceCaptureBtn" class="btn btn-success btn-block" disabled onclick="captureAndSaveFace()">📷 Simpan Face ID</button>
 </div>
 </div>
@@ -318,13 +305,9 @@ th{background:#f8f9fa;font-weight:600}
 <div id="toast" class="toast"></div>
 
 <script>
-/* ================================================================
-   v4.5 - KONFIGURASI WAJIB
-   GANTI API_URL DENGAN URL /exec DEPLOYMENT ANDA
-   ================================================================ */
+/* ================= KONFIGURASI WAJIB ================= */
 var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
-var APP_VERSION='4.5';
-
+var APP_VERSION='4.6';
 var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
 
 var currentUser=null,currentPosition=null,currentStatus=null,masterCuti=[],currentAbsensiType='MASUK';
@@ -335,52 +318,27 @@ var lastCameraError='';
 var MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 var FACE_API_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
 
-/* ================================================================
-   HISTORY MANAGEMENT - BACK BUTTON HP
-   ================================================================ */
-var screenHistory = ['login']; // Stack untuk navigasi
-
-function navigateTo(screenName) {
-  // Push ke history stack
-  screenHistory.push(screenName);
-  history.pushState({screen: screenName}, '', '#' + screenName);
-  
-  // Tampilkan screen
-  showScreen(screenName);
-  
-  // Load data untuk screen tertentu
-  if (screenName === 'riwayat') loadRiwayat();
-  else if (screenName === 'cuti') loadMasterCuti();
-  else if (screenName === 'riwayatCuti') loadRiwayatCuti();
-  else if (screenName === 'approval') loadApprovals();
-  else if (screenName === 'dashboard') loadDashboard();
-  else if (screenName === 'dataKaryawan') loadDataKaryawan();
+/* ================= HISTORY / BACK BUTTON HP ================= */
+var screenHistory=['login'];
+function navigateTo(name){
+  screenHistory.push(name);
+  history.pushState({screen:name},'','#'+name);
+  showScreen(name);
+  if(name==='riwayat')loadRiwayat();
+  else if(name==='cuti')loadMasterCuti();
+  else if(name==='riwayatCuti')loadRiwayatCuti();
+  else if(name==='approval')loadApprovals();
+  else if(name==='dashboard')loadDashboard();
+  else if(name==='dataKaryawan')loadDataKaryawan();
 }
-
-function goBack() {
-  // Pop dari history stack
-  if (screenHistory.length > 1) {
-    screenHistory.pop(); // Hapus current
-    var prevScreen = screenHistory[screenHistory.length - 1];
-    
-    // Kembali ke screen sebelumnya
-    history.back();
-    showScreen(prevScreen);
-  }
-}
-
-// Handle tombol back HP
-window.addEventListener('popstate', function(e) {
-  if (screenHistory.length > 1) {
+window.addEventListener('popstate',function(){
+  if(screenHistory.length>1){
     screenHistory.pop();
-    var prevScreen = screenHistory[screenHistory.length - 1];
-    showScreen(prevScreen);
+    showScreen(screenHistory[screenHistory.length-1]);
   }
 });
 
-/* ================================================================
-   callServer: google.script.run ATAU fetch
-   ================================================================ */
+/* ================= callServer ================= */
 function callServer(fn,args,onOk,onFail,timeoutMs){
   var ms=timeoutMs||30000,done=false;
   var timer=setTimeout(function(){if(!done){done=true;onFail({message:'Server tidak merespons (>'+Math.round(ms/1000)+' dtk). Coba lagi.'})}},ms);
@@ -397,25 +355,22 @@ function callServer(fn,args,onOk,onFail,timeoutMs){
   }
 }
 function retryHtml(fn){return '<br><button type="button" class="btn btn-outline btn-sm" style="margin-top:10px" onclick="'+fn+'">🔄 Coba Lagi</button>'}
+function getDebugEl(){return document.getElementById(livenessMode==='attendance'?'debugInfo':'faceDebugInfo')}
+function getCamDebugEl(){return document.getElementById(livenessMode==='attendance'?'camDebug':'faceCamDebug')}
 
 /* ================= INIT ================= */
 document.addEventListener('DOMContentLoaded',function(){
   var ls=document.getElementById('loadingScreen');if(ls)ls.style.display='none';
   var mb=document.getElementById('modeBadge');
   if(mb)mb.textContent=IS_STATIC?'MODE MOBILE/STATIS':'MODE APPS SCRIPT';
-
-  // Initialize history state
-  history.replaceState({screen: 'login'}, '', '#login');
-
+  history.replaceState({screen:'login'},'','#login');
   var u=loadSession();
   if(u){
     currentUser=u;
-    screenHistory = ['login', 'main'];
-    history.replaceState({screen: 'main'}, '', '#main');
+    screenHistory=['login','main'];
+    history.replaceState({screen:'main'},'','#main');
     try{enterMainScreen()}catch(e){clearSession();showScreen('login')}
-  }
-  else showScreen('login');
-
+  }else showScreen('login');
   var lp=document.getElementById('loginPin');
   var ln=document.getElementById('loginNik');
   if(lp)lp.addEventListener('keypress',function(e){if(e.key==='Enter')doLogin()});
@@ -423,7 +378,6 @@ document.addEventListener('DOMContentLoaded',function(){
   getCurrentLocation();
   checkAppVersion();
 });
-
 function checkAppVersion(){
   callServer('getAppVersion',[],function(v){
     if(v&&v!==APP_VERSION){
@@ -435,7 +389,6 @@ function checkAppVersion(){
     }else{try{sessionStorage.removeItem('absensiReloaded')}catch(e){}}
   },function(){});
 }
-
 function loadSession(){
   try{
     var raw=localStorage.getItem('absensiUser');if(!raw)return null;
@@ -450,8 +403,7 @@ function clearSession(){try{localStorage.removeItem('absensiUser')}catch(e){}}
 function showScreen(n){
   var s=document.querySelectorAll('.screen');
   for(var i=0;i<s.length;i++)s[i].classList.remove('active');
-  var t=document.getElementById(n+'Screen');
-  if(t)t.classList.add('active');
+  var t=document.getElementById(n+'Screen');if(t)t.classList.add('active');
   window.scrollTo(0,0);
 }
 function showToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3500)}
@@ -469,8 +421,8 @@ function doLogin(){
       currentUser={nik:res.user?res.user.nik:res.employee.nik,nama:res.user?res.user.nama:res.employee.nama,role:res.role,employee:res.employee};
       try{localStorage.setItem('absensiUser',JSON.stringify(currentUser))}catch(e){}
       document.getElementById('loginError').textContent='';
-      screenHistory = ['login', 'main'];
-      history.replaceState({screen: 'main'}, '', '#main');
+      screenHistory=['login','main'];
+      history.replaceState({screen:'main'},'','#main');
       enterMainScreen();
     }else document.getElementById('loginError').textContent=res.message||'Login gagal.';
   },function(err){btn.disabled=false;btn.innerHTML='Masuk';document.getElementById('loginError').textContent=err.message||'Terjadi kesalahan.'});
@@ -518,73 +470,115 @@ function getCurrentLocation(){
     {enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 
-/* ================= KAMERA & LIVENESS - PERBAIKAN FUNDAMENTAL ================= */
+/* ================= KAMERA (ROBUST) ================= */
 function requestCamera(video){
   return new Promise(function(resolve){
+    var cd=getCamDebugEl();
+    video.srcObject=null;
+    try{video.pause()}catch(e){}
     var md=navigator.mediaDevices;
-    if(!md||!md.getUserMedia){lastCameraError='Browser tidak mendukung kamera. Gunakan Chrome terbaru.';resolve(false);return}
+    if(!md||!md.getUserMedia){lastCameraError='Browser tidak mendukung kamera.';if(cd)cd.textContent='❌ '+lastCameraError;resolve(false);return}
+    if(cd)cd.textContent='📷 Meminta izin kamera...';
     md.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false})
       .then(function(stream){
+        if(cd)cd.textContent='✅ Izin diberikan. Menghubungkan stream...';
         cameraStream=stream;
+        var tracks=stream.getVideoTracks();
+        if(tracks.length===0){lastCameraError='Stream tanpa video track.';if(cd)cd.textContent='❌ '+lastCameraError;resolve(false);return}
+        var track=tracks[0];
+        var st=track.getSettings();
+        if(cd)cd.textContent='📹 '+(st.width||'?')+'x'+(st.height||'?');
         video.srcObject=stream;
-        video.play().then(function(){resolve(true)}).catch(function(){resolve(true)});
+        video.onloadedmetadata=function(){
+          if(cd)cd.textContent='✅ Metadata loaded. Memutar...';
+          var p=video.play();
+          if(p!==undefined){
+            p.then(function(){if(cd)cd.textContent='✅ Video berjalan!';resolve(true)})
+             .catch(function(err){
+               if(cd)cd.textContent='⚠️ Autoplay blocked. Retry...';
+               setTimeout(function(){
+                 video.play().then(function(){if(cd)cd.textContent='✅ Video diputar (retry)';resolve(true)})
+                 .catch(function(){lastCameraError='Autoplay diblokir. Klik area kamera.';if(cd)cd.textContent='❌ '+lastCameraError;
+                   video.onclick=function(){video.play().then(function(){video.onclick=null;if(cd)cd.textContent='✅ Video diputar manual';resolve(true)})};
+                   resolve(false);});
+               },100);
+             });
+          }else{
+            setTimeout(function(){
+              if(video.paused){lastCameraError='Video gagal diputar.';if(cd)cd.textContent='❌ '+lastCameraError;resolve(false)}
+              else{if(cd)cd.textContent='✅ Video berjalan';resolve(true)}
+            },500);
+          }
+        };
+        video.onerror=function(e){lastCameraError='Video error.';if(cd)cd.textContent='❌ '+lastCameraError;resolve(false)};
       })
-      .catch(function(err){lastCameraError=mapCameraError(err);resolve(false)});
+      .catch(function(err){lastCameraError=mapCameraError(err);if(cd)cd.textContent='❌ '+lastCameraError;resolve(false)});
   });
 }
 function mapCameraError(err){
   var n=err&&err.name;
-  if(n==='NotAllowedError'||n==='PermissionDeniedError')return 'IZIN KAMERA DITOLAK. Klik ikon gembok/kamera di address bar → Izinkan → 🔄 Coba Lagi.';
-  if(n==='NotFoundError'||n==='DevicesNotFoundError')return 'Kamera tidak ditemukan di perangkat ini.';
+  if(n==='NotAllowedError'||n==='PermissionDeniedError')return 'IZIN KAMERA DITOLAK. Klik ikon gembok di address bar → Izinkan → 🔄 Coba Lagi.';
+  if(n==='NotFoundError'||n==='DevicesNotFoundError')return 'Kamera tidak ditemukan.';
   if(n==='NotReadableError'||n==='TrackStartError')return 'Kamera dipakai aplikasi lain. Tutup lalu 🔄 Coba Lagi.';
-  if(n==='SecurityError')return 'Kamera diblokir kebijakan browser. Buka URL di tab baru.';
+  if(n==='SecurityError')return 'Kamera diblokir browser. Buka di tab baru.';
   return 'Gagal akses kamera: '+(err&&err.message?err.message:err);
+}
+function startVideoMonitor(video){
+  var cd=getCamDebugEl();
+  var count=0;
+  var m=setInterval(function(){
+    count++;
+    if(count>10){clearInterval(m);return}
+    if(video.srcObject){
+      var w=video.videoWidth,h=video.videoHeight,paused=video.paused;
+      if(cd){
+        var s='📹 ';
+        if(w>0&&h>0)s+=w+'x'+h+' | ';
+        s+=paused?'⏸️ PAUSED':'▶️ PLAYING';
+        cd.textContent=s;
+      }
+      if(count===3&&paused&&video.srcObject){video.play().catch(function(){})}
+    }else{if(cd)cd.textContent='❌ Tidak ada stream';clearInterval(m)}
+  },1000);
 }
 function showFlowError(msg){
   var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
   if(ie){ie.textContent='❌ '+msg;ie.classList.add('err')}
-  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');
-  if(rb)rb.classList.remove('hidden');
   stopCamera();
 }
 function retryCurrentFlow(){
-  var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
-  var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');if(ie)ie.classList.remove('err');
   var v=document.getElementById(livenessMode==='attendance'?'cameraVideo':'faceVideo');
   startLivenessFlow(v,livenessMode);
 }
-
 function updateLivenessProgress(){
-  var step1=document.getElementById('step1');
-  var step2=document.getElementById('step2');
-  var step3=document.getElementById('step3');
-  
-  step1.className='liveness-step' + (livenessStep>0?' done':'') + (livenessStep===0?' active':'');
-  step2.className='liveness-step' + (livenessStep>1?' done':'') + (livenessStep===1?' active':'');
-  step3.className='liveness-step' + (livenessStep>2?' done':'') + (livenessStep===2?' active':'');
+  var p=livenessMode==='attendance'?['step1','step2','step3']:['fstep1','fstep2','fstep3'];
+  for(var i=0;i<3;i++){
+    var el=document.getElementById(p[i]);
+    el.className='liveness-step'+(livenessStep>i?' done':'')+(livenessStep===i?' active':'');
+  }
 }
-
 async function startLivenessFlow(video,mode){
   videoElement=video;livenessMode=mode;
   blinkCount=0;livenessStep=0;wasEyesClosed=false;
   faceData.descriptor=null;faceData.photo=null;lastCameraError='';
-  var rb=document.getElementById(mode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
   document.getElementById('verifyBtn').disabled=true;
   document.getElementById('faceCaptureBtn').disabled=true;
   var ie=document.getElementById(mode==='attendance'?'livenessInstruction':'faceStatus');
   if(ie){ie.classList.remove('err');ie.textContent='📷 Meminta izin kamera...'}
-  
   updateLivenessProgress();
-  
   var camOk=await requestCamera(video);
-  if(!camOk){showFlowError(lastCameraError);return}
+  if(!camOk){
+    var ie2=document.getElementById(mode==='attendance'?'livenessInstruction':'faceStatus');
+    if(ie2){ie2.classList.add('err');ie2.innerHTML='❌ '+lastCameraError+'<br><small>Klik "🔄 Coba Lagi"</small>'}
+    return;
+  }
+  startVideoMonitor(video);
   if(ie)ie.textContent='⏳ Memuat model AI (sekali saja)...';
   var ok=await loadFaceModels();
   if(!ok){showFlowError('Model AI gagal dimuat. Periksa koneksi, lalu 🔄 Coba Lagi.');return}
   if(ie){ie.classList.remove('err');ie.textContent='Posisikan wajah dalam lingkaran. Kedipkan mata 2x.'}
   detectionLoop=requestAnimationFrame(detectLiveness);
 }
-
 function loadFaceApiScript(){
   return new Promise(function(resolve,reject){
     if(faceApiLoaded||typeof faceapi!=='undefined'){faceApiLoaded=true;resolve();return}
@@ -594,7 +588,6 @@ function loadFaceApiScript(){
     document.head.appendChild(s);
   });
 }
-
 async function loadFaceModels(){
   if(modelsLoaded)return true;
   try{
@@ -607,52 +600,34 @@ async function loadFaceModels(){
     modelsLoaded=true;return true;
   }catch(err){console.error(err);return false}
 }
-
 function preloadModelsInBackground(){
   var run=function(){loadFaceModels()};
   if(window.requestIdleCallback)requestIdleCallback(run,{timeout:8000});else setTimeout(run,3000);
 }
-
 function stopCamera(){
   if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop()});cameraStream=null}
   if(detectionLoop){cancelAnimationFrame(detectionLoop);detectionLoop=null}
 }
-
 async function detectLiveness(){
   if(!videoElement||videoElement.paused||videoElement.ended)return;
   try{
     var d=await faceapi.detectSingleFace(videoElement,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.4}))
       .withFaceLandmarks().withFaceDescriptor().withFaceExpressions();
     var se=document.getElementById(livenessMode==='attendance'?'livenessStatus':'faceStatus');
-    var debug=document.getElementById('debugInfo');
-    
+    var dbg=getDebugEl();
     if(!d){
       if(se)se.innerHTML='<span style="color:var(--warning)">⚠️ Wajah tidak terdeteksi</span>';
-      if(debug)debug.textContent='';
-      detectionLoop=requestAnimationFrame(detectLiveness);return
+      if(dbg)dbg.textContent='';
+      detectionLoop=requestAnimationFrame(detectLiveness);return;
     }
-    
-    // Debug info
-    if(debug){
-      debug.textContent='Face detected | Confidence: '+(d.detection.score*100).toFixed(1)+'%';
-    }
-    
+    if(dbg)dbg.textContent='Face: '+(d.detection.score*100).toFixed(0)+'%';
     if(livenessStep===0){
-      // STEP 1: Kedip mata
       var o=calcEye(d.landmarks);
-      if(debug)debug.textContent+=' | Eye: '+(o*100).toFixed(1)+'%';
-      
-      if(o<0.25&&!wasEyesClosed){
-        blinkCount++;
-        wasEyesClosed=true;
-        if(debug)debug.textContent+=' | BLINK!';
-      }else if(o>0.35){
-        wasEyesClosed=false;
-      }
-      
+      if(dbg)dbg.textContent+=' | Eye: '+(o*100).toFixed(0)+'%';
+      if(o<0.25&&!wasEyesClosed){blinkCount++;wasEyesClosed=true}
+      else if(o>0.35)wasEyesClosed=false;
       if(se)se.textContent='👁️ Kedipan: '+blinkCount+'/2';
       updateLivenessProgress();
-      
       if(blinkCount>=2){
         livenessStep=1;
         var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
@@ -660,13 +635,10 @@ async function detectLiveness(){
         updateLivenessProgress();
       }
     }else if(livenessStep===1){
-      // STEP 2: Senyum
       var h=d.expressions.happy;
-      if(debug)debug.textContent+=' | Smile: '+(h*100).toFixed(1)+'%';
-      
+      if(dbg)dbg.textContent+=' | Smile: '+(h*100).toFixed(0)+'%';
       if(se)se.textContent='😊 Senyum: '+Math.round(h*100)+'%';
       updateLivenessProgress();
-      
       if(h>0.5){
         livenessStep=2;
         faceData.descriptor=Array.from(d.descriptor);
@@ -679,29 +651,18 @@ async function detectLiveness(){
         stopCamera();return;
       }
     }
-  }catch(err){
-    console.error('Detection error:',err);
-    var debug=document.getElementById('debugInfo');
-    if(debug)debug.textContent='Error: '+err.message;
-  }
+  }catch(err){console.error(err);var dbg2=getDebugEl();if(dbg2)dbg2.textContent='Error: '+err.message}
   detectionLoop=requestAnimationFrame(detectLiveness);
 }
-
 function calcEye(lm){
-  // Eye Aspect Ratio (EAR) - lebih akurat
-  function ear(eye){
-    // Vertical distances
-    var v1=Math.hypot(eye[1].x-eye[5].x,eye[1].y-eye[5].y);
-    var v2=Math.hypot(eye[2].x-eye[4].x,eye[2].y-eye[4].y);
-    // Horizontal distance
-    var h=Math.hypot(eye[0].x-eye[3].x,eye[0].y-eye[3].y);
-    // EAR = (v1 + v2) / (2 * h)
+  function ear(e){
+    var v1=Math.hypot(e[1].x-e[5].x,e[1].y-e[5].y);
+    var v2=Math.hypot(e[2].x-e[4].x,e[2].y-e[4].y);
+    var h=Math.hypot(e[0].x-e[3].x,e[0].y-e[3].y);
     return h>0?(v1+v2)/(2*h):0;
   }
-  // Average of both eyes
   return(ear(lm.getLeftEye())+ear(lm.getRightEye()))/2;
 }
-
 function captureFrame(video){
   var maxW=640,w=video.videoWidth,h=video.videoHeight,s=Math.min(1,maxW/w);
   var c=document.createElement('canvas');
@@ -709,7 +670,6 @@ function captureFrame(video){
   c.getContext('2d').drawImage(video,0,0,c.width,c.height);
   return c.toDataURL('image/jpeg',0.7);
 }
-
 function openCamera(type){
   currentAbsensiType=type;
   if(!currentPosition){showToast('Menunggu GPS. Coba refresh lokasi.');getCurrentLocation();return}
@@ -725,19 +685,60 @@ function handleVerify(){
   callServer('simpanAbsensi',[p],function(res){btn.disabled=false;btn.innerHTML='✅ Verifikasi & Absen';closeCamera();showToast(res.message);loadStatusHariIni()},
   function(err){btn.disabled=false;btn.innerHTML='✅ Verifikasi & Absen';showToast('Gagal: '+err.message)});
 }
+
+/* ================= REGISTRASI FACE ID (DROPDOWN) ================= */
 function openFaceRegistrationModal(){
   document.getElementById('faceModal').classList.add('active');
-  document.getElementById('faceNik').value='';
+  loadUnregisteredEmployees();
   startLivenessFlow(document.getElementById('faceVideo'),'registration');
+}
+function loadUnregisteredEmployees(){
+  var sel=document.getElementById('faceNikSelect');
+  sel.innerHTML='<option value="">Memuat data karyawan...</option>';
+  callServer('getKaryawanSummary',[currentUser.role],function(res){
+    if(!res||res.ok===false){sel.innerHTML='<option value="">Gagal memuat data</option>';return}
+    var list=res.list||[];
+    var unreg=list.filter(function(x){return x.face==='❌'});
+    sel.innerHTML='<option value="">-- Pilih karyawan --</option>';
+    if(unreg.length===0){
+      sel.innerHTML='<option value="">Semua karyawan sudah punya Face ID ✅</option>';
+      return;
+    }
+    for(var i=0;i<unreg.length;i++){
+      var o=document.createElement('option');
+      o.value=unreg[i].nik;
+      o.textContent=unreg[i].nama+' ('+unreg[i].nik+')';
+      o.setAttribute('data-nama',unreg[i].nama);
+      o.setAttribute('data-branch',unreg[i].branch);
+      sel.appendChild(o);
+    }
+  },function(err){sel.innerHTML='<option value="">Gagal memuat data</option>'});
+}
+function onFaceEmployeeChange(){
+  var sel=document.getElementById('faceNikSelect');
+  var info=document.getElementById('faceSelectedInfo');
+  if(!sel.value){info.classList.add('hidden');return}
+  var opt=sel.selectedOptions[0];
+  info.classList.remove('hidden');
+  info.innerHTML='👤 <strong>'+opt.getAttribute('data-nama')+'</strong><br>🏢 '+opt.getAttribute('data-branch')+' | NIK: '+sel.value;
 }
 function closeFaceRegistration(){stopCamera();closeModal('faceModal')}
 function captureAndSaveFace(){
-  var nik=document.getElementById('faceNik').value.trim();
-  if(!nik){showToast('NIK wajib diisi.');return}
+  var sel=document.getElementById('faceNikSelect');
+  var nik=sel?sel.value:'';
+  if(!nik){showToast('Pilih karyawan terlebih dahulu.');return}
   if(!faceData.descriptor){showToast('Wajah belum terverifikasi.');return}
   var btn=document.getElementById('faceCaptureBtn');btn.disabled=true;btn.innerHTML='⏳ Menyimpan...';
   callServer('saveFaceDescriptor',[currentUser.role,nik,faceData.descriptor],
-    function(res){btn.disabled=false;btn.innerHTML='📷 Simpan Face ID';showToast(res.message);closeFaceRegistration()},
+    function(res){
+      btn.disabled=false;btn.innerHTML='📷 Simpan Face ID';
+      showToast(res.message);
+      loadUnregisteredEmployees(); // refresh dropdown
+      sel.value='';
+      document.getElementById('faceSelectedInfo').classList.add('hidden');
+      faceData.descriptor=null;faceData.photo=null;
+      document.getElementById('faceCaptureBtn').disabled=true;
+    },
     function(err){btn.disabled=false;btn.innerHTML='📷 Simpan Face ID';showToast('Gagal: '+err.message)});
 }
 
