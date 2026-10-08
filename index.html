@@ -305,7 +305,7 @@ th{background:#f8f9fa;font-weight:600}
 <script>
 /* ================= KONFIGURASI ================= */
 var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
-var APP_VERSION='4.9';
+var APP_VERSION='4.10';
 var LIVENESS_MODE='challenge';
 var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
 
@@ -324,6 +324,38 @@ var MP_WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VER+'/was
 var MP_MODEL='https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 var MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 var FACE_API_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
+
+/* ================= UTIL ================= */
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function isCanvasBlack(c){
+  try{
+    var s=document.createElement('canvas');s.width=16;s.height=16;
+    var x=s.getContext('2d');x.drawImage(c,0,0,16,16);
+    var d=x.getImageData(0,0,16,16).data;var sum=0;
+    for(var i=0;i<d.length;i+=4){sum+=(d[i]+d[i+1]+d[i+2])/3}
+    return (sum/(d.length/4))<8;
+  }catch(e){return false}
+}
+/* Kotak wajah dari landmark MediaPipe (diperlebar 35-45%) */
+function computeFaceBox(lm,w,h){
+  var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  for(var i=0;i<lm.length;i++){
+    var p=lm[i];
+    if(p.x<minX)minX=p.x;if(p.x>maxX)maxX=p.x;
+    if(p.y<minY)minY=p.y;if(p.y>maxY)maxY=p.y;
+  }
+  var bw=maxX-minX,bh=maxY-minY;
+  minX-=bw*0.35;maxX+=bw*0.35;minY-=bh*0.35;maxY+=bh*0.45;
+  minX=Math.max(0,minX);minY=Math.max(0,minY);
+  maxX=Math.min(w,maxX);maxY=Math.min(h,maxY);
+  return {x:minX,y:minY,w:maxX-minX,h:maxY-minY};
+}
+function cropCanvas(src,box){
+  var size=416;
+  var c=document.createElement('canvas');c.width=size;c.height=size;
+  c.getContext('2d').drawImage(src,box.x,box.y,box.w,box.h,0,0,size,size);
+  return c;
+}
 
 /* ================= HISTORY / BACK BUTTON ================= */
 var screenHistory=['login'];
@@ -539,10 +571,10 @@ async function ensureDescriptorNets(){
     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)]);
   faNetsReady=true;return true;
 }
-/* v4.9: 3 tingkat konfigurasi + fallback wajah terbesar */
-async function computeDescriptorOnce(canvas,attempt){
+async function computeDescriptorOnce(canvas,attempt,dbg){
+  if(dbg)dbg.textContent='⏳ a'+attempt+': memuat model sidik...';
   await ensureDescriptorNets();
-  var cfg=attempt===1?{in:416,th:0.35}:attempt===2?{in:320,th:0.25}:{in:512,th:0.2};
+  var cfg=attempt===1?{in:416,th:0.3}:attempt===2?{in:320,th:0.2}:{in:512,th:0.15};
   var opt=new faceapi.TinyFaceDetectorOptions({inputSize:cfg.in,scoreThreshold:cfg.th});
   var det=await faceapi.detectSingleFace(canvas,opt).withFaceDescriptor();
   if(!det){
@@ -552,6 +584,7 @@ async function computeDescriptorOnce(canvas,attempt){
       det=all[0];
     }
   }
+  if(!det&&dbg)dbg.textContent='a'+attempt+': wajah tidak ditemukan ('+cfg.in+'/'+cfg.th+')';
   return det?Array.from(det.descriptor):null;
 }
 
@@ -646,6 +679,9 @@ async function startLivenessFlow(video,mode){
   var mpOk=await initMediaPipe();
   if(!mpOk){showFlowError('Engine AI gagal dimuat. Periksa koneksi, lalu 🔄 Coba Lagi.');return}
 
+  /* v4.10: preload model sidik SELAMA tantangan berlangsung */
+  ensureDescriptorNets().catch(function(e){console.warn('preload nets:',e)});
+
   if(ie){
     ie.classList.remove('err');
     ie.textContent=(LIVENESS_MODE==='challenge')
@@ -702,7 +738,7 @@ async function detectLivenessMP(){
       stableFrames++;
       if(se)se.textContent='👁️ Wajah terkunci... '+Math.min(100,Math.round(stableFrames/25*100))+'%';
       if(dbg)dbg.textContent='EAR:'+Math.round(ear*100)+' | base:'+Math.round(baseEAR*100);
-      if(stableFrames>=25){livenessStep=2;updateLivenessProgress();await finalizeCapture();return}
+      if(stableFrames>=25){livenessStep=2;updateLivenessProgress();await finalizeCapture(lm);return}
       detectionLoop=requestAnimationFrame(detectLivenessMP);return;
     }
 
@@ -729,40 +765,78 @@ async function detectLivenessMP(){
       if(smile>thSmileOn)smileHold++;else smileHold=Math.max(0,smileHold-1);
       if(se)se.textContent='😊 Senyum... '+Math.min(100,Math.round(smileHold/6*100))+'%';
       if(dbg)dbg.textContent='smile:'+smile.toFixed(2)+' (th '+thSmileOn.toFixed(2)+') | hold:'+smileHold;
-      if(smileHold>=6){livenessStep=2;updateLivenessProgress();await finalizeCapture();return}
+      if(smileHold>=6){livenessStep=2;updateLivenessProgress();await finalizeCapture(lm);return}
     }
   }catch(err){console.error(err);var d=getDebugEl();if(d)d.textContent='Error: '+err.message}
   detectionLoop=requestAnimationFrame(detectLivenessMP);
 }
 
-/* v4.9: TANGKAP FRAME DULU, baru matikan kamera + 3x percobaan + fallback CPU */
-async function finalizeCapture(){
-  stopCamera();
-  var ie=getInstrEl();
+/* ================================================================
+   v4.10 - FINALIZE CAPTURE (PERBAIKAN TOTAL)
+   1) Frame ditangkap SAAT KAMERA HIDUP + cek frame hitam + retry
+   2) Crop wajah via landmark MediaPipe → face-api jauh lebih akurat
+   3) 3 percobaan + fallback CPU + fallback frame penuh
+   ================================================================ */
+async function finalizeCapture(lm){
+  var ie=getInstrEl(),dbg=getDebugEl();
   if(ie){ie.classList.add('success');ie.innerHTML='✅ Liveness OK! Menghitung sidik wajah...'}
   try{
-    var canvas=captureFrameCanvas(videoElement);
+    /* 1) Tangkap saat kamera masih hidup */
+    var full=captureFrameCanvas(videoElement);
+    for(var t=0;t<6&&(!full||full.width<50||isCanvasBlack(full));t++){
+      await sleep(250);
+      full=captureFrameCanvas(videoElement);
+    }
+    stopCamera();
+
+    if(!full||full.width<50||isCanvasBlack(full)){
+      showFlowError('Frame kamera kosong/hitam. Perbaiki cahaya, lalu 🔄 Coba Lagi.');
+      return;
+    }
+
+    /* 2) Crop wajah dari landmark */
+    var work=full;
+    if(lm&&lm.length){
+      var box=computeFaceBox(lm,full.width,full.height);
+      if(box.w>40&&box.h>40)work=cropCanvas(full,box);
+    }
+    if(dbg)dbg.textContent='🖼️ '+full.width+'x'+full.height+' → crop '+work.width+'x'+work.height;
+
+    /* 3) Hitung descriptor dengan 3 percobaan */
     var desc=null;
     for(var attempt=1;attempt<=3&&!desc;attempt++){
       try{
-        desc=await computeDescriptorOnce(canvas,attempt);
+        desc=await computeDescriptorOnce(work,attempt,dbg);
       }catch(e){
-        console.error('Descriptor attempt '+attempt+' gagal:',e);
+        console.error('Descriptor attempt '+attempt+':',e);
+        if(dbg)dbg.textContent='❌ a'+attempt+': '+(e&&e.message?e.message:e);
         if(attempt===1){
           try{await faceapi.tf.setBackend('cpu');await faceapi.tf.ready()}catch(e2){}
         }
       }
     }
-    if(!desc){showFlowError('Sidik wajah tidak terbaca. Perbaiki cahaya, penuhi lingkaran, lalu 🔄 Coba Lagi.');return}
+    /* Fallback terakhir: frame penuh */
+    if(!desc){
+      try{desc=await computeDescriptorOnce(full,3,dbg)}catch(e){console.error(e)}
+    }
+
+    if(!desc){
+      showFlowError('Sidik wajah tidak terbaca. Dekatkan wajah, perbaiki cahaya, lalu 🔄 Coba Lagi.');
+      return;
+    }
+
     faceData.descriptor=desc;
-    faceData.photo=canvas.toDataURL('image/jpeg',0.7);
+    faceData.photo=full.toDataURL('image/jpeg',0.7);
     if(ie)ie.innerHTML='✅ Verifikasi berhasil!';
+    if(dbg)dbg.textContent='✅ Sidik wajah 128-dimensi tersimpan';
     if(livenessMode==='attendance')document.getElementById('verifyBtn').disabled=false;
     else document.getElementById('faceCaptureBtn').disabled=false;
   }catch(err){console.error(err);showFlowError('Gagal menghitung sidik wajah. 🔄 Coba Lagi.')}
 }
 function captureFrameCanvas(video){
-  var maxW=640,w=video.videoWidth,h=video.videoHeight,s=Math.min(1,maxW/w);
+  var maxW=640,w=video.videoWidth,h=video.videoHeight;
+  if(!w||!h)return null;
+  var s=Math.min(1,maxW/w);
   var c=document.createElement('canvas');
   c.width=Math.round(w*s);c.height=Math.round(h*s);
   c.getContext('2d').drawImage(video,0,0,c.width,c.height);
