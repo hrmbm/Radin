@@ -92,6 +92,30 @@ th{background:#f8f9fa;font-weight:600}
 .spinner{width:36px;height:36px;border:4px solid rgba(255,255,255,.3);border-top:4px solid #fff;border-radius:50%;animation:spin 1s linear infinite}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .mode-badge{position:fixed;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:4px 8px;border-radius:10px;z-index:99998}
+
+/* ===== HR DESKTOP DASHBOARD ===== */
+.hr-dashboard-screen{background:#f4f7fb;min-height:100vh}
+.hr-shell{max-width:1440px;margin:0 auto;padding:24px 28px 40px}
+.hr-topbar{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:22px}
+.hr-title h1{margin:0;font-size:28px;color:#172033}.hr-title p{margin:5px 0 0;color:var(--gray);font-size:14px}
+.hr-actions{display:flex;gap:8px;flex-wrap:wrap}
+.hr-kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.hr-kpi{background:#fff;border:1px solid #e7ebf2;border-radius:14px;padding:18px;box-shadow:0 4px 16px rgba(20,40,80,.05);min-height:112px}
+.hr-kpi .kpi-label{font-size:12px;color:#687386;font-weight:600;text-transform:uppercase;letter-spacing:.3px}.hr-kpi .kpi-value{font-size:30px;font-weight:800;color:#172033;margin-top:8px}.hr-kpi .kpi-note{font-size:12px;color:#7b8798;margin-top:3px}
+.hr-kpi.primary{border-top:4px solid var(--primary)}.hr-kpi.success{border-top:4px solid var(--success)}.hr-kpi.warning{border-top:4px solid #f0ad4e}.hr-kpi.danger{border-top:4px solid var(--danger)}.hr-kpi.info{border-top:4px solid #17a2b8}
+.hr-grid-2{display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-bottom:18px}.hr-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-bottom:18px}
+.hr-panel{background:#fff;border:1px solid #e7ebf2;border-radius:14px;box-shadow:0 4px 16px rgba(20,40,80,.05);overflow:hidden}.hr-panel-head{padding:16px 18px;border-bottom:1px solid #edf0f4;display:flex;justify-content:space-between;align-items:center;gap:10px}.hr-panel-head h3{margin:0;font-size:16px;color:#172033}.hr-panel-body{padding:18px}
+.hr-progress{height:10px;background:#edf1f6;border-radius:8px;overflow:hidden}.hr-progress>div{height:100%;background:var(--primary);border-radius:8px;transition:width .3s}
+.hr-mini-list{display:flex;flex-direction:column;gap:10px}.hr-mini-item{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;background:#f8fafc;border-radius:10px;font-size:13px}.hr-mini-item strong{color:#172033}.hr-muted{color:#748094}
+.hr-status-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}.hr-status-box{padding:14px;border-radius:10px;background:#f8fafc;text-align:center}.hr-status-box .num{font-size:22px;font-weight:800}.hr-status-box .lbl{font-size:11px;color:#748094;margin-top:2px}
+.hr-table-wrap{overflow:auto;max-height:420px}.hr-table{width:100%;min-width:720px;border-collapse:collapse}.hr-table th{position:sticky;top:0;background:#f8fafc;z-index:1}.hr-table th,.hr-table td{padding:10px 12px;border-bottom:1px solid #edf0f4;font-size:12px}.hr-table td{background:#fff}.hr-table .name{font-weight:700;color:#172033}.hr-empty{padding:28px;text-align:center;color:#7b8798}
+.hr-location-card{border:1px solid #e7ebf2;border-radius:12px;padding:14px}.hr-location-card h4{margin:0 0 8px}.hr-location-meta{font-size:12px;color:#687386;line-height:1.6}.hr-location-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.hr-quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.hr-quick{border:1px solid #e7ebf2;background:#fff;border-radius:10px;padding:13px;text-align:left;cursor:pointer}.hr-quick:hover{border-color:var(--primary);background:#f8fbff}.hr-quick .qicon{font-size:20px}.hr-quick strong{display:block;margin-top:6px;font-size:13px}.hr-quick span{font-size:11px;color:#7b8798}
+.hr-section-tabs{display:flex;gap:8px;overflow:auto;margin-bottom:18px}.hr-tab{border:1px solid #dfe5ee;background:#fff;padding:9px 14px;border-radius:20px;cursor:pointer;font-size:13px;white-space:nowrap}.hr-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+.hr-only{display:none}
+@media(max-width:1100px){.hr-kpi-grid{grid-template-columns:repeat(3,1fr)}.hr-grid-2,.hr-grid-3{grid-template-columns:1fr}}
+@media(max-width:700px){.hr-shell{padding:16px}.hr-kpi-grid{grid-template-columns:1fr 1fr}.hr-topbar{align-items:flex-start;flex-direction:column}.hr-title h1{font-size:23px}}
+
 </style>
 <base target="_blank">
 </head>
@@ -162,7 +186,7 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 <div class="card hidden" id="menuAdmin">
 <h3 class="card-title">⚙️ Menu HR/Admin</h3>
-<button type="button" class="btn btn-info btn-block" onclick="navigateTo('dashboard')">📊 Dashboard</button>
+<button type="button" class="btn btn-info btn-block" onclick="navigateTo('dashboard')">📊 Dashboard HR</button>
 <button type="button" class="btn btn-outline btn-block" onclick="openAddEmployeeModal()">👤 Tambah Karyawan</button>
 <button type="button" class="btn btn-outline btn-block" onclick="openFaceManagementModal()">📷 Kelola Face ID</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('dataKaryawan')">👥 Data Karyawan</button>
@@ -217,18 +241,63 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 </div>
 
-<!-- DASHBOARD -->
-<div id="dashboardScreen" class="screen">
-<div class="container">
-<div class="app-header"><h1>📊 Dashboard</h1></div>
-<div class="stat-grid" id="dashboardStats"></div>
-<div class="card">
-<h3 class="card-title">Detail Kehadiran Hari Ini</h3>
-<div class="table-responsive">
-<table><thead><tr><th>NIK</th><th>Nama</th><th>In</th><th>Out</th><th>Status</th></tr></thead>
-<tbody id="dashboardBody"><tr><td colspan="5" class="text-center">Memuat...</td></tr></tbody></table>
-</div></div>
-<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
+<!-- HR DASHBOARD DESKTOP -->
+<div id="dashboardScreen" class="screen hr-dashboard-screen">
+<div class="hr-shell">
+  <div class="hr-topbar">
+    <div class="hr-title"><h1>📊 HR Dashboard</h1><p>Monitoring operasional HR • <span id="hrDashboardDate">Hari ini</span></p></div>
+    <div class="hr-actions">
+      <button class="btn btn-outline btn-sm" onclick="loadHrDashboard()">🔄 Refresh</button>
+      <button class="btn btn-info btn-sm" onclick="openAddEmployeeModal()">👤 Karyawan Baru</button>
+      <button class="btn btn-primary btn-sm" onclick="openFaceManagementModal()">📷 Face ID</button>
+      <button class="btn btn-outline btn-sm" onclick="navigateTo('main')">← Menu Utama</button>
+    </div>
+  </div>
+
+  <div class="hr-section-tabs">
+    <button class="hr-tab active" id="hrTabOverview" onclick="showHrTab('overview')">Ringkasan</button>
+    <button class="hr-tab" id="hrTabAttendance" onclick="showHrTab('attendance')">Kehadiran</button>
+    <button class="hr-tab" id="hrTabPeople" onclick="showHrTab('people')">Karyawan</button>
+    <button class="hr-tab" id="hrTabFace" onclick="showHrTab('face')">Face ID</button>
+    <button class="hr-tab" id="hrTabLocation" onclick="showHrTab('location')">Lokasi Kantor</button>
+  </div>
+
+  <div id="hrTabOverviewPanel">
+    <div class="hr-kpi-grid">
+      <div class="hr-kpi primary"><div class="kpi-label">Karyawan Aktif</div><div class="kpi-value" id="hrTotalAktif">-</div><div class="kpi-note">akun aktif</div></div>
+      <div class="hr-kpi success"><div class="kpi-label">Sudah Clock In</div><div class="kpi-value" id="hrClockIn">-</div><div class="kpi-note" id="hrClockInPct">-</div></div>
+      <div class="hr-kpi info"><div class="kpi-label">Sudah Clock Out</div><div class="kpi-value" id="hrClockOut">-</div><div class="kpi-note">hari ini</div></div>
+      <div class="hr-kpi warning"><div class="kpi-label">Belum Clock In</div><div class="kpi-value" id="hrBelumIn">-</div><div class="kpi-note">perlu monitoring</div></div>
+      <div class="hr-kpi danger"><div class="kpi-label">Pending Approval</div><div class="kpi-value" id="hrPending">-</div><div class="kpi-note">absensi + cuti</div></div>
+    </div>
+
+    <div class="hr-grid-2">
+      <div class="hr-panel"><div class="hr-panel-head"><h3>📈 Kehadiran Hari Ini</h3><span class="badge badge-info" id="hrAttendancePct">-</span></div><div class="hr-panel-body">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:7px"><span>Progress Clock In</span><strong id="hrProgressText">-</strong></div>
+        <div class="hr-progress"><div id="hrProgressBar" style="width:0%"></div></div>
+        <div class="hr-status-row" style="margin-top:16px"><div class="hr-status-box"><div class="num" id="hrHadirNum">-</div><div class="lbl">Hadir</div></div><div class="hr-status-box"><div class="num" id="hrBelumNum">-</div><div class="lbl">Belum Absen</div></div><div class="hr-status-box"><div class="num" id="hrOutNum">-</div><div class="lbl">Sudah Pulang</div></div></div>
+      </div></div>
+      <div class="hr-panel"><div class="hr-panel-head"><h3>⚡ Aksi Cepat</h3></div><div class="hr-panel-body"><div class="hr-quick-grid">
+        <button class="hr-quick" onclick="showHrTab('people')"><span class="qicon">👥</span><strong>Kelola Karyawan</strong><span>Tambah, edit, lihat data</span></button>
+        <button class="hr-quick" onclick="navigateTo('approval')"><span class="qicon">✅</span><strong>Approval</strong><span>Proses pengajuan pending</span></button>
+        <button class="hr-quick" onclick="openFaceManagementModal()"><span class="qicon">📷</span><strong>Face ID</strong><span>Aktifkan akses registrasi</span></button>
+        <button class="hr-quick" onclick="showHrTab('location')"><span class="qicon">📍</span><strong>Lokasi Kantor</strong><span>Atur titik & radius</span></button>
+      </div></div></div>
+    </div>
+
+    <div class="hr-grid-2">
+      <div class="hr-panel"><div class="hr-panel-head"><h3>🕘 Perlu Perhatian</h3><button class="btn btn-outline btn-sm" onclick="showHrTab('attendance')">Lihat Semua</button></div><div class="hr-panel-body"><div id="hrAttentionList" class="hr-mini-list"><div class="hr-empty">Memuat...</div></div></div></div>
+      <div class="hr-panel"><div class="hr-panel-head"><h3>📷 Status Face ID</h3><button class="btn btn-outline btn-sm" onclick="showHrTab('face')">Kelola</button></div><div class="hr-panel-body"><div id="hrFaceSummary"><div class="hr-empty">Memuat...</div></div></div></div>
+    </div>
+  </div>
+
+  <div id="hrTabAttendancePanel" class="hidden"><div class="hr-panel"><div class="hr-panel-head"><h3>🕘 Monitoring Kehadiran Hari Ini</h3><button class="btn btn-outline btn-sm" onclick="loadHrDashboard()">🔄 Refresh</button></div><div class="hr-table-wrap"><table class="hr-table"><thead><tr><th>NIK</th><th>Nama</th><th>Organisasi</th><th>Clock In</th><th>Clock Out</th><th>Status</th></tr></thead><tbody id="dashboardBody"><tr><td colspan="6" class="hr-empty">Memuat...</td></tr></tbody></table></div></div></div>
+
+  <div id="hrTabPeoplePanel" class="hidden"><div class="hr-panel"><div class="hr-panel-head"><h3>👥 Data Karyawan</h3><div><button class="btn btn-info btn-sm" onclick="openAddEmployeeModal()">＋ Tambah Karyawan</button> <button class="btn btn-outline btn-sm" onclick="loadHrPeople()">🔄 Refresh</button></div></div><div class="hr-panel-body"><div id="hrPeopleTable" class="hr-table-wrap">Memuat...</div></div></div></div>
+
+  <div id="hrTabFacePanel" class="hidden"><div class="hr-grid-2"><div class="hr-panel"><div class="hr-panel-head"><h3>📷 Registrasi Face ID</h3></div><div class="hr-panel-body"><div id="hrFaceProgressPanel"><div class="hr-empty">Memuat...</div></div><div style="margin-top:14px"><button class="btn btn-primary" onclick="grantMassFaceUi(60)">🚀 Aktifkan Sesi 60 Menit</button> <button class="btn btn-outline" onclick="openFaceManagementModal()">Kelola Personal</button></div></div></div><div class="hr-panel"><div class="hr-panel-head"><h3>🔐 Akses Personal</h3></div><div class="hr-panel-body"><p style="font-size:13px;color:#687386">Untuk Direksi atau karyawan yang diberikan akses satu per satu.</p><button class="btn btn-success btn-block" onclick="openFaceManagementModal()">Berikan Akses Registrasi</button></div></div></div></div>
+
+  <div id="hrTabLocationPanel" class="hidden"><div class="hr-panel"><div class="hr-panel-head"><h3>📍 Lokasi Kantor</h3><button class="btn btn-outline btn-sm" onclick="loadHrLocations()">🔄 Refresh</button></div><div class="hr-panel-body"><div id="hrLocationsGrid" class="hr-grid-3" style="margin-bottom:0">Memuat...</div></div></div></div>
 </div>
 </div>
 
@@ -331,6 +400,7 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 </div>
 
+<div id="locationEditorModal" class="modal"><div class="modal-content"><div class="modal-header"><h3>📍 Edit Lokasi Kantor</h3><button type="button" class="icon-btn" onclick="closeModal('locationEditorModal')">✕</button></div><div class="modal-body"><div class="form-group"><label class="form-label">Branch</label><input id="hrLocBranch" class="form-control" readonly></div><div class="form-group"><label class="form-label">Alamat</label><input id="hrLocAddress" class="form-control"></div><div class="form-group"><label class="form-label">Latitude</label><input id="hrLocLat" type="number" step="any" class="form-control"></div><div class="form-group"><label class="form-label">Longitude</label><input id="hrLocLng" type="number" step="any" class="form-control"></div><div class="form-group"><label class="form-label">Radius (meter)</label><input id="hrLocRadius" type="number" min="1" class="form-control"></div><div class="form-group"><label class="form-label">Akurasi GPS Maksimal (meter)</label><input id="hrLocAccuracy" type="number" min="1" class="form-control"></div><button class="btn btn-primary btn-block" onclick="saveHrLocation()">💾 Simpan Lokasi</button></div></div></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -1112,24 +1182,66 @@ function processApprovalGeneric(fn,id,action,alasan){
 
 /* ================= DASHBOARD ================= */
 function loadDashboard(){
-  var body=document.getElementById('dashboardBody');
-  body.innerHTML='<tr><td colspan="5" class="text-center">Memuat...</td></tr>';
-  callServer('getDashboardAdmin',[currentUser.role],function(data){
-    document.getElementById('dashboardStats').innerHTML=
-      '<div class="stat-card"><div class="value">'+data.totalKaryawan+'</div><div class="label">Total Karyawan</div></div>'+
-      '<div class="stat-card"><div class="value">'+data.karyawanAktif+'</div><div class="label">Karyawan Aktif</div></div>'+
-      '<div class="stat-card"><div class="value">'+data.clockInHariIni+'</div><div class="label">Clock In</div></div>'+
-      '<div class="stat-card"><div class="value">'+data.clockOutHariIni+'</div><div class="label">Clock Out</div></div>'+
-      '<div class="stat-card"><div class="value">'+data.belumClockIn+'</div><div class="label">Belum In</div></div>'+
-      '<div class="stat-card"><div class="value">'+data.persentase+'%</div><div class="label">Kehadiran</div></div>';
-    var html='';
-    for(var i=0;i<data.detail.length;i++){var d=data.detail[i];var bc=d.status==='HADIR'?'badge-success':d.status==='BELUM CLOCK OUT'?'badge-warning':'badge-danger';
-      html+='<tr><td>'+d.nik+'</td><td>'+d.nama+'</td><td>'+(d.clockIn||'-')+'</td><td>'+(d.clockOut||'-')+'</td><td><span class="badge '+bc+'">'+d.status+'</span></td></tr>'}
-    body.innerHTML=html||'<tr><td colspan="5" class="text-center">Tidak ada data</td></tr>';
-  },function(err){body.innerHTML='<tr><td colspan="5" class="text-center" style="color:var(--danger)">❌ '+(err&&err.message?err.message:'Gagal')+'</td></tr><tr><td colspan="5" class="text-center">'+retryHtml('loadDashboard()')+'</td></tr>'},20000);
+  if(currentUser && currentUser.role==='HR') loadHrDashboard();
+  else loadDashboardLegacy();
 }
+function loadDashboardLegacy(){
+  var body=document.getElementById('dashboardBody'); if(!body)return;
+  body.innerHTML='<tr><td colspan="6" class="text-center">Memuat...</td></tr>';
+  callServer('getDashboardAdmin',[currentUser.role],function(data){
+    body.innerHTML=(data.detail||[]).map(function(x){return '<tr><td>'+x.nik+'</td><td>'+x.nama+'</td><td>'+x.clockIn+'</td><td>'+x.clockOut+'</td><td>'+x.status+'</td></tr>'}).join('')||'<tr><td colspan="6" class="hr-empty">Tidak ada data</td></tr>';
+  },function(err){body.innerHTML='<tr><td colspan="6" class="text-center" style="color:var(--danger)">❌ '+(err&&err.message?err.message:'Gagal')+'</td></tr>'});
+}
+function showHrTab(tab){
+  if(!currentUser || currentUser.role!=='HR'){showToast('Dashboard HR hanya untuk HR.');return}
+  var tabs=['overview','attendance','people','face','location'];
+  tabs.forEach(function(x){
+    var p=document.getElementById('hrTab'+x.charAt(0).toUpperCase()+x.slice(1)+'Panel');
+    var b=document.getElementById('hrTab'+x.charAt(0).toUpperCase()+x.slice(1));
+    if(p)p.classList.toggle('hidden',x!==tab); if(b)b.classList.toggle('active',x===tab);
+  });
+  if(tab==='attendance') loadHrAttendance();
+  if(tab==='people') loadHrPeople();
+  if(tab==='face') loadHrFacePanel();
+  if(tab==='location') loadHrLocations();
+}
+function loadHrDashboard(){
+  if(!currentUser || currentUser.role!=='HR')return;
+  var de=document.getElementById('hrDashboardDate'); if(de)de.textContent=new Date().toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  callServer('getDashboardAdmin',[currentUser.role],function(d){
+    var a=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v};
+    a('hrTotalAktif',d.karyawanAktif||0);a('hrClockIn',d.clockInHariIni||0);a('hrClockOut',d.clockOutHariIni||0);a('hrBelumIn',d.belumClockIn||0);a('hrPending',0);
+    var pct=d.persentase||0;a('hrClockInPct',pct+'% dari karyawan aktif');a('hrAttendancePct',pct+'%');a('hrProgressText',(d.clockInHariIni||0)+' / '+(d.karyawanAktif||0));a('hrHadirNum',d.clockInHariIni||0);a('hrBelumNum',d.belumClockIn||0);a('hrOutNum',d.clockOutHariIni||0);
+    var bar=document.getElementById('hrProgressBar');if(bar)bar.style.width=Math.min(100,pct)+'%';
+    var body=document.getElementById('dashboardBody');if(body){body.innerHTML=(d.detail||[]).map(function(x){var badge=x.status==='HADIR'?'badge-success':(x.status==='BELUM CLOCK IN'?'badge-warning':'badge-info');return '<tr><td>'+escHtml(x.nik)+'</td><td class="name">'+escHtml(x.nama)+'</td><td>'+escHtml(x.organization||'-')+'</td><td>'+escHtml(x.clockIn||'—')+'</td><td>'+escHtml(x.clockOut||'—')+'</td><td><span class="badge '+badge+'">'+escHtml(x.status)+'</span></td></tr>'}).join('')||'<tr><td colspan="6" class="hr-empty">Tidak ada data</td></tr>'}
+    var attention=(d.detail||[]).filter(function(x){return x.status!=='HADIR'}).slice(0,6), ac=document.getElementById('hrAttentionList');
+    if(ac)ac.innerHTML=attention.length?attention.map(function(x){return '<div class="hr-mini-item"><span><strong>'+escHtml(x.nama)+'</strong><br><span class="hr-muted">'+escHtml(x.nik)+'</span></span><span class="badge '+(x.status==='BELUM CLOCK IN'?'badge-warning':'badge-info')+'">'+escHtml(x.status)+'</span></div>'}).join(''):'<div class="hr-empty">Semua karyawan sudah Clock In dan Clock Out. 🎉</div>';
+    loadHrPendingCount();loadHrFacePanel(true);loadHrLocations();
+  },function(err){showToast('Gagal memuat dashboard: '+(err.message||err));});
+}
+function loadHrPendingCount(){
+  var nik=currentUser.employee.nik;callServer('getPendingApprovalsFull',[currentUser.role,nik],function(r){var n=(r.total||0),e=document.getElementById('hrPending');if(e)e.textContent=n;var b=document.getElementById('approvalBadge');if(b){b.textContent=n;b.style.display=n?'inline-block':'none';}});
+}
+function loadHrAttendance(){loadHrDashboard()}
+function loadHrPeople(){
+  var c=document.getElementById('hrPeopleTable');if(!c)return;c.innerHTML='Memuat...';
+  callServer('getKaryawanSummary',[currentUser.role],function(r){var list=r.list||[];c.innerHTML='<table class="hr-table"><thead><tr><th>NIK</th><th>Nama</th><th>Branch</th><th>Organisasi</th><th>Posisi</th><th>Status</th><th>Face ID</th></tr></thead><tbody>'+list.map(function(x){return '<tr><td>'+escHtml(x.nik)+'</td><td class="name">'+escHtml(x.nama)+'</td><td>'+escHtml(x.branch||'-')+'</td><td>'+escHtml(x.org||'-')+'</td><td>'+escHtml(x.posisi||'-')+'</td><td>'+escHtml(x.akun||'-')+'</td><td>'+escHtml(x.face||'❌')+'</td></tr>'}).join('')+'</tbody></table>';},function(e){c.innerHTML='<div class="hr-empty">Gagal: '+escHtml(e.message||'Error')+'</div>'});
+}
+function loadHrFacePanel(){loadHrFacePanelData()}
+function loadHrFacePanelData(){
+  callServer('getFaceRegistrationProgress',[currentUser.role],function(r){var html='<div class="hr-status-row"><div class="hr-status-box"><div class="num">'+(r.total||0)+'</div><div class="lbl">Total</div></div><div class="hr-status-box"><div class="num">'+(r.registered||0)+'</div><div class="lbl">Sudah Terdaftar</div></div><div class="hr-status-box"><div class="num">'+(r.remaining||0)+'</div><div class="lbl">Belum</div></div></div><div style="margin-top:16px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span>Progress</span><strong>'+((r.total||0)?Math.round((r.registered||0)/(r.total||1)*100):0)+'%</strong></div><div class="hr-progress"><div style="width:'+((r.total||0)?Math.round((r.registered||0)/(r.total||1)*100):0)+'%"></div></div></div>';var a=document.getElementById('hrFaceProgressPanel');if(a)a.innerHTML=html;var b=document.getElementById('hrFaceSummary');if(b)b.innerHTML=html;},function(e){var a=document.getElementById('hrFaceProgressPanel');if(a)a.innerHTML='<div class="hr-empty">Gagal memuat Face ID.</div>'});
+}
+function loadHrLocations(){
+  var c=document.getElementById('hrLocationsGrid');if(!c)return;c.innerHTML='Memuat...';callServer('getLokasiKantor',[],function(list){if(!list||!list.length){c.innerHTML='<div class="hr-empty">Belum ada lokasi aktif.</div>';return}c.innerHTML=list.map(function(x,i){var id='hrLoc'+i;return '<div class="hr-location-card"><h4>📍 '+escHtml(x.branch)+'</h4><div class="hr-location-meta">'+escHtml(x.alamat||'-')+'<br>Koordinat: '+Number(x.latitude).toFixed(6)+', '+Number(x.longitude).toFixed(6)+'<br>Radius: '+x.radius+' m • Akurasi maksimal: '+x.maxAccuracy+' m</div><div class="hr-location-actions"><button class="btn btn-outline btn-sm" onclick="openLocationEditor('+JSON.stringify(x).replace(/"/g,'&quot;')+')">✏️ Edit</button><a class="btn btn-outline btn-sm" target="_blank" href="https://www.google.com/maps?q='+encodeURIComponent(x.latitude+','+x.longitude)+'">🗺️ Peta</a></div></div>'}).join('');},function(e){c.innerHTML='<div class="hr-empty">Gagal: '+escHtml(e.message||'Error')+'</div>'});
+}
+function openLocationEditor(x){
+  var modal=document.getElementById('locationEditorModal');if(!modal)return;modal.classList.add('active');
+  ['hrLocBranch','hrLocAddress','hrLocLat','hrLocLng','hrLocRadius','hrLocAccuracy'].forEach(function(id){var e=document.getElementById(id);if(e)e.value=''});
+  document.getElementById('hrLocBranch').value=x.branch||'';document.getElementById('hrLocAddress').value=x.alamat||'';document.getElementById('hrLocLat').value=x.latitude||'';document.getElementById('hrLocLng').value=x.longitude||'';document.getElementById('hrLocRadius').value=x.radius||100;document.getElementById('hrLocAccuracy').value=x.maxAccuracy||50;
+}
+function saveHrLocation(){var d={branch:val('hrLocBranch'),alamat:val('hrLocAddress'),latitude:Number(val('hrLocLat')),longitude:Number(val('hrLocLng')),radius:Number(val('hrLocRadius')),maxAccuracy:Number(val('hrLocAccuracy')),status:'AKTIF'};if(!d.branch||!isFinite(d.latitude)||!isFinite(d.longitude)){showToast('Branch dan koordinat wajib diisi.');return}callServer('saveLokasiKantor',[currentUser.role,d],function(r){showToast(r.message);closeModal('locationEditorModal');loadHrLocations();},function(e){showToast('Gagal: '+e.message)});}
+function escHtml(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 
-/* ================= DATA KARYAWAN ================= */
 function loadDataKaryawan(){
   var c=document.getElementById('dataKaryawanTable');
   c.innerHTML='⏳ Memuat data karyawan...';
