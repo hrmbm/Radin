@@ -86,6 +86,11 @@ th{background:#f8f9fa;font-weight:600}
 .error-text{color:var(--danger);font-size:13px;margin-top:10px;text-align:center}
 .hidden{display:none!important}
 .text-center{text-align:center}
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.profile-item{background:#f8f9fa;border-radius:10px;padding:12px}
+.profile-label{font-size:12px;color:var(--gray);margin-bottom:5px}
+.profile-value{font-size:14px;font-weight:600;word-break:break-word}
+@media(max-width:380px){.profile-grid{grid-template-columns:1fr}}
 .d-flex{display:flex}
 .justify-between{justify-content:space-between}
 .align-center{align-items:center}
@@ -149,6 +154,8 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 <div class="card" id="menuKaryawan">
 <h3 class="card-title">📋 Menu</h3>
+<button type="button" class="btn btn-outline btn-block" onclick="navigateTo('profile')">👤 Profil Saya</button>
+<button type="button" class="btn btn-outline btn-block" onclick="openChangePasswordModal()">🔐 Ganti Password</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('riwayat')">🕘 Riwayat Kehadiran</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('cuti')">📅 Pengajuan Cuti</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('riwayatCuti')">📄 Riwayat Cuti Saya</button>
@@ -163,6 +170,44 @@ th{background:#f8f9fa;font-weight:600}
 <button type="button" class="btn btn-outline btn-block" onclick="openAddEmployeeModal()">👤 Tambah Karyawan</button>
 <button type="button" class="btn btn-outline btn-block" onclick="openFaceRegistrationModal()">📷 Daftarkan Face ID</button>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('dataKaryawan')">👥 Data Karyawan</button>
+</div>
+</div>
+</div>
+
+<!-- PROFIL SAYA -->
+<div id="profileScreen" class="screen">
+<div class="container">
+<div class="app-header">
+<div class="d-flex justify-between align-center">
+<div><h1>👤 Profil Saya</h1><p class="subtitle">Informasi akun dan data kepegawaian</p></div>
+<button type="button" class="icon-btn" onclick="navigateTo('main')">←</button>
+</div>
+</div>
+<div class="card">
+<div id="profileLoading" class="text-center" style="padding:20px">⏳ Memuat profil...</div>
+<div id="profileError" class="error-text"></div>
+<div id="profileContent" class="hidden">
+<div class="profile-grid">
+<div class="profile-item"><div class="profile-label">NIK</div><div class="profile-value" id="profileNik">-</div></div>
+<div class="profile-item"><div class="profile-label">Role</div><div class="profile-value" id="profileRole">-</div></div>
+<div class="profile-item" style="grid-column:1/-1"><div class="profile-label">Nama Lengkap</div><div class="profile-value" id="profileNama">-</div></div>
+<div class="profile-item"><div class="profile-label">Jabatan</div><div class="profile-value" id="profilePosition">-</div></div>
+<div class="profile-item"><div class="profile-label">Organisasi</div><div class="profile-value" id="profileOrganization">-</div></div>
+<div class="profile-item"><div class="profile-label">Branch</div><div class="profile-value" id="profileBranch">-</div></div>
+<div class="profile-item"><div class="profile-label">Job Level</div><div class="profile-value" id="profileLevel">-</div></div>
+<div class="profile-item"><div class="profile-label">Grade</div><div class="profile-value" id="profileGrade">-</div></div>
+<div class="profile-item"><div class="profile-label">Class</div><div class="profile-value" id="profileClass">-</div></div>
+<div class="profile-item"><div class="profile-label">Status Kerja</div><div class="profile-value" id="profileStatusKerja">-</div></div>
+<div class="profile-item"><div class="profile-label">Tanggal Bergabung</div><div class="profile-value" id="profileJoinDate">-</div></div>
+<div class="profile-item"><div class="profile-label">Status Akun</div><div class="profile-value" id="profileStatusAkun">-</div></div>
+<div class="profile-item"><div class="profile-label">NIK Atasan</div><div class="profile-value" id="profileAtasanId">-</div></div>
+<div class="profile-item" style="grid-column:1/-1"><div class="profile-label">Atasan Langsung</div><div class="profile-value" id="profileAtasan">-</div></div>
+<div class="profile-item" style="grid-column:1/-1"><div class="profile-label">Email</div><div class="profile-value" id="profileEmail">-</div></div>
+</div>
+<div style="margin-top:16px">
+<button type="button" class="btn btn-primary btn-block" onclick="openChangePasswordModal()">🔐 Ganti Password</button>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -235,6 +280,21 @@ th{background:#f8f9fa;font-weight:600}
 <div class="app-header"><h1>👥 Data Karyawan</h1></div>
 <div class="card"><div class="table-responsive" id="dataKaryawanTable">Memuat...</div></div>
 <button type="button" class="btn btn-outline btn-block" onclick="navigateTo('main')">← Kembali</button>
+</div>
+</div>
+
+<!-- MODAL GANTI PASSWORD -->
+<div id="changePasswordModal" class="modal">
+<div class="modal-content">
+<div class="modal-header"><h3>🔐 Ganti Password</h3><button type="button" class="icon-btn" onclick="closeModal('changePasswordModal')">✕</button></div>
+<div class="modal-body">
+<div style="background:#e3f2fd;color:#0c5460;padding:12px;border-radius:10px;margin-bottom:16px;font-size:13px">Password baru akan langsung disimpan ke spreadsheet dan dapat digunakan untuk login berikutnya.</div>
+<div class="form-group"><label class="form-label">Password / PIN Lama</label><input type="password" id="oldPassword" class="form-control" placeholder="Masukkan password lama" autocomplete="current-password"></div>
+<div class="form-group"><label class="form-label">Password / PIN Baru</label><input type="password" id="newPassword" class="form-control" placeholder="Minimal 4 karakter" autocomplete="new-password"></div>
+<div class="form-group"><label class="form-label">Konfirmasi Password / PIN Baru</label><input type="password" id="confirmPassword" class="form-control" placeholder="Ulangi password baru" autocomplete="new-password"></div>
+<div id="changePasswordError" class="error-text"></div>
+<button type="button" id="changePasswordBtn" class="btn btn-primary btn-block" onclick="submitChangePassword()">🔐 Simpan Password Baru</button>
+</div>
 </div>
 </div>
 
@@ -383,7 +443,8 @@ function navigateTo(name){
   screenHistory.push(name);
   history.pushState({screen:name},'','#'+name);
   showScreen(name);
-  if(name==='riwayat')loadRiwayat();
+  if(name==='profile')loadProfile();
+  else if(name==='riwayat')loadRiwayat();
   else if(name==='cuti')loadMasterCuti();
   else if(name==='riwayatCuti')loadRiwayatCuti();
   else if(name==='approval')loadApprovals();
@@ -981,6 +1042,88 @@ function closeFaceRegistration(){
     showToast(wizardNewEmployee.nama+': Face ID '+(wizardNewEmployee.faceDone?'\u2705 aktif':'\u26a0\ufe0f belum terdaftar'));
     wizardNewEmployee=null;
   }
+}
+
+/* ================= PROFIL & PASSWORD ================= */
+function profileValue(v){return v===undefined||v===null||String(v).trim()===''?'-':String(v)}
+function setProfileValue(id,v){var el=document.getElementById(id);if(el)el.textContent=profileValue(v)}
+function getCurrentNik(){return currentUser&&currentUser.employee&&currentUser.employee.nik?currentUser.employee.nik:(currentUser?currentUser.nik:'')}
+
+function loadProfile(){
+  var loading=document.getElementById('profileLoading');
+  var content=document.getElementById('profileContent');
+  var error=document.getElementById('profileError');
+  if(loading)loading.classList.remove('hidden');
+  if(content)content.classList.add('hidden');
+  if(error)error.textContent='';
+  var nik=getCurrentNik();
+  if(!nik){
+    if(loading)loading.classList.add('hidden');
+    if(error)error.textContent='NIK akun tidak tersedia.';
+    return;
+  }
+  callServer('getMyProfile',[nik],function(p){
+    if(!p||p.success===false)throw new Error((p&&p.message)||'Profil tidak ditemukan.');
+    setProfileValue('profileNik',p.nik||nik);
+    setProfileValue('profileNama',p.nama||(currentUser?currentUser.nama:''));
+    setProfileValue('profilePosition',p.position);
+    setProfileValue('profileOrganization',p.organization);
+    setProfileValue('profileBranch',p.branch);
+    setProfileValue('profileLevel',p.level);
+    setProfileValue('profileGrade',p.grade);
+    setProfileValue('profileClass',p.class);
+    setProfileValue('profileStatusKerja',p.statusKerja);
+    setProfileValue('profileJoinDate',p.joinDate);
+    setProfileValue('profileStatusAkun',p.statusAkun||'AKTIF');
+    setProfileValue('profileAtasanId',p.atasanId);
+    setProfileValue('profileAtasan',p.atasanNama);
+    setProfileValue('profileEmail',p.email);
+    setProfileValue('profileRole',p.role||(currentUser?currentUser.role:''));
+    if(loading)loading.classList.add('hidden');
+    if(content)content.classList.remove('hidden');
+  },function(err){
+    if(loading)loading.classList.add('hidden');
+    if(error)error.textContent='Gagal memuat profil: '+(err&&err.message?err.message:'Terjadi kesalahan.');
+  },20000);
+}
+
+function openChangePasswordModal(){
+  var modal=document.getElementById('changePasswordModal');
+  if(!modal)return;
+  document.getElementById('oldPassword').value='';
+  document.getElementById('newPassword').value='';
+  document.getElementById('confirmPassword').value='';
+  document.getElementById('changePasswordError').textContent='';
+  var btn=document.getElementById('changePasswordBtn');
+  btn.disabled=false;btn.innerHTML='🔐 Simpan Password Baru';
+  modal.classList.add('active');
+  setTimeout(function(){document.getElementById('oldPassword').focus()},100);
+}
+
+function submitChangePassword(){
+  var oldPin=document.getElementById('oldPassword').value.trim();
+  var newPin=document.getElementById('newPassword').value.trim();
+  var confirmPin=document.getElementById('confirmPassword').value.trim();
+  var error=document.getElementById('changePasswordError');
+  var btn=document.getElementById('changePasswordBtn');
+  error.textContent='';
+  if(!oldPin||!newPin||!confirmPin){error.textContent='Semua kolom wajib diisi.';return}
+  if(newPin.length<4){error.textContent='Password baru minimal 4 karakter.';return}
+  if(newPin.length>20){error.textContent='Password baru maksimal 20 karakter.';return}
+  if(newPin!==confirmPin){error.textContent='Konfirmasi password baru tidak sama.';return}
+  if(oldPin===newPin){error.textContent='Password baru tidak boleh sama dengan password lama.';return}
+  var nik=getCurrentNik();
+  if(!nik){error.textContent='NIK akun tidak tersedia.';return}
+  btn.disabled=true;btn.innerHTML='⏳ Menyimpan...';
+  callServer('changeMyPassword',[nik,oldPin,newPin],function(res){
+    btn.disabled=false;btn.innerHTML='🔐 Simpan Password Baru';
+    if(!res||res.success===false){error.textContent=(res&&res.message)||'Gagal mengganti password.';return}
+    closeModal('changePasswordModal');
+    showToast('✅ Password berhasil diganti dan tersimpan.');
+  },function(err){
+    btn.disabled=false;btn.innerHTML='🔐 Simpan Password Baru';
+    error.textContent=err&&err.message?err.message:'Gagal mengganti password.';
+  },20000);
 }
 
 /* ================= RIWAYAT ================= */
