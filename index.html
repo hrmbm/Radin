@@ -305,13 +305,8 @@ th{background:#f8f9fa;font-weight:600}
 <script>
 /* ================= KONFIGURASI ================= */
 var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
-var APP_VERSION='4.8';
-
-/* ⚙️ SAKLAR MODE LIVENESS:
-   'challenge' = kedip + senyum (default, paling aman)
-   'passive'   = deteksi wajah umum tanpa gerakan (fallback; identitas tetap dikunci sidik wajah di server) */
+var APP_VERSION='4.9';
 var LIVENESS_MODE='challenge';
-
 var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
 
 var currentUser=null,currentPosition=null,currentStatus=null,masterCuti=[],currentAbsensiType='MASUK';
@@ -320,8 +315,6 @@ var cameraStream=null,livenessMode=null,videoElement=null,detectionLoop=null;
 var faceLandmarker=null,mpReady=false,mpLoading=false;
 var faNetsReady=false,faceApiLoaded=false;
 var lastCameraError='';
-
-/* State mesin liveness v4.8 */
 var calSamples=[],calibrated=false,baseEAR=0,baseBlink=0,baseSmile=0;
 var thEARClose=0,thEAROpen=0,thBlinkOn=0,thBlinkOff=0,thSmileOn=0;
 var eyeState='open',closedAt=0,blinkCount=0,smileHold=0,stableFrames=0,livenessStep=0;
@@ -514,7 +507,6 @@ function getBlend(res,name){
   for(var i=0;i<cats.length;i++)if(cats[i].categoryName===name)return cats[i].score;
   return 0;
 }
-/* EAR (Eye Aspect Ratio) dari landmark 478 — sinyal kedua untuk kedip */
 function calcEAR(lm){
   function d(a,b){return Math.hypot(lm[a].x-lm[b].x,lm[a].y-lm[b].y)}
   var rV1=d(160,144),rV2=d(158,153),rH=d(33,133);
@@ -529,7 +521,7 @@ function median(arr){
   return s.length%2?s[m]:(s[m-1]+s[m])/2;
 }
 
-/* ================= FACE-API (DESCRIPTOR SEKALI) ================= */
+/* ================= FACE-API (DESCRIPTOR) ================= */
 function loadFaceApiScript(){
   return new Promise(function(resolve,reject){
     if(faceApiLoaded||typeof faceapi!=='undefined'){faceApiLoaded=true;resolve();return}
@@ -547,9 +539,19 @@ async function ensureDescriptorNets(){
     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)]);
   faNetsReady=true;return true;
 }
-async function computeDescriptorOnce(source){
+/* v4.9: 3 tingkat konfigurasi + fallback wajah terbesar */
+async function computeDescriptorOnce(canvas,attempt){
   await ensureDescriptorNets();
-  var det=await faceapi.detectSingleFace(source,new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:0.4})).withFaceDescriptor();
+  var cfg=attempt===1?{in:416,th:0.35}:attempt===2?{in:320,th:0.25}:{in:512,th:0.2};
+  var opt=new faceapi.TinyFaceDetectorOptions({inputSize:cfg.in,scoreThreshold:cfg.th});
+  var det=await faceapi.detectSingleFace(canvas,opt).withFaceDescriptor();
+  if(!det){
+    var all=await faceapi.detectAllFaces(canvas,opt).withFaceDescriptors();
+    if(all&&all.length){
+      all.sort(function(a,b){return (b.detection.box.width*b.detection.box.height)-(a.detection.box.width*a.detection.box.height)});
+      det=all[0];
+    }
+  }
   return det?Array.from(det.descriptor):null;
 }
 
@@ -653,7 +655,7 @@ async function startLivenessFlow(video,mode){
   detectionLoop=requestAnimationFrame(detectLivenessMP);
 }
 
-/* ================= MESIN LIVENESS v4.8 ================= */
+/* ================= MESIN LIVENESS ================= */
 async function detectLivenessMP(){
   if(!videoElement||videoElement.paused||videoElement.ended)return;
   try{
@@ -672,7 +674,6 @@ async function detectLivenessMP(){
     var smile=(getBlend(res,'mouthSmileLeft')+getBlend(res,'mouthSmileRight'))/2;
     var ear=calcEAR(lm);
 
-    /* ---- FASE 1: KALIBRASI PERSONAL (±15 frame) ---- */
     if(!calibrated){
       calSamples.push({ear:ear,blink:blink,smile:smile});
       if(dbg)dbg.textContent='🎯 Kalibrasi... '+calSamples.length+'/15';
@@ -697,7 +698,6 @@ async function detectLivenessMP(){
       detectionLoop=requestAnimationFrame(detectLivenessMP);return;
     }
 
-    /* ---- MODE PASSIVE: wajah stabil = lolos ---- */
     if(LIVENESS_MODE==='passive'){
       stableFrames++;
       if(se)se.textContent='👁️ Wajah terkunci... '+Math.min(100,Math.round(stableFrames/25*100))+'%';
@@ -706,13 +706,11 @@ async function detectLivenessMP(){
       detectionLoop=requestAnimationFrame(detectLivenessMP);return;
     }
 
-    /* ---- MODE CHALLENGE ---- */
     var earClosed=ear<thEARClose;
     var blinkOn=blink>thBlinkOn;
     var blinkOff=blink<thBlinkOff;
     var earOpen=ear>thEAROpen;
 
-    /* Step 0: state machine kedipan (terbuka→tertutup→terbuka = 1 kedip) */
     if(livenessStep===0){
       if(eyeState==='open'&&(earClosed||blinkOn)){eyeState='closed';closedAt=now}
       else if(eyeState==='closed'&&earOpen&&blinkOff){
@@ -727,7 +725,6 @@ async function detectLivenessMP(){
         updateLivenessProgress();
       }
     }
-    /* Step 1: senyum relatif terhadap baseline */
     else if(livenessStep===1){
       if(smile>thSmileOn)smileHold++;else smileHold=Math.max(0,smileHold-1);
       if(se)se.textContent='😊 Senyum... '+Math.min(100,Math.round(smileHold/6*100))+'%';
@@ -738,14 +735,25 @@ async function detectLivenessMP(){
   detectionLoop=requestAnimationFrame(detectLivenessMP);
 }
 
+/* v4.9: TANGKAP FRAME DULU, baru matikan kamera + 3x percobaan + fallback CPU */
 async function finalizeCapture(){
   stopCamera();
   var ie=getInstrEl();
   if(ie){ie.classList.add('success');ie.innerHTML='✅ Liveness OK! Menghitung sidik wajah...'}
   try{
     var canvas=captureFrameCanvas(videoElement);
-    var desc=await computeDescriptorOnce(canvas);
-    if(!desc){showFlowError('Sidik wajah tidak terbaca. Pastikan wajah terang & tidak tertutup. 🔄 Coba Lagi.');return}
+    var desc=null;
+    for(var attempt=1;attempt<=3&&!desc;attempt++){
+      try{
+        desc=await computeDescriptorOnce(canvas,attempt);
+      }catch(e){
+        console.error('Descriptor attempt '+attempt+' gagal:',e);
+        if(attempt===1){
+          try{await faceapi.tf.setBackend('cpu');await faceapi.tf.ready()}catch(e2){}
+        }
+      }
+    }
+    if(!desc){showFlowError('Sidik wajah tidak terbaca. Perbaiki cahaya, penuhi lingkaran, lalu 🔄 Coba Lagi.');return}
     faceData.descriptor=desc;
     faceData.photo=canvas.toDataURL('image/jpeg',0.7);
     if(ie)ie.innerHTML='✅ Verifikasi berhasil!';
