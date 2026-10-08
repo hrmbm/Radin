@@ -93,6 +93,7 @@ th{background:#f8f9fa;font-weight:600}
 @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 .mode-badge{position:fixed;top:8px;right:8px;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:4px 8px;border-radius:10px;z-index:99998}
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -256,21 +257,40 @@ th{background:#f8f9fa;font-weight:600}
 </div>
 </div>
 
-<!-- MODAL TAMBAH KARYAWAN -->
+<!-- MODAL TAMBAH KARYAWAN (WIZARD: DATA LENGKAP -> FACE ID) -->
 <div id="addEmployeeModal" class="modal">
 <div class="modal-content">
-<div class="modal-header"><h3>Tambah Karyawan</h3><button type="button" class="icon-btn" onclick="closeModal('addEmployeeModal')">✕</button></div>
+<div class="modal-header"><h3 id="addEmpTitle">Tambah Karyawan</h3><button type="button" class="icon-btn" onclick="closeAddEmployeeWizard()">✕</button></div>
 <div class="modal-body">
+
+<!-- LANGKAH 1: FORM LENGKAP -->
+<div id="addEmpStep1">
 <div class="form-group"><label class="form-label">Employee ID *</label><input type="text" id="empId" class="form-control" placeholder="Contoh: ST 260505"></div>
 <div class="form-group"><label class="form-label">Nama Lengkap *</label><input type="text" id="empNama" class="form-control"></div>
 <div class="form-group"><label class="form-label">Branch *</label><select id="empBranch" class="form-control"><option value="Pusat">Pusat</option><option value="Pasuruan">Pasuruan</option><option value="Surabaya">Surabaya</option></select></div>
-<div class="form-group"><label class="form-label">Organisasi</label><input type="text" id="empOrg" class="form-control"></div>
-<div class="form-group"><label class="form-label">Jabatan</label><input type="text" id="empPosisi" class="form-control"></div>
-<div class="form-group"><label class="form-label">NIK Atasan Langsung</label><input type="text" id="empAtasanId" class="form-control"></div>
-<div class="form-group"><label class="form-label">Nama Atasan</label><input type="text" id="empAtasanNama" class="form-control"></div>
+<div class="form-group"><label class="form-label">Organisasi / Department</label><input type="text" id="empOrg" class="form-control"></div>
+<div class="form-group"><label class="form-label">Job Level</label><select id="empLevel" class="form-control"><option value="">- Pilih -</option><option>Staff</option><option>Supervisor</option><option>Manager</option><option>GM</option></select></div>
+<div class="form-group"><label class="form-label">Jabatan / Posisi</label><input type="text" id="empPosisi" class="form-control"></div>
+<div class="form-group"><label class="form-label">Grade</label><input type="text" id="empGrade" class="form-control"></div>
+<div class="form-group"><label class="form-label">Class</label><input type="text" id="empClass" class="form-control"></div>
 <div class="form-group"><label class="form-label">Status Kerja</label><select id="empStatus" class="form-control"><option value="Contract">Contract</option><option value="Permanent">Permanent</option></select></div>
-<button type="button" class="btn btn-success btn-block" onclick="saveNewEmployee()">💾 Simpan</button>
+<div class="form-group"><label class="form-label">Tanggal Bergabung</label><input type="date" id="empJoinDate" class="form-control"></div>
+<div class="form-group"><label class="form-label">NIK Atasan Langsung *</label><input type="text" id="empAtasanId" class="form-control" placeholder="Wajib - untuk approval cuti/absensi"></div>
+<div class="form-group"><label class="form-label">Nama Atasan *</label><input type="text" id="empAtasanNama" class="form-control"></div>
+<div class="form-group"><label class="form-label">Role</label><select id="empRole" class="form-control"><option value="KARYAWAN">Karyawan</option><option value="ATASAN">Atasan (dapat approve)</option></select></div>
+<button type="button" class="btn btn-success btn-block" onclick="saveNewEmployee()">💾 Simpan &amp; Lanjut</button>
+<div id="addEmpError" class="error-text"></div>
+</div>
+
+<!-- LANGKAH 2: HASIL + LANJUT FACE ID -->
+<div id="addEmpStep2" class="hidden">
 <div id="addEmpResult"></div>
+<div class="text-center" style="margin:16px 0;font-size:40px">📷</div>
+<p class="text-center" style="margin-bottom:16px;color:var(--gray);font-size:14px">Lengkapi pendaftaran dengan merekam <strong>Face ID</strong> karyawan ini sekarang. Tanpa Face ID, karyawan <strong>belum bisa absen</strong>.</p>
+<button type="button" class="btn btn-primary btn-block" onclick="wizardGoToFaceId()">📷 Daftarkan Face ID Sekarang</button>
+<button type="button" class="btn btn-outline btn-block" onclick="wizardFinishLater()">⏭️ Nanti Saja (Face ID belum aktif)</button>
+</div>
+
 </div>
 </div>
 </div>
@@ -305,7 +325,7 @@ th{background:#f8f9fa;font-weight:600}
 <script>
 /* ================= KONFIGURASI ================= */
 var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
-var APP_VERSION='4.10';
+var APP_VERSION='4.11';
 var LIVENESS_MODE='challenge';
 var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
 
@@ -511,7 +531,7 @@ function getCurrentLocation(){
 
 /* ================= MEDIAPIPE ================= */
 function preloadEngine(){
-  var run=function(){initMediaPipe()};
+  var run=function(){initMediaPipe();ensureDescriptorNets().catch(function(e){console.warn('preload nets:',e)})};
   if(window.requestIdleCallback)requestIdleCallback(run,{timeout:6000});else setTimeout(run,2500);
 }
 async function initMediaPipe(){
@@ -563,31 +583,51 @@ function loadFaceApiScript(){
     document.head.appendChild(s);
   });
 }
+/* ================= FACE-API (DESCRIPTOR) v4.11 - ROBUST =================
+   SSD MobileNet (andal utk wajah kecil/miring/gelap) + landmark alignment
+   + fallback berlapis. Format descriptor TETAP 128-d sehingga Face ID
+   yang sudah tersimpan sebelumnya tetap kompatibel. */
 async function ensureDescriptorNets(){
   await loadFaceApiScript();
   if(faNetsReady)return true;
   await Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+    faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)]);
   faNetsReady=true;return true;
 }
-async function computeDescriptorOnce(canvas,attempt,dbg){
-  if(dbg)dbg.textContent='⏳ a'+attempt+': memuat model sidik...';
-  await ensureDescriptorNets();
-  var cfg=attempt===1?{in:416,th:0.3}:attempt===2?{in:320,th:0.2}:{in:512,th:0.15};
-  var opt=new faceapi.TinyFaceDetectorOptions({inputSize:cfg.in,scoreThreshold:cfg.th});
-  var det=await faceapi.detectSingleFace(canvas,opt).withFaceDescriptor();
+function sortByAreaDesc(arr){
+  return arr.sort(function(a,b){
+    var ba=a.detection?a.detection.box:a.box;
+    var bb=b.detection?b.detection.box:b.box;
+    return (bb.width*bb.height)-(ba.width*ba.height)});
+}
+async function detectBestFace(canvas,opt,dbg,tag){
+  var det=await faceapi.detectSingleFace(canvas,opt).withFaceLandmarks().withFaceDescriptor();
   if(!det){
-    var all=await faceapi.detectAllFaces(canvas,opt).withFaceDescriptors();
-    if(all&&all.length){
-      all.sort(function(a,b){return (b.detection.box.width*b.detection.box.height)-(a.detection.box.width*a.detection.box.height)});
-      det=all[0];
+    var all=await faceapi.detectAllFaces(canvas,opt).withFaceLandmarks().withFaceDescriptors();
+    if(all&&all.length)det=sortByAreaDesc(all)[0];
+  }
+  if(dbg&&det)dbg.textContent='\u2705 '+tag+': wajah OK (score '+det.detection.score.toFixed(2)+')';
+  return det;
+}
+async function computeDescriptorRobust(canvas,dbg){
+  var steps=[
+    function(){return detectBestFace(canvas,new faceapi.SsdMobilenetv1Options({minConfidence:0.30,maxResults:5}),dbg,'a1/ssd')},
+    function(){return detectBestFace(canvas,new faceapi.SsdMobilenetv1Options({minConfidence:0.15,maxResults:5}),dbg,'a2/ssd')},
+    function(){return detectBestFace(canvas,new faceapi.TinyFaceDetectorOptions({inputSize:416,scoreThreshold:0.20}),dbg,'a3/tiny')},
+    function(){return detectBestFace(canvas,new faceapi.TinyFaceDetectorOptions({inputSize:512,scoreThreshold:0.10}),dbg,'a4/tiny')}
+  ];
+  for(var i=0;i<steps.length;i++){
+    try{
+      var det=await steps[i]();
+      if(det&&det.descriptor)return Array.from(det.descriptor);
+    }catch(e){
+      if(dbg)dbg.textContent='\u26a0\ufe0f a'+(i+1)+': '+(e&&e.message?e.message:e);
     }
   }
-  if(!det&&dbg)dbg.textContent='a'+attempt+': wajah tidak ditemukan ('+cfg.in+'/'+cfg.th+')';
-  return det?Array.from(det.descriptor):null;
+  return null;
 }
-
 /* ================= KAMERA ROBUST ================= */
 function ensureVisible(video){return new Promise(function(res){requestAnimationFrame(function(){requestAnimationFrame(function(){res()})})})}
 function ensureVideoPlaying(video,cd){
@@ -772,66 +812,84 @@ async function detectLivenessMP(){
 }
 
 /* ================================================================
-   v4.10 - FINALIZE CAPTURE (PERBAIKAN TOTAL)
-   1) Frame ditangkap SAAT KAMERA HIDUP + cek frame hitam + retry
-   2) Crop wajah via landmark MediaPipe → face-api jauh lebih akurat
-   3) 3 percobaan + fallback CPU + fallback frame penuh
+   v4.11 - FINALIZE CAPTURE (REWRITE FUNDAMENTAL)
+   1) Frame ditangkap SEGERA saat lulus liveness (tanpa jeda tidur)
+      sehingga posisi wajah sama persis dengan tantangan terakhir.
+   2) Landmark dihitung ULANG dari frame hasil tangkapan (bukan frame
+      lama) -> crop wajah presisi.
+   3) Crop PERSEGI tanpa distorsi (letterbox) - wajah tidak gepeng.
+   4) SSD MobileNet + landmark alignment + 4 lapis fallback detector.
+   5) Fallback terakhir: deteksi pada frame penuh.
    ================================================================ */
+function squareCropCanvas(src,box){
+  var side=Math.max(box.w,box.h);
+  var cx=box.x+box.w/2;
+  var cy=box.y+box.h/2;
+  var x=cx-side/2;
+  var y=cy-side/2;
+  x=Math.max(0,Math.min(src.width-side,x));
+  y=Math.max(0,Math.min(src.height-side,y));
+  var size=416;
+  var c=document.createElement('canvas');c.width=size;c.height=size;
+  var ctx=c.getContext('2d');
+  ctx.fillStyle='#000';ctx.fillRect(0,0,size,size);
+  ctx.drawImage(src,x,y,side,side,0,0,size,size);
+  return c;
+}
 async function finalizeCapture(lm){
   var ie=getInstrEl(),dbg=getDebugEl();
-  if(ie){ie.classList.add('success');ie.innerHTML='✅ Liveness OK! Menghitung sidik wajah...'}
+  if(ie){ie.classList.add('success');ie.innerHTML='\u2705 Liveness OK! Menghitung sidik wajah...'}
   try{
-    /* 1) Tangkap saat kamera masih hidup */
-    var full=captureFrameCanvas(videoElement);
-    for(var t=0;t<6&&(!full||full.width<50||isCanvasBlack(full));t++){
-      await sleep(250);
+    /* 1) Tangkap frame SEGERA - kamera masih hidup, wajah belum bergerak */
+    var full=null;
+    for(var t=0;t<3;t++){
       full=captureFrameCanvas(videoElement);
+      if(full&&full.width>=50&&!isCanvasBlack(full))break;
     }
     stopCamera();
 
     if(!full||full.width<50||isCanvasBlack(full)){
-      showFlowError('Frame kamera kosong/hitam. Perbaiki cahaya, lalu 🔄 Coba Lagi.');
+      showFlowError('Frame kamera kosong/gelap. Perbaiki pencahayaan, lalu \ud83d\udd01 Coba Lagi.');
       return;
     }
 
-    /* 2) Crop wajah dari landmark */
+    /* 2) Landmark SEGAR dari frame yang benar-benar diproses */
+    var freshLm=lm;
+    try{
+      var dr=faceLandmarker.detectForVideo(full,performance.now());
+      if(dr&&dr.faceLandmarks&&dr.faceLandmarks.length)freshLm=dr.faceLandmarks[0];
+    }catch(e){}
+
+    /* 3) Crop persegi tanpa distorsi */
     var work=full;
-    if(lm&&lm.length){
-      var box=computeFaceBox(lm,full.width,full.height);
-      if(box.w>40&&box.h>40)work=cropCanvas(full,box);
+    if(freshLm&&freshLm.length){
+      var box=computeFaceBox(freshLm,full.width,full.height);
+      if(box.w>40&&box.h>40)work=squareCropCanvas(full,box);
     }
-    if(dbg)dbg.textContent='🖼️ '+full.width+'x'+full.height+' → crop '+work.width+'x'+work.height;
+    if(dbg)dbg.textContent='\ud83d\uddbc\ufe0f '+full.width+'x'+full.height+' -> crop '+work.width+'x'+work.height;
 
-    /* 3) Hitung descriptor dengan 3 percobaan */
+    /* 4) Descriptor robust: SSD -> SSD low conf -> Tiny -> Tiny low */
     var desc=null;
-    for(var attempt=1;attempt<=3&&!desc;attempt++){
-      try{
-        desc=await computeDescriptorOnce(work,attempt,dbg);
-      }catch(e){
-        console.error('Descriptor attempt '+attempt+':',e);
-        if(dbg)dbg.textContent='❌ a'+attempt+': '+(e&&e.message?e.message:e);
-        if(attempt===1){
-          try{await faceapi.tf.setBackend('cpu');await faceapi.tf.ready()}catch(e2){}
-        }
-      }
-    }
-    /* Fallback terakhir: frame penuh */
+    try{desc=await computeDescriptorRobust(work,dbg)}catch(e){console.error(e)}
+
+    /* 5) Fallback terakhir: frame penuh */
     if(!desc){
-      try{desc=await computeDescriptorOnce(full,3,dbg)}catch(e){console.error(e)}
+      if(dbg)dbg.textContent='\u26a0\ufe0f fallback: mendeteksi pada frame penuh...';
+      try{desc=await computeDescriptorRobust(full,dbg)}catch(e){console.error(e)}
     }
 
     if(!desc){
-      showFlowError('Sidik wajah tidak terbaca. Dekatkan wajah, perbaiki cahaya, lalu 🔄 Coba Lagi.');
+      showFlowError('Sidik wajah tidak terbaca. Pastikan cukup cahaya & wajah tidak terlalu jauh, lalu \ud83d\udd01 Coba Lagi.');
       return;
     }
 
     faceData.descriptor=desc;
     faceData.photo=full.toDataURL('image/jpeg',0.7);
-    if(ie)ie.innerHTML='✅ Verifikasi berhasil!';
-    if(dbg)dbg.textContent='✅ Sidik wajah 128-dimensi tersimpan';
+    if(ie)ie.innerHTML='\u2705 Sidik wajah berhasil diambil!';
+    if(dbg)dbg.textContent='\u2705 Descriptor 128-d siap';
     if(livenessMode==='attendance')document.getElementById('verifyBtn').disabled=false;
     else document.getElementById('faceCaptureBtn').disabled=false;
-  }catch(err){console.error(err);showFlowError('Gagal menghitung sidik wajah. 🔄 Coba Lagi.')}
+  }catch(err){console.error(err);showFlowError('Gagal menghitung sidik wajah. \ud83d\udd01 Coba Lagi.')}
 }
 function captureFrameCanvas(video){
   var maxW=640,w=video.videoWidth,h=video.videoHeight;
@@ -860,27 +918,29 @@ function handleVerify(){
 }
 
 /* ================= REGISTRASI FACE ID ================= */
-function openFaceRegistrationModal(){
+function openFaceRegistrationModal(preselectNik){
   document.getElementById('faceModal').classList.add('active');
-  loadUnregisteredEmployees();
+  loadUnregisteredEmployees(preselectNik||null);
   startLivenessFlow(document.getElementById('faceVideo'),'registration');
 }
-function loadUnregisteredEmployees(){
+function loadUnregisteredEmployees(preselectNik){
   var sel=document.getElementById('faceNikSelect');
   sel.innerHTML='<option value="">Memuat data karyawan...</option>';
   callServer('getKaryawanSummary',[currentUser.role],function(res){
     if(!res||res.ok===false){sel.innerHTML='<option value="">Gagal memuat data</option>';return}
-    var unreg=(res.list||[]).filter(function(x){return x.face==='❌'});
+    var unreg=(res.list||[]).filter(function(x){return x.face==='\u274c'});
     sel.innerHTML='<option value="">-- Pilih karyawan --</option>';
-    if(unreg.length===0){sel.innerHTML='<option value="">Semua karyawan sudah punya Face ID ✅</option>';return}
+    if(unreg.length===0){sel.innerHTML='<option value="">Semua karyawan sudah punya Face ID \u2705</option>';return}
     for(var i=0;i<unreg.length;i++){
       var o=document.createElement('option');
       o.value=unreg[i].nik;
       o.textContent=unreg[i].nama+' ('+unreg[i].nik+')';
       o.setAttribute('data-nama',unreg[i].nama);
       o.setAttribute('data-branch',unreg[i].branch);
+      if(preselectNik&&unreg[i].nik===preselectNik)o.selected=true;
       sel.appendChild(o);
     }
+    if(preselectNik)onFaceEmployeeChange();
   },function(){sel.innerHTML='<option value="">Gagal memuat data</option>'});
 }
 function onFaceEmployeeChange(){
@@ -897,18 +957,30 @@ function captureAndSaveFace(){
   var nik=sel?sel.value:'';
   if(!nik){showToast('Pilih karyawan terlebih dahulu.');return}
   if(!faceData.descriptor){showToast('Wajah belum terverifikasi.');return}
-  var btn=document.getElementById('faceCaptureBtn');btn.disabled=true;btn.innerHTML='⏳ Menyimpan...';
+  var btn=document.getElementById('faceCaptureBtn');btn.disabled=true;btn.innerHTML='\u23f3 Menyimpan...';
   callServer('saveFaceDescriptor',[currentUser.role,nik,faceData.descriptor],
     function(res){
-      btn.disabled=false;btn.innerHTML='📷 Simpan Face ID';
+      btn.disabled=false;btn.innerHTML='\ud83d\udcf7 Simpan Face ID';
       showToast(res.message);
+      if(wizardNewEmployee&&wizardNewEmployee.nik===nik){
+        wizardNewEmployee.faceDone=true;
+        var st=document.getElementById('faceStatus');
+        if(st)st.innerHTML='\ud83c\udf89 Face ID <strong>'+wizardNewEmployee.nama+'</strong> aktif! Karyawan siap absen.';
+      }
       loadUnregisteredEmployees();
       sel.value='';
       document.getElementById('faceSelectedInfo').classList.add('hidden');
       faceData.descriptor=null;faceData.photo=null;
       document.getElementById('faceCaptureBtn').disabled=true;
     },
-    function(err){btn.disabled=false;btn.innerHTML='📷 Simpan Face ID';showToast('Gagal: '+err.message)});
+    function(err){btn.disabled=false;btn.innerHTML='\ud83d\udcf7 Simpan Face ID';showToast('Gagal: '+err.message)});
+}
+function closeFaceRegistration(){
+  stopCamera();closeModal('faceModal');
+  if(wizardNewEmployee){
+    showToast(wizardNewEmployee.nama+': Face ID '+(wizardNewEmployee.faceDone?'\u2705 aktif':'\u26a0\ufe0f belum terdaftar'));
+    wizardNewEmployee=null;
+  }
 }
 
 /* ================= RIWAYAT ================= */
@@ -1046,17 +1118,58 @@ function loadDataKaryawan(){
 }
 
 /* ================= TAMBAH KARYAWAN ================= */
-function openAddEmployeeModal(){document.getElementById('addEmployeeModal').classList.add('active')}
+/* ============ TAMBAH KARYAWAN (WIZARD: DATA LENGKAP -> FACE ID) ============ */
+var wizardNewEmployee=null;
+function val(id){var e=document.getElementById(id);return e?String(e.value||'').trim():''}
+function openAddEmployeeModal(){
+  wizardNewEmployee=null;
+  document.getElementById('addEmpTitle').textContent='Tambah Karyawan';
+  document.getElementById('addEmpStep1').classList.remove('hidden');
+  document.getElementById('addEmpStep2').classList.add('hidden');
+  document.getElementById('addEmpError').textContent='';
+  document.getElementById('addEmpResult').innerHTML='';
+  document.getElementById('addEmployeeModal').classList.add('active');
+}
+function closeAddEmployeeWizard(){
+  closeModal('addEmployeeModal');
+  if(wizardNewEmployee){
+    showToast(wizardNewEmployee.nama+': tersimpan \u2705 | PIN '+wizardNewEmployee.pin+' | Face ID '+(wizardNewEmployee.faceDone?'\u2705':'\u26a0\ufe0f belum'));
+    wizardNewEmployee=null;
+  }
+}
 function saveNewEmployee(){
-  var data={employeeId:document.getElementById('empId').value.trim(),nama:document.getElementById('empNama').value.trim(),
-    branch:document.getElementById('empBranch').value,organization:document.getElementById('empOrg').value.trim(),
-    position:document.getElementById('empPosisi').value.trim(),atasanId:document.getElementById('empAtasanId').value.trim(),
-    atasanNama:document.getElementById('empAtasanNama').value.trim(),statusKerja:document.getElementById('empStatus').value};
-  if(!data.employeeId||!data.nama){showToast('Employee ID dan Nama wajib diisi.');return}
+  var btn=event.target;
+  var data={
+    employeeId:val('empId'),nama:val('empNama'),branch:val('empBranch'),
+    organization:val('empOrg'),level:val('empLevel'),position:val('empPosisi'),
+    grade:val('empGrade'),'class':val('empClass'),statusKerja:val('empStatus'),
+    joinDate:val('empJoinDate'),atasanId:val('empAtasanId'),atasanNama:val('empAtasanNama'),
+    role:val('empRole')||'KARYAWAN'};
+  document.getElementById('addEmpError').textContent='';
+  if(!data.employeeId||!data.nama||!data.branch){document.getElementById('addEmpError').textContent='Employee ID, Nama, dan Branch wajib diisi.';return}
+  if(!data.atasanId||!data.atasanNama){document.getElementById('addEmpError').textContent='NIK & Nama atasan wajib diisi (diperlukan untuk approval).';return}
+  btn.disabled=true;btn.innerHTML='\u23f3 Menyimpan...';
   callServer('addKaryawan',[currentUser.role,data],function(res){
-    document.getElementById('addEmpResult').innerHTML='<div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px;margin-top:12px">'+res.message+'<br><strong>PIN Sementara: '+res.pin+'</strong></div>';
-    showToast('Karyawan ditambahkan. PIN: '+res.pin);
-  },function(err){document.getElementById('addEmpResult').innerHTML='<div style="background:#f8d7da;color:#721c24;padding:12px;border-radius:8px;margin-top:12px">'+err.message+'</div>'});
+    btn.disabled=false;btn.innerHTML='\ud83d\udcbe Simpan & Lanjut';
+    wizardNewEmployee={nik:data.employeeId,nama:data.nama,pin:res.pin,faceDone:false};
+    document.getElementById('addEmpResult').innerHTML='<div style="background:#d4edda;color:#155724;padding:12px;border-radius:8px">'+res.message+'<br>\ud83d\udc64 <strong>'+data.nama+'</strong> ('+data.employeeId+')<br>\ud83d\udd11 PIN sementara: <strong style="font-size:18px;letter-spacing:2px">'+res.pin+'</strong><br><span style="font-size:12px">Sampaikan PIN ini ke karyawan untuk login pertama.</span></div>';
+    document.getElementById('addEmpStep1').classList.add('hidden');
+    document.getElementById('addEmpStep2').classList.remove('hidden');
+  },function(err){
+    btn.disabled=false;btn.innerHTML='\ud83d\udcbe Simpan & Lanjut';
+    document.getElementById('addEmpError').textContent=err.message||'Gagal menyimpan.';
+  });
+}
+function wizardGoToFaceId(){
+  var nik=wizardNewEmployee?wizardNewEmployee.nik:null;
+  closeModal('addEmployeeModal');
+  openFaceRegistrationModal(nik);
+}
+function wizardFinishLater(){
+  var n=wizardNewEmployee;
+  closeModal('addEmployeeModal');
+  if(n)showToast(n.nama+' aktif. \u26a0\ufe0f Tanpa Face ID, karyawan belum bisa absen.');
+  wizardNewEmployee=null;
 }
 
 window.addEventListener('error',function(e){
