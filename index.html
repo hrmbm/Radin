@@ -65,7 +65,7 @@ input,select,textarea,button{font-size:16px!important}
 .liveness-step{width:40px;height:6px;background:#e0e0e0;border-radius:3px;transition:background .3s}
 .liveness-step.active{background:var(--primary)}
 .liveness-step.done{background:var(--success)}
-.debug-info{font-size:11px;color:var(--gray);text-align:center;margin-top:8px;font-family:monospace;word-break:break-all}
+.debug-info{font-size:11px;color:var(--gray);text-align:center;margin-top:8px;font-family:monospace;word-break:break-all;min-height:16px}
 .camera-debug{position:absolute;top:8px;left:8px;right:8px;background:rgba(0,0,0,.7);color:#fff;padding:8px;border-radius:8px;font-size:11px;font-family:monospace;z-index:10;word-break:break-all}
 .table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -248,7 +248,7 @@ th{background:#f8f9fa;font-weight:600}
 <div class="liveness-step" id="step2"></div>
 </div>
 <div class="camera-container"><div class="camera-debug" id="camDebug"></div><video id="cameraVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
-<div class="text-center" id="livenessStatus" style="margin-bottom:16px;color:var(--gray);font-size:14px"></div>
+<div class="text-center" id="livenessStatus" style="margin-bottom:8px;color:var(--gray);font-size:14px"></div>
 <div class="debug-info" id="debugInfo"></div>
 <button type="button" id="retryCameraBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
 <button type="button" id="verifyBtn" class="btn btn-success btn-block" disabled onclick="handleVerify()">✅ Verifikasi & Absen</button>
@@ -292,7 +292,7 @@ th{background:#f8f9fa;font-weight:600}
 <div class="liveness-step" id="fstep2"></div>
 </div>
 <div class="camera-container"><div class="camera-debug" id="faceCamDebug"></div><video id="faceVideo" autoplay playsinline muted></video><div class="face-overlay"></div></div>
-<div class="text-center" id="faceStatus" style="margin-bottom:16px;font-size:14px;color:var(--gray)"></div>
+<div class="text-center" id="faceStatus" style="margin-bottom:8px;font-size:14px;color:var(--gray)"></div>
 <div class="debug-info" id="faceDebugInfo"></div>
 <button type="button" id="retryFaceBtn" class="btn btn-warning btn-block hidden" onclick="retryCurrentFlow()">🔄 Coba Lagi</button>
 <button type="button" id="faceCaptureBtn" class="btn btn-success btn-block" disabled onclick="captureAndSaveFace()">📷 Simpan Face ID</button>
@@ -305,16 +305,27 @@ th{background:#f8f9fa;font-weight:600}
 <script>
 /* ================= KONFIGURASI ================= */
 var API_URL='https://script.google.com/macros/s/AKfycbyzjg84LqKfTx0iuoJRRF0Re9CFsiSQ7KysV__u2TqyuPaP5tdYINrrKYbfNtMH8BsK/exec';
-var APP_VERSION='4.7';
+var APP_VERSION='4.8';
+
+/* ⚙️ SAKLAR MODE LIVENESS:
+   'challenge' = kedip + senyum (default, paling aman)
+   'passive'   = deteksi wajah umum tanpa gerakan (fallback; identitas tetap dikunci sidik wajah di server) */
+var LIVENESS_MODE='challenge';
+
 var IS_STATIC=(typeof google==='undefined'||!google||!google.script||!google.script.run);
 
 var currentUser=null,currentPosition=null,currentStatus=null,masterCuti=[],currentAbsensiType='MASUK';
 var faceData={descriptor:null,photo:null};
 var cameraStream=null,livenessMode=null,videoElement=null,detectionLoop=null;
-var blinkEvents=0,smileHold=0,lastBlinkAt=0,livenessStep=0;
 var faceLandmarker=null,mpReady=false,mpLoading=false;
 var faNetsReady=false,faceApiLoaded=false;
 var lastCameraError='';
+
+/* State mesin liveness v4.8 */
+var calSamples=[],calibrated=false,baseEAR=0,baseBlink=0,baseSmile=0;
+var thEARClose=0,thEAROpen=0,thBlinkOn=0,thBlinkOff=0,thSmileOn=0;
+var eyeState='open',closedAt=0,blinkCount=0,smileHold=0,stableFrames=0,livenessStep=0;
+
 var MP_VER='0.10.14';
 var MP_WASM='https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@'+MP_VER+'/wasm';
 var MP_MODEL='https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
@@ -357,12 +368,14 @@ function callServer(fn,args,onOk,onFail,timeoutMs){
 function retryHtml(fn){return '<br><button type="button" class="btn btn-outline btn-sm" style="margin-top:10px" onclick="'+fn+'">🔄 Coba Lagi</button>'}
 function getDebugEl(){return document.getElementById(livenessMode==='attendance'?'debugInfo':'faceDebugInfo')}
 function getCamDebugEl(){return document.getElementById(livenessMode==='attendance'?'camDebug':'faceCamDebug')}
+function getInstrEl(){return document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus')}
+function getStatusEl(){return document.getElementById(livenessMode==='attendance'?'livenessStatus':'faceStatus')}
 
 /* ================= INIT ================= */
 document.addEventListener('DOMContentLoaded',function(){
   var ls=document.getElementById('loadingScreen');if(ls)ls.style.display='none';
   var mb=document.getElementById('modeBadge');
-  if(mb)mb.textContent=IS_STATIC?'MODE MOBILE/STATIS':'MODE APPS SCRIPT';
+  if(mb)mb.textContent=(IS_STATIC?'STATIS':'GAS')+' | '+(LIVENESS_MODE==='challenge'?'CHALLENGE':'PASSIVE');
   history.replaceState({screen:'login'},'','#login');
   var u=loadSession();
   if(u){
@@ -439,7 +452,7 @@ function enterMainScreen(){
   document.getElementById('menuAdmin').classList.toggle('hidden',!isAdmin);
   document.getElementById('menuApproval').classList.remove('hidden');
   loadStatusHariIni();loadApprovalCount();
-  preloadEngine(); // pre-warm MediaPipe setelah login
+  preloadEngine();
 }
 function loadStatusHariIni(){
   if(!currentUser||!currentUser.employee)return;
@@ -471,17 +484,14 @@ function getCurrentLocation(){
     {enableHighAccuracy:true,timeout:15000,maximumAge:0});
 }
 
-/* ================= MEDIAPIPE (LIVENESS RESPONSIF) ================= */
+/* ================= MEDIAPIPE ================= */
 function preloadEngine(){
   var run=function(){initMediaPipe()};
   if(window.requestIdleCallback)requestIdleCallback(run,{timeout:6000});else setTimeout(run,2500);
 }
 async function initMediaPipe(){
   if(mpReady)return true;
-  if(mpLoading){ // tunggu yang sedang loading
-    for(var i=0;i<40&&!mpReady;i++){await new Promise(r=>setTimeout(r,250))}
-    return mpReady;
-  }
+  if(mpLoading){for(var i=0;i<40&&!mpReady;i++){await new Promise(r=>setTimeout(r,250))}return mpReady}
   mpLoading=true;
   var cd=getCamDebugEl();
   try{
@@ -496,11 +506,7 @@ async function initMediaPipe(){
     mpReady=true;mpLoading=false;
     if(cd)cd.textContent='✅ Engine siap';
     return true;
-  }catch(err){
-    console.error('MediaPipe error:',err);
-    mpLoading=false;
-    return false;
-  }
+  }catch(err){console.error('MediaPipe error:',err);mpLoading=false;return false}
 }
 function getBlend(res,name){
   if(!res||!res.faceBlendshapes||!res.faceBlendshapes.length)return 0;
@@ -508,8 +514,22 @@ function getBlend(res,name){
   for(var i=0;i<cats.length;i++)if(cats[i].categoryName===name)return cats[i].score;
   return 0;
 }
+/* EAR (Eye Aspect Ratio) dari landmark 478 — sinyal kedua untuk kedip */
+function calcEAR(lm){
+  function d(a,b){return Math.hypot(lm[a].x-lm[b].x,lm[a].y-lm[b].y)}
+  var rV1=d(160,144),rV2=d(158,153),rH=d(33,133);
+  var lV1=d(385,373),lV2=d(384,380),lH=d(362,263);
+  var r=rH>0?(rV1+rV2)/(2*rH):0;
+  var l=lH>0?(lV1+lV2)/(2*lH):0;
+  return (r+l)/2;
+}
+function median(arr){
+  var s=arr.slice().sort(function(a,b){return a-b});
+  var m=Math.floor(s.length/2);
+  return s.length%2?s[m]:(s[m-1]+s[m])/2;
+}
 
-/* ================= FACE-API (DESCRIPTOR SATU KALI) ================= */
+/* ================= FACE-API (DESCRIPTOR SEKALI) ================= */
 function loadFaceApiScript(){
   return new Promise(function(resolve,reject){
     if(faceApiLoaded||typeof faceapi!=='undefined'){faceApiLoaded=true;resolve();return}
@@ -533,10 +553,8 @@ async function computeDescriptorOnce(source){
   return det?Array.from(det.descriptor):null;
 }
 
-/* ================= KAMERA ROBUST (ANTI LAYAR HITAM) ================= */
-function ensureVisible(video){
-  return new Promise(function(res){requestAnimationFrame(function(){requestAnimationFrame(function(){res()})})});
-}
+/* ================= KAMERA ROBUST ================= */
+function ensureVisible(video){return new Promise(function(res){requestAnimationFrame(function(){requestAnimationFrame(function(){res()})})})}
 function ensureVideoPlaying(video,cd){
   return new Promise(function(resolve){
     var tries=0;
@@ -544,8 +562,7 @@ function ensureVideoPlaying(video,cd){
       tries++;
       if(!video.paused&&video.readyState>=2&&video.videoWidth>0){resolve(true);return}
       if(tries>20){resolve(false);return}
-      var p=video.play();
-      if(p&&p.catch)p.catch(function(){});
+      var p=video.play();if(p&&p.catch)p.catch(function(){});
       if(cd)cd.textContent='⏳ Menyalakan kamera... ('+tries+')';
       setTimeout(attempt,300);
     }
@@ -563,8 +580,7 @@ function requestCamera(video){
     md.getUserMedia({video:{facingMode:'user',width:{ideal:640},height:{ideal:480}},audio:false})
       .then(async function(stream){
         cameraStream=stream;
-        var tracks=stream.getVideoTracks();
-        if(tracks.length===0){lastCameraError='Stream tanpa video track.';resolve(false);return}
+        if(stream.getVideoTracks().length===0){lastCameraError='Stream tanpa video track.';resolve(false);return}
         await ensureVisible(video);
         video.srcObject=stream;
         var okPlay=await ensureVideoPlaying(video,cd);
@@ -583,7 +599,7 @@ function mapCameraError(err){
   return 'Gagal akses kamera: '+(err&&err.message?err.message:err);
 }
 function showFlowError(msg){
-  var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
+  var ie=getInstrEl();
   if(ie){ie.textContent='❌ '+msg;ie.classList.add('err')}
   var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');
   if(rb)rb.classList.remove('hidden');
@@ -591,7 +607,7 @@ function showFlowError(msg){
 }
 function retryCurrentFlow(){
   var rb=document.getElementById(livenessMode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
-  var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');if(ie)ie.classList.remove('err');
+  var ie=getInstrEl();if(ie)ie.classList.remove('err');
   var v=document.getElementById(livenessMode==='attendance'?'cameraVideo':'faceVideo');
   startLivenessFlow(v,livenessMode);
 }
@@ -606,36 +622,44 @@ function stopCamera(){
   if(cameraStream){cameraStream.getTracks().forEach(function(t){t.stop()});cameraStream=null}
   if(detectionLoop){cancelAnimationFrame(detectionLoop);detectionLoop=null}
 }
+function resetLivenessState(){
+  calSamples=[];calibrated=false;baseEAR=0;baseBlink=0;baseSmile=0;
+  thEARClose=0;thEAROpen=0;thBlinkOn=0;thBlinkOff=0;thSmileOn=0;
+  eyeState='open';closedAt=0;blinkCount=0;smileHold=0;stableFrames=0;livenessStep=0;
+}
 
 async function startLivenessFlow(video,mode){
   videoElement=video;livenessMode=mode;
-  blinkEvents=0;smileHold=0;lastBlinkAt=0;livenessStep=0;
+  resetLivenessState();
   faceData.descriptor=null;faceData.photo=null;lastCameraError='';
   document.getElementById('verifyBtn').disabled=true;
   document.getElementById('faceCaptureBtn').disabled=true;
   var rb=document.getElementById(mode==='attendance'?'retryCameraBtn':'retryFaceBtn');if(rb)rb.classList.add('hidden');
-  var ie=document.getElementById(mode==='attendance'?'livenessInstruction':'faceStatus');
+  var ie=getInstrEl();
   if(ie){ie.classList.remove('err','success');ie.textContent='📷 Menyalakan kamera...'}
   updateLivenessProgress();
 
   var camOk=await requestCamera(video);
   if(!camOk){showFlowError(lastCameraError);return}
-
   var mpOk=await initMediaPipe();
   if(!mpOk){showFlowError('Engine AI gagal dimuat. Periksa koneksi, lalu 🔄 Coba Lagi.');return}
 
-  if(ie){ie.classList.remove('err');ie.textContent='Posisikan wajah dalam lingkaran, lalu kedipkan mata.'}
+  if(ie){
+    ie.classList.remove('err');
+    ie.textContent=(LIVENESS_MODE==='challenge')
+      ?'👀 Kalibrasi wajah... pandang lurus ke kamera.'
+      :'👀 Posisikan wajah dalam lingkaran & cukup cahaya.';
+  }
   detectionLoop=requestAnimationFrame(detectLivenessMP);
 }
 
-/* Loop liveness MediaPipe — sangat responsif (20-30 FPS) */
+/* ================= MESIN LIVENESS v4.8 ================= */
 async function detectLivenessMP(){
   if(!videoElement||videoElement.paused||videoElement.ended)return;
   try{
     var now=performance.now();
     var res=faceLandmarker.detectForVideo(videoElement,now);
-    var se=document.getElementById(livenessMode==='attendance'?'livenessStatus':'faceStatus');
-    var dbg=getDebugEl();
+    var se=getStatusEl(),dbg=getDebugEl(),ie=getInstrEl();
 
     if(!res.faceLandmarks||!res.faceLandmarks.length){
       if(se)se.innerHTML='<span style="color:var(--warning)">⚠️ Wajah tidak terdeteksi</span>';
@@ -643,56 +667,91 @@ async function detectLivenessMP(){
       detectionLoop=requestAnimationFrame(detectLivenessMP);return;
     }
 
+    var lm=res.faceLandmarks[0];
     var blink=(getBlend(res,'eyeBlinkLeft')+getBlend(res,'eyeBlinkRight'))/2;
     var smile=(getBlend(res,'mouthSmileLeft')+getBlend(res,'mouthSmileRight'))/2;
-    if(dbg)dbg.textContent='Blink: '+Math.round(blink*100)+'% | Smile: '+Math.round(smile*100)+'%';
+    var ear=calcEAR(lm);
 
+    /* ---- FASE 1: KALIBRASI PERSONAL (±15 frame) ---- */
+    if(!calibrated){
+      calSamples.push({ear:ear,blink:blink,smile:smile});
+      if(dbg)dbg.textContent='🎯 Kalibrasi... '+calSamples.length+'/15';
+      if(calSamples.length>=15){
+        var ears=calSamples.map(function(x){return x.ear}).filter(function(v){return v>0});
+        baseEAR=ears.length?median(ears):0.25;
+        baseBlink=calSamples.reduce(function(a,x){return a+x.blink},0)/calSamples.length;
+        baseSmile=calSamples.reduce(function(a,x){return a+x.smile},0)/calSamples.length;
+        thEARClose=baseEAR*0.72;
+        thEAROpen=baseEAR*0.88;
+        thBlinkOn=Math.max(0.3,baseBlink+0.25);
+        thBlinkOff=Math.max(0.12,baseBlink+0.08);
+        thSmileOn=Math.max(0.3,baseSmile+0.2);
+        calibrated=true;
+        if(LIVENESS_MODE==='challenge'){
+          if(ie)ie.textContent='✅ Kalibrasi selesai. Kedipkan mata 1x.';
+        }else{
+          if(ie)ie.textContent='✅ Terkunci. Tahan posisi...';
+        }
+        livenessStep=0;updateLivenessProgress();
+      }
+      detectionLoop=requestAnimationFrame(detectLivenessMP);return;
+    }
+
+    /* ---- MODE PASSIVE: wajah stabil = lolos ---- */
+    if(LIVENESS_MODE==='passive'){
+      stableFrames++;
+      if(se)se.textContent='👁️ Wajah terkunci... '+Math.min(100,Math.round(stableFrames/25*100))+'%';
+      if(dbg)dbg.textContent='EAR:'+Math.round(ear*100)+' | base:'+Math.round(baseEAR*100);
+      if(stableFrames>=25){livenessStep=2;updateLivenessProgress();await finalizeCapture();return}
+      detectionLoop=requestAnimationFrame(detectLivenessMP);return;
+    }
+
+    /* ---- MODE CHALLENGE ---- */
+    var earClosed=ear<thEARClose;
+    var blinkOn=blink>thBlinkOn;
+    var blinkOff=blink<thBlinkOff;
+    var earOpen=ear>thEAROpen;
+
+    /* Step 0: state machine kedipan (terbuka→tertutup→terbuka = 1 kedip) */
     if(livenessStep===0){
-      if(blink>0.45&&(now-lastBlinkAt)>400){blinkEvents++;lastBlinkAt=now}
-      if(se)se.textContent='👁️ Kedip terdeteksi: '+blinkEvents+'/1';
-      updateLivenessProgress();
-      if(blinkEvents>=1){
+      if(eyeState==='open'&&(earClosed||blinkOn)){eyeState='closed';closedAt=now}
+      else if(eyeState==='closed'&&earOpen&&blinkOff){
+        if(now-closedAt>=60){blinkCount++}
+        eyeState='open';
+      }
+      if(se)se.textContent='👁️ Kedip terdeteksi: '+blinkCount+'/1';
+      if(dbg)dbg.textContent='EAR:'+Math.round(ear*100)+'% (th '+Math.round(thEARClose*100)+') | blink:'+blink.toFixed(2)+' | '+(eyeState==='closed'?'🔴TERTUTUP':'🟢TERBUKA');
+      if(blinkCount>=1){
         livenessStep=1;
-        var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
         if(ie)ie.textContent='✅ Kedip OK! Sekarang tersenyumlah.';
         updateLivenessProgress();
       }
-    }else if(livenessStep===1){
-      if(smile>0.3)smileHold++;else smileHold=Math.max(0,smileHold-1);
+    }
+    /* Step 1: senyum relatif terhadap baseline */
+    else if(livenessStep===1){
+      if(smile>thSmileOn)smileHold++;else smileHold=Math.max(0,smileHold-1);
       if(se)se.textContent='😊 Senyum... '+Math.min(100,Math.round(smileHold/6*100))+'%';
-      if(smileHold>=6){
-        livenessStep=2;
-        updateLivenessProgress();
-        await finalizeCapture();
-        return;
-      }
+      if(dbg)dbg.textContent='smile:'+smile.toFixed(2)+' (th '+thSmileOn.toFixed(2)+') | hold:'+smileHold;
+      if(smileHold>=6){livenessStep=2;updateLivenessProgress();await finalizeCapture();return}
     }
   }catch(err){console.error(err);var d=getDebugEl();if(d)d.textContent='Error: '+err.message}
   detectionLoop=requestAnimationFrame(detectLivenessMP);
 }
 
-/* Saat liveness lolos: tangkap frame + hitung descriptor SEKALI */
 async function finalizeCapture(){
   stopCamera();
-  var ie=document.getElementById(livenessMode==='attendance'?'livenessInstruction':'faceStatus');
-  var se=document.getElementById(livenessMode==='attendance'?'livenessStatus':'faceStatus');
+  var ie=getInstrEl();
   if(ie){ie.classList.add('success');ie.innerHTML='✅ Liveness OK! Menghitung sidik wajah...'}
   try{
     var canvas=captureFrameCanvas(videoElement);
     var desc=await computeDescriptorOnce(canvas);
-    if(!desc){
-      showFlowError('Sidik wajah tidak terbaca. Pastikan wajah terang & tidak tertutup. 🔄 Coba Lagi.');
-      return;
-    }
+    if(!desc){showFlowError('Sidik wajah tidak terbaca. Pastikan wajah terang & tidak tertutup. 🔄 Coba Lagi.');return}
     faceData.descriptor=desc;
     faceData.photo=canvas.toDataURL('image/jpeg',0.7);
     if(ie)ie.innerHTML='✅ Verifikasi berhasil!';
     if(livenessMode==='attendance')document.getElementById('verifyBtn').disabled=false;
     else document.getElementById('faceCaptureBtn').disabled=false;
-  }catch(err){
-    console.error(err);
-    showFlowError('Gagal menghitung sidik wajah. 🔄 Coba Lagi.');
-  }
+  }catch(err){console.error(err);showFlowError('Gagal menghitung sidik wajah. 🔄 Coba Lagi.')}
 }
 function captureFrameCanvas(video){
   var maxW=640,w=video.videoWidth,h=video.videoHeight,s=Math.min(1,maxW/w);
