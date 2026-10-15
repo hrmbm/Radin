@@ -1,8 +1,8 @@
 'use strict';
 
-var CACHE_NAME = 'presensi-static-v13-4';
-var SHELL_CACHE = 'presensi-shell-v13-4';
-var CDN_CACHE = 'presensi-cdn-v13-4';
+var CACHE_NAME = 'presensi-static-v13-5';
+var SHELL_CACHE = 'presensi-shell-v13-5';
+var CDN_CACHE = 'presensi-cdn-v13-5';
 var APP_SHELL = ['./'];
 
 self.addEventListener('install', function (event) {
