@@ -2515,7 +2515,131 @@ input, select, textarea {
 .clock-pill button.co { color: #007850; font-weight: 700; }
 .clock-pill button.co svg { stroke: #007850; }
 .clock-pill button:disabled { opacity: 0.45; }
-</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script></head>
+</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><style id="rh-theme-studio">
+/* === ReHolz Theme Studio: varian tema latar & ukuran font per-segmen ===
+   Ditambahkan tanpa mengubah tema bawaan; aktif hanya saat html[data-theme] dipilih. */
+html .menu-item span, html .menu-item .menu-label { font-size: var(--fz-menu, 11.5px) !important; line-height: 1.3 !important; }
+html .sheet-item { font-size: var(--fz-sheet, 14px) !important; }
+html #tabbar button, html #tabbar .tab-item { font-size: var(--fz-tab, 10.5px) !important; }
+html .topbar h1 { font-size: var(--fz-top, 16.5px) !important; }
+html .d-nav-item { font-size: var(--fz-nav, 13px) !important; }
+
+/* Latar setelah login: hanya body & .scr; splash, login, kartu, dan topbar bawaan tidak diubah */
+html[data-theme] body, html[data-theme] .scr { background-attachment: fixed; }
+
+/* 1. Kayu Jati — latar kayu gelap */
+html[data-theme="wood"] body, html[data-theme="wood"] .scr {
+  background-color: #4A3520 !important;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(26,15,6,0.32) 0px, rgba(26,15,6,0.32) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 118px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.05) 0px, rgba(255,255,255,0.05) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 118px),
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.045) 0px, rgba(0,0,0,0.045) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 5px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 9px),
+    linear-gradient(90deg, #503A22 0%, #63482B 24%, #4C3520 49%, #5D4429 75%, #483219 100%) !important;
+}
+
+/* 2. Kayu Pinus — latar kayu lebih terang */
+html[data-theme="woodlight"] body, html[data-theme="woodlight"] .scr {
+  background-color: #DEC49B !important;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(120,84,44,0.16) 0px, rgba(120,84,44,0.16) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 128px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.28) 0px, rgba(255,255,255,0.28) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 128px),
+    repeating-linear-gradient(0deg, rgba(120,84,44,0.05) 0px, rgba(120,84,44,0.05) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 6px),
+    linear-gradient(90deg, #E4CCA4 0%, #D6B98C 26%, #E9D3AB 52%, #D2B183 78%, #E2C89E 100%) !important;
+}
+
+/* 3. ReHolz Signature — tekstur kayu hijau khas ReHolz */
+html[data-theme="reholz"] body, html[data-theme="reholz"] .scr {
+  background-color: #0A5540 !important;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(0,38,26,0.38) 0px, rgba(0,38,26,0.38) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 112px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.06) 0px, rgba(255,255,255,0.06) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 112px),
+    repeating-linear-gradient(0deg, rgba(0,30,20,0.10) 0px, rgba(0,30,20,0.10) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 5px),
+    linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 38%),
+    linear-gradient(90deg, #0B5C40 0%, #0E6B49 24%, #095236 50%, #0D6543 76%, #084A33 100%) !important;
+}
+
+/* 4. Midnight Futuristik */
+html[data-theme="midnight"] body, html[data-theme="midnight"] .scr {
+  background-color: #0B1220 !important;
+  background-image:
+    radial-gradient(1000px 620px at 85% -10%, rgba(0,160,110,0.20), rgba(0,0,0,0) 62%),
+    radial-gradient(820px 540px at -12% 110%, rgba(64,96,190,0.16), rgba(0,0,0,0) 60%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.022) 0px, rgba(255,255,255,0.022) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 46px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.022) 0px, rgba(255,255,255,0.022) 1px, rgba(0,0,0,0) 1px, rgba(0,0,0,0) 46px),
+    linear-gradient(165deg, #0B1220 0%, #101B2E 100%) !important;
+}
+
+/* 5. Ivory Elegan */
+html[data-theme="ivory"] body, html[data-theme="ivory"] .scr {
+  background-color: #F3EEE2 !important;
+  background-image:
+    radial-gradient(900px 600px at 50% -10%, rgba(183,121,50,0.07), rgba(0,0,0,0) 60%),
+    linear-gradient(180deg, #F6F1E6 0%, #F0EADA 100%) !important;
+}
+
+/* 6. Aurora Glass */
+html[data-theme="aurora"] body, html[data-theme="aurora"] .scr {
+  background-color: #F4F8F7 !important;
+  background-image:
+    radial-gradient(720px 420px at 88% -6%, rgba(0,120,80,0.10), rgba(0,0,0,0) 60%),
+    radial-gradient(640px 520px at -8% 104%, rgba(70,120,200,0.09), rgba(0,0,0,0) 62%),
+    linear-gradient(180deg, #F7FBF9 0%, #EEF4F1 100%) !important;
+}
+
+/* Keterbacaan: teks yang berada langsung di atas latar gelap dibuat terang */
+html[data-theme="wood"] .greet small, html[data-theme="reholz"] .greet small, html[data-theme="midnight"] .greet small,
+html[data-theme="wood"] .date-lbl, html[data-theme="reholz"] .date-lbl, html[data-theme="midnight"] .date-lbl { color: rgba(255,255,255,0.72); }
+html[data-theme="wood"] .greet b, html[data-theme="reholz"] .greet b, html[data-theme="midnight"] .greet b,
+html[data-theme="wood"] .sec-title h2, html[data-theme="reholz"] .sec-title h2, html[data-theme="midnight"] .sec-title h2 { color: #F4F1EA; }
+html[data-theme="wood"] .sec-title a, html[data-theme="reholz"] .sec-title a { color: #B9E3C8; }
+html[data-theme="midnight"] .sec-title a { color: #6FD3A5; }
+html[data-theme="wood"] .hint, html[data-theme="reholz"] .hint, html[data-theme="midnight"] .hint { color: rgba(255,255,255,0.55); }
+
+/* Topbar polos di atas latar gelap: panel buram agar teks tetap terbaca */
+html[data-theme="wood"] .topbar:not(.red), html[data-theme="reholz"] .topbar:not(.red) {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+html[data-theme="midnight"] .topbar:not(.red) {
+  background: rgba(13,21,38,0.86);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom-color: rgba(255,255,255,0.08);
+}
+html[data-theme="midnight"] .topbar:not(.red) h1 { color: #EDF3FA; }
+html[data-theme="midnight"] .topbar:not(.red) .back { color: #E6EDF3; background: rgba(255,255,255,0.10); }
+
+/* Panel Tema & Tampilan (sheet) */
+.tm-note { font-size: 12px; color: var(--txt-muted); margin: -6px 0 12px; line-height: 1.5; }
+.tm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tm-card { position: relative; border: 1.5px solid var(--line); border-radius: 14px; padding: 8px; text-align: left; background: #fff; transition: border-color .15s ease, box-shadow .15s ease; }
+.tm-card:active { transform: scale(0.98); }
+.tm-card.on { border-color: var(--wood); box-shadow: 0 0 0 3px rgba(0,120,80,0.12); }
+.tm-sw { display: block; height: 54px; border-radius: 9px; border: 1px solid rgba(0,0,0,0.06); }
+.tm-sw-emerald { background: linear-gradient(150deg, #FFFFFF 0%, #F4F8F5 55%, #DCE9E0 100%); }
+.tm-sw-wood { background: repeating-linear-gradient(90deg, rgba(26,15,6,0.32) 0 2px, rgba(0,0,0,0) 2px 26px), linear-gradient(90deg, #503A22, #63482B 30%, #4C3520 55%, #5D4429); }
+.tm-sw-woodlight { background: repeating-linear-gradient(90deg, rgba(120,84,44,0.16) 0 2px, rgba(0,0,0,0) 2px 28px), linear-gradient(90deg, #E4CCA4, #D6B98C 35%, #E9D3AB 60%, #D2B183); }
+.tm-sw-reholz { background: repeating-linear-gradient(90deg, rgba(0,38,26,0.38) 0 2px, rgba(0,0,0,0) 2px 24px), linear-gradient(90deg, #0B5C40, #0E6B49 30%, #095236 55%, #0D6543); }
+.tm-sw-midnight { background: radial-gradient(120px 60px at 80% 0%, rgba(0,160,110,0.35), rgba(0,0,0,0) 70%), linear-gradient(165deg, #0B1220, #16233A); }
+.tm-sw-ivory { background: radial-gradient(120px 70px at 50% 0%, rgba(183,121,50,0.12), rgba(0,0,0,0) 65%), linear-gradient(180deg, #F6F1E6, #EFE8D7); }
+.tm-sw-aurora { background: radial-gradient(90px 46px at 85% 0%, rgba(0,120,80,0.18), rgba(0,0,0,0) 65%), radial-gradient(90px 60px at 5% 100%, rgba(70,120,200,0.15), rgba(0,0,0,0) 65%), linear-gradient(180deg, #F7FBF9, #ECF3EF); }
+.tm-name { display: block; font-size: 12.5px; font-weight: 700; color: var(--txt); margin-top: 7px; }
+.tm-desc { display: block; font-size: 10.5px; color: var(--txt-muted); margin-top: 1px; line-height: 1.35; }
+.tm-check { position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; border-radius: 50%; background: var(--wood); color: #fff; font-size: 12px; font-weight: 800; display: none; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,64,42,0.25); }
+.tm-card.on .tm-check { display: flex; }
+.tm-sec { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--txt-muted); text-transform: uppercase; margin: 18px 2px 8px; }
+.tm-frow { display: flex; align-items: center; gap: 10px; padding: 8px 2px; }
+.tm-frow label { flex: 0 0 118px; font-size: 12.5px; color: var(--txt); font-weight: 600; }
+.tm-frow input[type="range"] { flex: 1; accent-color: #007850; height: 26px; }
+.tm-frow b { flex: 0 0 42px; text-align: right; font-size: 12px; color: var(--wood); }
+</style>
+<script>
+/* Terapkan tema & ukuran font tersimpan sedini mungkin (mencegah kedip tampilan) */
+(function(){try{var t=localStorage.getItem('rh_theme_v1');if(t)document.documentElement.setAttribute('data-theme',t);var f=JSON.parse(localStorage.getItem('rh_fonts_v1')||'null');if(f){var m={menu:'--fz-menu',sheet:'--fz-sheet',tab:'--fz-tab',top:'--fz-top',nav:'--fz-nav'},s=document.documentElement.style;for(var k in m){if(f[k])s.setProperty(m[k],f[k]+'px');}}}catch(e){}})();
+</script>
+</head>
 <body>
 
 <!-- Desktop Navigation Sidebar -->
@@ -3709,6 +3833,18 @@ window.__APP_PREPARING_ASSETS = true;
         Ubah PIN
         <span class="arr"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#8FA79A" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg></span>
       </button>
+      <button class="sheet-item" onclick="openTema()">
+        <div class="si" style="background:#F2EDFB;border-color:rgba(94,75,155,0.16)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#5E4B9B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a9 9 0 100 18c1.1 0 1.8-.7 1.8-1.6 0-.8-.6-1.3-.6-2.1 0-.9.7-1.6 1.7-1.6H17a4 4 0 004-4c0-4.4-4-7.7-9-7.7z"></path>
+            <circle cx="7.5" cy="10.5" r="1.1" fill="#5E4B9B" stroke="none"></circle>
+            <circle cx="11" cy="7.4" r="1.1" fill="#B77932" stroke="none"></circle>
+            <circle cx="15.4" cy="8.6" r="1.1" fill="#007850" stroke="none"></circle>
+          </svg>
+        </div>
+        Tema &amp; Tampilan
+        <span class="arr"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#8FA79A" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg></span>
+      </button>
     </div>
 
     <div class="card" style="padding:6px 16px">
@@ -3817,6 +3953,68 @@ window.__APP_PREPARING_ASSETS = true;
         </button>
       </h3>
       <div class="karyawan-form" id="karFormBody"></div>
+    </div>
+
+    <!-- Theme & Appearance sheet -->
+    <div id="shTema" style="display:none">
+      <h3>
+        Tema &amp; Tampilan
+        <button onclick="closeSheet()">
+          <svg class="sh-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </h3>
+      <p class="tm-note">Tema menggantikan latar belakang setelah login; splash, halaman login, kartu, dan seluruh fungsi tetap sama. Pilihan tersimpan di perangkat ini dan otomatis menjadi <b>tampilan default</b> saat aplikasi dibuka.</p>
+      <div class="tm-grid">
+        <button class="tm-card" data-theme="emerald" onclick="setTheme('emerald')">
+          <span class="tm-sw tm-sw-emerald"></span>
+          <span class="tm-name">ReHolz Emerald</span>
+          <span class="tm-desc">Tema bawaan saat ini</span>
+          <span class="tm-check">✓</span>
+        </button>
+        <button class="tm-card" data-theme="wood" onclick="setTheme('wood')">
+          <span class="tm-sw tm-sw-wood"></span>
+          <span class="tm-name">Kayu Jati</span>
+          <span class="tm-desc">Latar kayu gelap klasik</span>
+          <span class="tm-check">✓</span>
+        </button>
+        <button class="tm-card" data-theme="woodlight" onclick="setTheme('woodlight')">
+          <span class="tm-sw tm-sw-woodlight"></span>
+          <span class="tm-name">Kayu Pinus</span>
+          <span class="tm-desc">Latar kayu lebih terang</span>
+          <span class="tm-check">✓</span>
+        </button>
+        <button class="tm-card" data-theme="reholz" onclick="setTheme('reholz')">
+          <span class="tm-sw tm-sw-reholz"></span>
+          <span class="tm-name">ReHolz Signature</span>
+          <span class="tm-desc">Tekstur kayu khas ReHolz</span>
+          <span class="tm-check">✓</span>
+        </button>
+        <button class="tm-card" data-theme="midnight" onclick="setTheme('midnight')">
+          <span class="tm-sw tm-sw-midnight"></span>
+          <span class="tm-name">Midnight Futuristik</span>
+          <span class="tm-desc">Gelap, modern, fokus</span>
+          <span class="tm-check">✓</span>
+        </button>
+        <button class="tm-card" data-theme="ivory" onclick="setTheme('ivory')">
+          <span class="tm-sw tm-sw-ivory"></span>
+          <span class="tm-name">Ivory Elegan</span>
+          <span class="tm-desc">Terang hangat minimalis</span>
+          <span class="tm-check">✓</span>
+        </button>
+        <button class="tm-card" data-theme="aurora" onclick="setTheme('aurora')">
+          <span class="tm-sw tm-sw-aurora"></span>
+          <span class="tm-name">Aurora Glass</span>
+          <span class="tm-desc">Terang futuristik lembut</span>
+          <span class="tm-check">✓</span>
+        </button>
+      </div>
+      <div class="tm-sec">Ukuran Font</div>
+      <div class="tm-frow"><label>Menu Beranda</label><input type="range" id="fzMenu" min="9" max="16" step="0.5" oninput="fzInput('menu',this.value)"><b id="fzMenuV">11.5</b></div>
+      <div class="tm-frow"><label>Menu popup / dropdown</label><input type="range" id="fzSheet" min="11" max="18" step="0.5" oninput="fzInput('sheet',this.value)"><b id="fzSheetV">14</b></div>
+      <div class="tm-frow"><label>Navigasi bawah</label><input type="range" id="fzTab" min="8" max="14" step="0.5" oninput="fzInput('tab',this.value)"><b id="fzTabV">10.5</b></div>
+      <div class="tm-frow"><label>Judul halaman</label><input type="range" id="fzTop" min="13" max="22" step="0.5" oninput="fzInput('top',this.value)"><b id="fzTopV">16.5</b></div>
+      <div class="tm-frow"><label>Menu samping (desktop)</label><input type="range" id="fzNav" min="10" max="17" step="0.5" oninput="fzInput('nav',this.value)"><b id="fzNavV">13</b></div>
+      <button class="btn btn-ghost" style="margin-top:12px" onclick="resetFonts()">Reset ukuran font</button>
     </div>
   </div>
 </div>
@@ -4771,7 +4969,7 @@ var _backTo = 's-inbox';
 function backTarget() { return _backTo; }
 
 function openSheet(id) {
-  ['shAjukan', 'shProfile', 'shPin', 'shFace', 'shKarForm', 'shKarDetail'].forEach(function(x) { $(x).style.display = 'none'; });
+  ['shAjukan', 'shProfile', 'shPin', 'shFace', 'shKarForm', 'shKarDetail', 'shTema'].forEach(function(x) { $(x).style.display = 'none'; });
   $(id).style.display = 'block';
   $('ov').classList.toggle('face-enroll-mode', id === 'shFace');
   $('ov').classList.add('on');
@@ -7248,5 +7446,32 @@ function showHrPlaceholder(title, group, description) {
 
 
 
+
+<script>
+/* ReHolz Theme Studio — logika tema & ukuran font (murni tampilan, tersimpan lokal di perangkat) */
+(function(){
+  var TKEY='rh_theme_v1', FKEY='rh_fonts_v1';
+  var THEMES={emerald:'ReHolz Emerald',wood:'Kayu Jati',woodlight:'Kayu Pinus',reholz:'ReHolz Signature',midnight:'Midnight Futuristik',ivory:'Ivory Elegan',aurora:'Aurora Glass'};
+  var FDEF={menu:11.5,sheet:14,tab:10.5,top:16.5,nav:13};
+  var FVAR={menu:'--fz-menu',sheet:'--fz-sheet',tab:'--fz-tab',top:'--fz-top',nav:'--fz-nav'};
+  var FEL={menu:'fzMenu',sheet:'fzSheet',tab:'fzTab',top:'fzTop',nav:'fzNav'};
+  function lsGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function lsSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function lsDel(k){try{localStorage.removeItem(k);}catch(e){}}
+  function tmToast(m){var t=document.getElementById('toast');if(!t)return;t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('on');},3200);}
+  function curTheme(){var t=lsGet(TKEY);return THEMES[t]?t:'emerald';}
+  function markTheme(t){var c=document.querySelectorAll('.tm-card');for(var i=0;i<c.length;i++){c[i].classList.toggle('on',c[i].getAttribute('data-theme')===t);}}
+  function applyTheme(t){document.documentElement.setAttribute('data-theme',t);markTheme(t);}
+  function getFonts(){var f=null;try{f=JSON.parse(lsGet(FKEY)||'null');}catch(e){}var r={},k;for(k in FDEF){r[k]=(f&&isFinite(+f[k]))?+f[k]:FDEF[k];}return r;}
+  function syncFontUi(f){for(var k in FEL){var el=document.getElementById(FEL[k]),v=document.getElementById(FEL[k]+'V');if(el)el.value=f[k];if(v)v.textContent=f[k];}}
+  function applyFonts(f){var s=document.documentElement.style,k;for(k in FVAR){s.setProperty(FVAR[k],f[k]+'px');}syncFontUi(f);}
+  window.setTheme=function(t){if(!THEMES[t])return;lsSet(TKEY,t);applyTheme(t);tmToast('Tema aktif: '+THEMES[t]+' (tersimpan sebagai default)');};
+  window.openTema=function(){applyTheme(curTheme());applyFonts(getFonts());openSheet('shTema');};
+  window.fzInput=function(k,val){var v=parseFloat(val);if(!isFinite(v)||!FVAR[k])return;var f=getFonts();f[k]=v;document.documentElement.style.setProperty(FVAR[k],v+'px');var lbl=document.getElementById(FEL[k]+'V');if(lbl)lbl.textContent=v;lsSet(FKEY,JSON.stringify(f));};
+  window.resetFonts=function(){lsDel(FKEY);applyFonts(FDEF);tmToast('Ukuran font dikembalikan ke standar');};
+  applyTheme(curTheme());
+  applyFonts(getFonts());
+})();
+</script>
 
 </body></html>
