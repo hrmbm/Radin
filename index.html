@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="13.4-theme-studio-textures">
+<meta name="app-release" content="13.5-desktop-console-photocache">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Aplikasi Presensi Karyawan ReHolz dengan tema More-Than-Wood material, Face ID AI, GPS Geofencing, dan Manajemen Cuti.">
 <meta property="og:title" content="Presensi ReHolz">
@@ -4213,7 +4213,7 @@ window.__APP_PREPARING_ASSETS = true;
 <script type="module">
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
-var APP_VERSION = '6.3-SUPABASE-REHOLZ-GPS-ABSENSI-FIX3';
+var APP_VERSION = '6.4-SUPABASE-REHOLZ-DESKTOP-CONSOLE-PHOTOCACHE';
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 var FACE_API_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
 var FACE_MATCH_THRESHOLD = 0.55;
@@ -4728,40 +4728,267 @@ function restoreLastScreen(cb) {
   done();
 }
 
-function faceCacheAll() {
-  if (FACECACHE === null) {
-    try { FACECACHE = JSON.parse(localStorage.getItem('tk_faces_v1') || '{}'); } catch (e) { FACECACHE = {}; }
+/* ============================================================
+   RHMediaCache v1 — Cache foto karyawan berlapis (baru)
+   Masalah lama: foto disimpan sebagai satu JSON raksasa di
+   localStorage (±3 MB/foto asli, limit ±5 MB) sehingga setItem
+   selalu gagal -> foto diunduh ulang setiap kali buka menu.
+   Solusi:
+   - Foto di-downscale sekali (maks 320px, JPEG q0.85) -> ±10-40 KB.
+   - Disimpan per-NIK di IndexedDB (store "photos") + mirror
+     in-memory agar pembacaan sinkron (avaInner) tetap instan.
+   - Invalidasi berbasis faceVer dari server: foto hanya diunduh
+     ulang bila versi berubah.
+   - localStorage 'tk_faces_v1' lama dimigrasi sekali lalu dibersihkan.
+   API sinkron faceCacheHas/faceCacheGet/faceCachePut/faceCacheAll
+   dipertahankan agar kode mobile yang sudah stabil tidak berubah.
+   ============================================================ */
+var RHMediaCache = (function () {
+  var DB_NAME = 'reholz_media_v1';
+  var mem = {};            // nik -> {ver, ph, desc}
+  var db = null, dbReady = false, readyCbs = [];
+  var flushing = {};
+
+  function notifyReady() {
+    dbReady = true;
+    while (readyCbs.length) { try { readyCbs.shift()(); } catch (e) {} }
   }
-  return FACECACHE;
-}
+  function onReady(cb) { if (dbReady) cb(); else readyCbs.push(cb); }
 
-function faceCacheHas(nik, ver) {
-  var c = faceCacheAll()[nik];
-  return !!(c && c.ver === ver && typeof c.ph === 'string');
-}
+  function open() {
+    return new Promise(function (resolve) {
+      var req;
+      try { req = indexedDB.open(DB_NAME, 1); } catch (e) { return resolve(null); }
+      req.onupgradeneeded = function () {
+        try {
+          var d = req.result;
+          if (!d.objectStoreNames.contains('photos')) d.createObjectStore('photos', { keyPath: 'nik' });
+          if (!d.objectStoreNames.contains('kv')) d.createObjectStore('kv', { keyPath: 'k' });
+        } catch (e) {}
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { resolve(null); };
+      req.onblocked = function () { resolve(null); };
+    });
+  }
+  function idbPut(store, val) {
+    return new Promise(function (resolve) {
+      if (!db) return resolve(false);
+      try {
+        var tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).put(val);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(false); };
+        tx.onabort = function () { resolve(false); };
+      } catch (e) { resolve(false); }
+    });
+  }
+  function idbDel(store, key) {
+    return new Promise(function (resolve) {
+      if (!db) return resolve(false);
+      try {
+        var tx = db.transaction(store, 'readwrite');
+        tx.objectStore(store).delete(key);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(false); };
+      } catch (e) { resolve(false); }
+    });
+  }
+  function idbAll(store) {
+    return new Promise(function (resolve) {
+      if (!db) return resolve([]);
+      try {
+        var tx = db.transaction(store, 'readonly');
+        var rq = tx.objectStore(store).getAll();
+        rq.onsuccess = function () { resolve(rq.result || []); };
+        rq.onerror = function () { resolve([]); };
+      } catch (e) { resolve([]); }
+    });
+  }
 
-function faceCacheGet(nik, ver) {
-  var c = faceCacheAll()[nik];
-  return (c && c.ver === ver && typeof c.ph === 'string') ? c.ph : null;
-}
+  // Downscale foto ke avatar maks 320px (async, sekali per foto).
+  function shrink(dataUrl) {
+    return new Promise(function (resolve) {
+      if (typeof dataUrl !== 'string' || dataUrl.indexOf('data:image') !== 0 || dataUrl.length < 60000) {
+        return resolve(dataUrl);
+      }
+      try {
+        var img = new Image();
+        var done = false;
+        var to = setTimeout(function () { if (!done) { done = true; resolve(dataUrl); } }, 4000);
+        img.onload = function () {
+          if (done) return; done = true; clearTimeout(to);
+          try {
+            var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+            var MAX = 320;
+            if (!w || !h) return resolve(dataUrl);
+            if (w <= MAX && h <= MAX) return resolve(dataUrl);
+            var sc = MAX / Math.max(w, h);
+            var cw = Math.max(1, Math.round(w * sc)), ch = Math.max(1, Math.round(h * sc));
+            var cv = document.createElement('canvas');
+            cv.width = cw; cv.height = ch;
+            var cx = cv.getContext('2d');
+            cx.drawImage(img, 0, 0, cw, ch);
+            var out = cv.toDataURL('image/jpeg', 0.85);
+            resolve(out && out.length < dataUrl.length ? out : dataUrl);
+          } catch (e) { resolve(dataUrl); }
+        };
+        img.onerror = function () { if (!done) { done = true; clearTimeout(to); resolve(dataUrl); } };
+        img.src = dataUrl;
+      } catch (e) { resolve(dataUrl); }
+    });
+  }
 
-function faceCachePut(nik, ver, ph) {
-  var a = faceCacheAll();
-  a[nik] = { ver: ver, ph: ph };
-  try { localStorage.setItem('tk_faces_v1', JSON.stringify(a)); } catch (e) {}
-}
+  function persist(nik) {
+    var rec = mem[nik];
+    if (!rec) return;
+    if (flushing[nik]) return;
+    flushing[nik] = true;
+    idbPut('photos', { nik: nik, ver: rec.ver || 0, ph: rec.ph || '', ts: Date.now() })
+      .then(function () { delete flushing[nik]; });
+  }
 
-function faceCacheGetDesc(nik, ver) {
-  var c = faceCacheAll()[nik];
-  return (c && c.ver === ver && c.desc) ? c.desc : null;
-}
+  function kvSet(k, v) { return idbPut('kv', { k: k, v: v, ts: Date.now() }); }
+  function kvGet(k) {
+    return new Promise(function (resolve) {
+      if (!db) return resolve(null);
+      try {
+        var tx = db.transaction('kv', 'readonly');
+        var rq = tx.objectStore('kv').get(k);
+        rq.onsuccess = function () { resolve(rq.result ? rq.result.v : null); };
+        rq.onerror = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+  }
 
-function faceCachePutDesc(nik, ver, desc) {
-  var a = faceCacheAll();
-  if (!a[nik]) a[nik] = { ver: ver };
-  a[nik].desc = desc;
-  try { localStorage.setItem('tk_faces_v1', JSON.stringify(a)); } catch (e) {}
-}
+  // Migrasi satu kali dari localStorage lama + muat mirror memori.
+  var bootPromise = open().then(function (d) {
+    db = d;
+    return idbAll('photos');
+  }).then(function (rows) {
+    rows.forEach(function (r) { if (r && r.nik) mem[r.nik] = { ver: r.ver || 0, ph: r.ph || '' }; });
+    // Muat descriptor wajah dari kv (dipisah agar tidak tertimpa put foto).
+    return idbAll('kv').then(function (kvs) {
+      kvs.forEach(function (row) {
+        if (row && row.k && row.k.indexOf('desc:') === 0 && row.v && mem[row.k.slice(5)]) {
+          mem[row.k.slice(5)].desc = row.v.desc;
+        }
+      });
+    });
+  }).then(function () {
+    // Migrasi localStorage lama (jika ada & IndexedDB tersedia).
+    var legacy = null;
+    try { legacy = JSON.parse(localStorage.getItem('tk_faces_v1') || 'null'); } catch (e) {}
+    if (legacy && typeof legacy === 'object') {
+      var niks = Object.keys(legacy);
+      var chain = Promise.resolve();
+      niks.forEach(function (nik) {
+        var c = legacy[nik];
+        if (!c) return;
+        if (typeof c.ph === 'string' && c.ph) {
+          chain = chain.then(function () {
+            return shrink(c.ph).then(function (small) {
+              if (!mem[nik] || mem[nik].ver !== c.ver) {
+                mem[nik] = { ver: c.ver || 0, ph: small };
+                persist(nik);
+              }
+            });
+          });
+        }
+        if (c.desc) {
+          if (!mem[nik]) mem[nik] = { ver: c.ver || 0, ph: '' };
+          mem[nik].desc = c.desc;
+          kvSet('desc:' + nik, { desc: c.desc, ver: c.ver || 0 });
+        }
+      });
+      return chain.then(function () {
+        try { localStorage.removeItem('tk_faces_v1'); } catch (e) {}
+      });
+    }
+  }).catch(function () {}).then(function () { notifyReady(); });
+
+  return {
+    ready: onReady,
+    readyPromise: bootPromise,
+    has: function (nik, ver) {
+      var c = mem[nik];
+      return !!(c && c.ver === ver && typeof c.ph === 'string');
+    },
+    get: function (nik, ver) {
+      var c = mem[nik];
+      return (c && c.ver === ver && typeof c.ph === 'string') ? c.ph : null;
+    },
+    // Dipanggil hydrateFaces dengan foto asli dari server: perkecil lalu simpan.
+    put: function (nik, ver, ph) {
+      var prev = mem[nik] || {};
+      mem[nik] = { ver: ver, ph: ph, desc: prev.desc };
+      if (typeof ph === 'string' && ph.length > 60000) {
+        shrink(ph).then(function (small) {
+          var cur = mem[nik];
+          if (cur && cur.ver === ver && cur.ph === ph) {
+            cur.ph = small;
+            persist(nik);
+            // Perbarui tampilan bila foto sudah terlanjur dirender versi besar.
+            try {
+              document.querySelectorAll('[data-facenik="' + nik + '"]').forEach(function (el) {
+                if (+(el.getAttribute('data-facever') || 0) === ver) {
+                  el.innerHTML = small ? '<img src="' + small + '" alt="">' : '';
+                }
+              });
+            } catch (e) {}
+          }
+        });
+      } else {
+        persist(nik);
+      }
+    },
+    getDesc: function (nik, ver) {
+      var c = mem[nik];
+      return (c && c.ver === ver && c.desc) ? c.desc : null;
+    },
+    putDesc: function (nik, ver, desc) {
+      var c = mem[nik] || { ver: ver, ph: '' };
+      c.desc = desc;
+      mem[nik] = c;
+      kvSet('desc:' + nik, { desc: desc, ver: ver });
+    },
+    invalidate: function (nik) {
+      delete mem[nik];
+      idbDel('photos', nik);
+      idbDel('kv', 'desc:' + nik);
+    },
+    clearAll: function () {
+      mem = {};
+      if (!db) return Promise.resolve(false);
+      return new Promise(function (resolve) {
+        try {
+          var tx = db.transaction(['photos', 'kv'], 'readwrite');
+          tx.objectStore('photos').clear();
+          tx.objectStore('kv').clear();
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = function () { resolve(false); };
+        } catch (e) { resolve(false); }
+      });
+    },
+    kvGet: kvGet,
+    kvSet: kvSet,
+    stats: function () {
+      var n = 0, bytes = 0;
+      Object.keys(mem).forEach(function (k) { if (mem[k] && mem[k].ph) { n++; bytes += mem[k].ph.length; } });
+      return { photos: n, approxBytes: bytes, idb: !!db };
+    },
+    _mem: function () { return mem; }
+  };
+})();
+
+/* ---- Fasad sinkron kompatibel dengan kode lama (jangan diubah pemakaiannya) ---- */
+var FACECACHE = null; // dipertahankan untuk kompatibilitas referensi lama
+function faceCacheAll() { return RHMediaCache._mem(); }
+function faceCacheHas(nik, ver) { return RHMediaCache.has(nik, ver); }
+function faceCacheGet(nik, ver) { return RHMediaCache.get(nik, ver); }
+function faceCachePut(nik, ver, ph) { RHMediaCache.put(nik, ver, ph); }
+function faceCacheGetDesc(nik, ver) { return RHMediaCache.getDesc(nik, ver); }
+function faceCachePutDesc(nik, ver, desc) { RHMediaCache.putDesc(nik, ver, desc); }
 
 function avaInner(nik, nama, ver) {
   var ph = faceCacheGet(nik, ver);
@@ -4775,6 +5002,8 @@ function faceWrap(nik, nama, ver) {
 
 async function hydrateFaces() {
   var gen = SESSION_GEN;
+  try { await RHMediaCache.readyPromise; } catch (e) {}
+  if (stale(gen)) return;
   var els = document.querySelectorAll('[data-facenik]');
   var need = {};
   els.forEach(function(el) {
@@ -4784,8 +5013,8 @@ async function hydrateFaces() {
   });
   var niks = Object.keys(need);
   if (!niks.length) return;
-  for (var i = 0; i < niks.length; i += 8) {
-    var chunk = niks.slice(i, i + 8);
+  for (var i = 0; i < niks.length; i += 4) {
+    var chunk = niks.slice(i, i + 4);
     try {
       var list = await api('getFacePhotos', [chunk]);
       if (stale(gen)) return;
@@ -4915,7 +5144,7 @@ async function api(fn, args, timeoutMs) {
   }
   if (fn === 'uploadAbsensiFoto') return callExistingApiFunction('uploadAbsensiFoto', [getToken(), String(args[0] || ''), String(args[1] || '')], 45000);
   if (fn === 'getEvidenceSignedUrl') return callExistingApiFunction('getEvidenceSignedUrl', [getToken(), String(args[0] || '')], 20000);
-  if (fn === 'getFacePhotos') return rpc('get_face_photos', { p_token: getToken(), p_niks: args[0] });
+  if (fn === 'getFacePhotos') return rpc('get_face_photos', { p_token: getToken(), p_niks: args[0] }, 90000);
   if (fn === 'getMyFaceData') return rpc('get_my_face_data', { p_token: getToken() });
   if (fn === 'getTeamActivity') return rpc('get_team_activity', { p_token: getToken(), p_date: args[0] || null });
   if (fn === 'getOrgChart') return rpc('get_org_chart', { p_token: getToken() });
@@ -6355,9 +6584,9 @@ function actCuti(id, approve) {
   });
 }
 
-function loadEmployees() {
+function loadEmployeesNet() {
   $('empList').innerHTML = '<div class="empty">Memuat...</div>';
-  api('getKaryawanSummary', [S.user.role], 25000).then(function(r) {
+  return api('getKaryawanSummary', [S.user.role], 25000).then(function(r) {
     if (!r || r.ok === false) {
       $('empList').innerHTML = '<div class="empty">' + esc((r && r.error) || 'Gagal memuat.') + '</div>';
       return;
@@ -6575,7 +6804,7 @@ async function faceMgrHandleUpload(input) {
  var ds=await faceapi.detectAllFaces(img,new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.4})).withFaceLandmarks().withFaceDescriptors();
  if(!ds||ds.length!==1)throw new Error(ds&&ds.length>1?'Foto harus menampilkan satu wajah saja.':'Wajah tidak terdeteksi. Gunakan foto wajah yang jelas dan menghadap kamera.');
  var desc=Array.from(ds[0].descriptor||[]);if(desc.length!==128)throw new Error('Descriptor wajah tidak valid.');
- var result=await api('hrSaveFaceReference',[{nik:nik,descriptor:desc,photo:dataUrl}],45000);toast((result&&result.message)||'Foto referensi berhasil diperbarui.');loadFaceMgr();
+ var result=await api('hrSaveFaceReference',[{nik:nik,descriptor:desc,photo:dataUrl}],45000);try{RHMediaCache.invalidate(nik);}catch(e){}toast((result&&result.message)||'Foto referensi berhasil diperbarui.');loadFaceMgr();
  } catch(e) {if(e&&e.message==='STALE')return;toast('❌ '+(e&&e.message?e.message:'Gagal menyimpan foto referensi.'));} finally {if(input)input.value='';FACE_REF_UPLOAD_NIK=null;}
 }
 
@@ -6595,7 +6824,7 @@ function faceMgrMass() {
 
 function faceMgrReset(nik) {
   if (!confirm('Reset Face ID & foto untuk ' + nik + '? Karyawan harus daftar ulang.')) return;
-  api('resetFace', [nik]).then(function(r) { toast(r.message); loadFaceMgr(); }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
+  api('resetFace', [nik]).then(function(r) { try { RHMediaCache.invalidate(nik); } catch (e) {} toast(r.message); loadFaceMgr(); }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
 }
 
 function faceMgrRevoke(nik) {
@@ -6747,10 +6976,10 @@ function locDelete(branch) {
   }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
 }
 
-function loadKaryawanMgr() {
+function loadKaryawanMgrNet() {
   if (!S.user || (S.user.role !== 'HR' && S.user.role !== 'ADMIN')) { toast('Akses ditolak.'); go('s-home'); return; }
   $('karList').innerHTML = '<div class="empty">Memuat...</div>';
-  Promise.all([
+  return Promise.all([
     api('getKaryawanSummary', [S.user.role], 25000),
     api('getKaryawanOptions', []).catch(function() { return null; })
   ]).then(function(rs) {
@@ -6762,6 +6991,57 @@ function loadKaryawanMgr() {
   }).catch(function(e) {
     if (e && e.message === 'STALE') return;
     $('karList').innerHTML = '<div class="empty">❌ ' + esc(e.message) + '</div>';
+  });
+}
+
+/* ---- SWR: daftar karyawan tampil instan dari cache, lalu segar dari server ---- */
+function loadEmployees(force) {
+  var had = !!(DATA.empList && DATA.empList.length);
+  if (!force && had && DATA._empAt && (Date.now() - DATA._empAt) < 30000) {
+    renderEmpList('');
+    return Promise.resolve(true);
+  }
+  if (!had) {
+    RHMediaCache.kvGet('empSummary').then(function(c) {
+      if (c && c.list && c.list.length && !(DATA.empList && DATA.empList.length) && S.user) {
+        DATA.empList = c.list;
+        DATA.empList.forEach(function(x) { DATA.faceVer[x.nik] = x.faceVer; });
+        try { renderEmpList(''); } catch (e) {}
+      }
+    });
+  }
+  return Promise.resolve(loadEmployeesNet()).then(function(r) {
+    if (DATA.empList && DATA.empList.length) {
+      DATA._empAt = Date.now();
+      try { RHMediaCache.kvSet('empSummary', { list: DATA.empList, at: DATA._empAt }); } catch (e) {}
+    }
+    return r;
+  });
+}
+
+function loadKaryawanMgr(force) {
+  if (!S.user || (S.user.role !== 'HR' && S.user.role !== 'ADMIN')) { toast('Akses ditolak.'); go('s-home'); return Promise.resolve(false); }
+  var had = !!(DATA.karList && DATA.karList.length);
+  if (!force && had && DATA._karAt && (Date.now() - DATA._karAt) < 30000) {
+    renderKarList('');
+    return Promise.resolve(true);
+  }
+  if (!had) {
+    RHMediaCache.kvGet('karData').then(function(c) {
+      if (c && c.list && c.list.length && !(DATA.karList && DATA.karList.length) && S.user) {
+        DATA.karList = c.list;
+        if (c.opts) DATA.karOpts = c.opts;
+        DATA.karList.forEach(function(x) { DATA.faceVer[x.nik] = x.faceVer; });
+        try { renderKarList(''); } catch (e) {}
+      }
+    });
+  }
+  return Promise.resolve(loadKaryawanMgrNet()).then(function(r) {
+    if (DATA.karList && DATA.karList.length) {
+      DATA._karAt = Date.now();
+      try { RHMediaCache.kvSet('karData', { list: DATA.karList, opts: DATA.karOpts, at: DATA._karAt }); } catch (e) {}
+    }
+    return r;
   });
 }
 
@@ -6933,18 +7213,18 @@ function karSave(mode) {
         api('grantFace', [r.nik, 60]).then(function() { toast('Akses Face ID 60 menit diberikan.'); }).catch(function() {});
       }
     }
-    loadKaryawanMgr();
+    loadKaryawanMgr(true);
   }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
 }
 
 function karDeactivate(nik) {
   if (!confirm('Nonaktifkan karyawan ' + nik + '?')) return;
-  api('hrDeactivate', [nik]).then(function(r) { toast(r.message); loadKaryawanMgr(); }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
+  api('hrDeactivate', [nik]).then(function(r) { toast(r.message); loadKaryawanMgr(true); }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
 }
 
 function karReactivate(nik) {
   if (!confirm('Aktifkan kembali karyawan ' + nik + '?')) return;
-  api('hrReactivate', [nik]).then(function(r) { toast(r.message); loadKaryawanMgr(); }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
+  api('hrReactivate', [nik]).then(function(r) { toast(r.message); loadKaryawanMgr(true); }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
 }
 
 function karResetPin(nik) {
@@ -7227,6 +7507,7 @@ function saveSelfFace() {
   b.innerHTML = '<span class="spin"></span> Menyimpan...';
   var photo = snapFacePhoto($('faceVideo'), 160, 0.65);
   api('saveMyFaceDescriptor', [S.user.nik, FACESELF.desc, photo]).then(function(r) {
+    try { RHMediaCache.invalidate(S.user.nik); } catch (e) {}
     toast(r.message);
     S.face.registered = true;
     S.face.canRegister = false;
@@ -7423,6 +7704,14 @@ Object.assign(window, {
   renderCutiList, openProfileSheet, changePin, enableOverride, downloadAppHtml
 });
 
+/* Ekspor tambahan untuk Desktop HR Console & RHMediaCache (tidak mengubah perilaku) */
+Object.assign(window, {
+  S: S, DATA: DATA, api: api, esc: esc, initials: initials, toast: toast,
+  tglID: tglID, todayISO: todayISO, getToken: getToken, getSb: getSb,
+  hydrateFaces: hydrateFaces, faceWrap: faceWrap, avaInner: avaInner,
+  RHMediaCache: RHMediaCache
+});
+
 
 
 function syncDesktopNav(id) {
@@ -7526,6 +7815,1211 @@ function showHrPlaceholder(title, group, description) {
   window.resetFonts=function(){lsDel(FKEY);applyFonts(FDEF);tmToast('Ukuran font dikembalikan ke standar');};
   applyTheme(curTheme());
   applyFonts(getFonts());
+})();
+</script>
+
+
+<style id="rh-desk-css">
+/* ==========================================================================
+   ReHolz Desktop HR Console — tambahan tampilan desktop (>=1024px)
+   Struktur & gaya mengikuti HRMS Apps Script (panel login split, sidebar,
+   kartu statistik, grafik) dengan tema ReHolz yang dipakai tampilan mobile.
+   Tidak mengubah CSS mobile: semua aturan di-scope di bawah media query.
+   ========================================================================== */
+
+/* ---------- Login split-panel gaya Apps Script (desktop saja) ---------- */
+@media (min-width: 1024px) {
+  #s-login {
+    background: #F2F7F4 !important;
+  }
+  #s-login .login-card.rh-lg-split {
+    display: grid;
+    grid-template-columns: 1.02fr 1fr;
+    gap: 0;
+    max-width: 940px;
+    width: 100%;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 26px;
+    border: 1px solid #E2ECE5;
+    box-shadow: 0 30px 70px -18px rgba(0, 60, 40, 0.28);
+    background: #FFFFFF;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-brand {
+    grid-column: 1;
+    grid-row: 1 / 40;
+    background: linear-gradient(155deg, #0E7A50 0%, #00553A 58%, #003D29 100%);
+    color: #F4FAF6;
+    padding: 52px 46px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    min-height: 520px;
+  }
+  #s-login .rh-lg-brand::before {
+    content: "";
+    position: absolute;
+    width: 340px; height: 340px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    top: -120px; right: -110px;
+  }
+  #s-login .rh-lg-brand::after {
+    content: "";
+    position: absolute;
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    background: rgba(183, 121, 50, 0.18);
+    bottom: -90px; left: -70px;
+  }
+  #s-login .rh-lg-brand .rh-lg-logo {
+    width: 132px;
+    background: #FFFFFF;
+    border-radius: 16px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 24px rgba(0, 30, 20, 0.25);
+    margin-bottom: 34px;
+  }
+  #s-login .rh-lg-brand .rh-lg-logo img { display: block; width: 100%; height: auto; }
+  #s-login .rh-lg-brand h2 {
+    font-size: 21px; font-weight: 800; letter-spacing: 0.4px; margin: 0 0 4px;
+  }
+  #s-login .rh-lg-brand h3 {
+    font-size: 16px; font-weight: 700; color: #BFE6CF; margin: 0 0 16px;
+  }
+  #s-login .rh-lg-brand p {
+    font-size: 13px; line-height: 1.7; color: rgba(233, 245, 238, 0.82); max-width: 330px; margin: 0;
+    position: relative; z-index: 1;
+  }
+  /* kolom kanan (form) */
+  #s-login .login-card.rh-lg-split > .lg-logo-main { display: none !important; }
+  #s-login .login-card.rh-lg-split > .rh-lg-head { grid-column: 2; padding: 52px 46px 0; }
+  #s-login .login-card.rh-lg-split > h1 { display: none; }
+  #s-login .rh-lg-head h4 { font-size: 24px; font-weight: 800; color: #14352A; margin: 0 0 6px; }
+  #s-login .rh-lg-head p { font-size: 13px; color: #5E6E63; margin: 0 0 6px; }
+  #s-login .login-card.rh-lg-split > .field,
+  #s-login .login-card.rh-lg-split > .btn,
+  #s-login .login-card.rh-lg-split > .err,
+  #s-login .login-card.rh-lg-split > .hint { grid-column: 2; margin-left: 46px; margin-right: 46px; }
+  #s-login .login-card.rh-lg-split > .field:first-of-type { margin-top: 30px; }
+  #s-login .login-card.rh-lg-split > .btn { margin-top: 14px; }
+  #s-login .login-card.rh-lg-split > .hint { margin-bottom: 40px; }
+}
+@media (max-width: 1023.98px) {
+  .rh-lg-brand, .rh-lg-head { display: none !important; }
+}
+/* Saat layar login aktif di desktop, sidebar/topbar lama disembunyikan */
+@media (min-width: 1024px) {
+  body:has(#s-login.on) .desktop-sidebar,
+  body:has(#s-login.on) .desktop-topbar { display: none !important; }
+}
+
+/* ---------- Karyawan (non HR/Admin) di desktop: tetap layout mobile ---------- */
+@media (min-width: 1024px) {
+  body.rh-role-staff .desktop-sidebar,
+  body.rh-role-staff .desktop-topbar { display: none !important; }
+  body.rh-role-staff .scr:not(#s-splash):not(#s-login) {
+    padding-top: 0 !important;
+    max-width: 560px;
+    margin: 0 auto !important;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    box-shadow: 0 0 40px rgba(0, 60, 40, 0.06);
+  }
+  body.rh-role-staff #tabbar {
+    max-width: 560px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    border-radius: 18px 18px 0 0;
+  }
+}
+
+/* ---------- Konsol HR/Admin (desktop saja) ---------- */
+#rhDesk { display: none; }
+@media (min-width: 1024px) {
+  body.rh-desk-on #rhDesk { display: block; }
+  body.rh-desk-on .scr,
+  body.rh-desk-on #tabbar,
+  body.rh-desk-on .desktop-sidebar,
+  body.rh-desk-on .desktop-topbar { display: none !important; }
+  body.rh-desk-on { background: #F2F7F4; }
+
+  #rhDesk {
+    --rk-green: #007850;
+    --rk-green-dark: #00553A;
+    --rk-ink: #14352A;
+    --rk-muted: #5E6E63;
+    --rk-line: #DFEAE2;
+    --rk-bg: #F2F7F4;
+    --rk-card: #FFFFFF;
+    position: fixed;
+    inset: 0;
+    z-index: 400;
+    display: none;
+    background: var(--rk-bg);
+    color: var(--rk-ink);
+    font-family: inherit;
+  }
+  body.rh-desk-on #rhDesk { display: grid; grid-template-columns: 244px 1fr; grid-template-rows: 60px 1fr; }
+
+  /* Sidebar */
+  .rk-side {
+    grid-row: 1 / 3;
+    background: #FFFFFF;
+    border-right: 1px solid var(--rk-line);
+    display: flex; flex-direction: column;
+    padding: 0 14px 16px;
+    overflow-y: auto;
+  }
+  .rk-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 16px 8px 16px;
+    border-bottom: 1px solid var(--rk-line);
+    margin-bottom: 12px;
+  }
+  .rk-brand .rk-logo {
+    width: 118px; background: #fff; border-radius: 10px; padding: 6px 8px;
+    border: 1px solid var(--rk-line);
+  }
+  .rk-brand .rk-logo img { display: block; width: 100%; height: auto; }
+  .rk-brand .rk-tag {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.6px;
+    background: #E4F2E8; color: var(--rk-green);
+    padding: 3px 7px; border-radius: 6px;
+  }
+  .rk-nav-label { font-size: 10.5px; font-weight: 700; letter-spacing: 1px; color: #8AA093; padding: 10px 10px 6px; }
+  .rk-nav { display: flex; flex-direction: column; gap: 2px; }
+  .rk-nav button {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 12px; border: none; background: transparent;
+    border-radius: 9px; font-size: 13.5px; font-weight: 600;
+    color: #33503F; cursor: pointer; text-align: left;
+    transition: background 0.15s ease, color 0.15s ease;
+    width: 100%; font-family: inherit;
+  }
+  .rk-nav button svg { flex: 0 0 auto; }
+  .rk-nav button:hover { background: #EDF5EF; color: var(--rk-green); }
+  .rk-nav button.on { background: var(--rk-green); color: #fff; box-shadow: 0 4px 12px rgba(0, 120, 80, 0.25); }
+  .rk-nav button.on svg * { stroke: #fff; }
+  .rk-nav button .rk-badge {
+    margin-left: auto; background: #B77932; color: #fff;
+    font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 7px;
+  }
+  .rk-side-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--rk-line); }
+  .rk-side-foot button {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    background: transparent; border: none; color: #8F4232;
+    font-size: 13px; font-weight: 600; padding: 9px 12px; border-radius: 9px; cursor: pointer;
+    font-family: inherit;
+  }
+  .rk-side-foot button:hover { background: #FBEFEC; }
+
+  /* Topbar */
+  .rk-top {
+    grid-column: 2;
+    display: flex; align-items: center; gap: 16px;
+    background: #FFFFFF; border-bottom: 1px solid var(--rk-line);
+    padding: 0 26px;
+  }
+  .rk-top h1 { font-size: 17px; font-weight: 800; margin: 0; letter-spacing: 0.2px; }
+  .rk-top .rk-sub { font-size: 11.5px; color: var(--rk-muted); margin-top: 1px; }
+  .rk-top-search {
+    margin-left: auto; position: relative; width: 320px;
+  }
+  .rk-top-search input {
+    width: 100%; padding: 8px 14px 8px 36px; font-size: 13px;
+    border: 1.5px solid var(--rk-line); border-radius: 10px; background: #F6FAF7;
+    font-family: inherit; color: var(--rk-ink);
+  }
+  .rk-top-search input:focus { outline: none; border-color: var(--rk-green); background: #fff; }
+  .rk-top-search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); }
+  .rk-iconbtn {
+    width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid var(--rk-line);
+    background: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    transition: all .15s ease; position: relative;
+  }
+  .rk-iconbtn:hover { border-color: var(--rk-green); background: #F0F7F2; }
+  .rk-user {
+    display: flex; align-items: center; gap: 10px; cursor: pointer;
+    padding: 5px 10px 5px 5px; border-radius: 12px; border: 1.5px solid var(--rk-line); background: #fff;
+  }
+  .rk-user-ava {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: linear-gradient(140deg, #0E7A50, #004C33);
+    color: #fff; font-size: 12.5px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex: 0 0 auto;
+  }
+  .rk-user-ava img { width: 100%; height: 100%; object-fit: cover; }
+  .rk-user-name { font-size: 12.5px; font-weight: 700; line-height: 1.2; }
+  .rk-user-role { font-size: 10.5px; color: var(--rk-muted); font-weight: 600; }
+
+  /* Main */
+  .rk-main { grid-column: 2; overflow-y: auto; padding: 24px 28px 60px; }
+  .rk-page { display: none; animation: rkFade .22s ease; }
+  .rk-page.on { display: block; }
+  @keyframes rkFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .rk-grid { display: grid; gap: 16px; }
+  .rk-g4 { grid-template-columns: repeat(4, 1fr); }
+  .rk-g3 { grid-template-columns: repeat(3, 1fr); }
+  .rk-g2 { grid-template-columns: repeat(2, 1fr); }
+
+  .rk-card {
+    background: var(--rk-card); border: 1px solid var(--rk-line);
+    border-radius: 16px; padding: 18px 20px;
+    box-shadow: 0 2px 10px rgba(0, 64, 42, 0.04);
+  }
+  .rk-card h3 { font-size: 13.5px; font-weight: 800; margin: 0 0 4px; display:flex; align-items:center; gap:8px; }
+  .rk-card .rk-card-sub { font-size: 11.5px; color: var(--rk-muted); margin-bottom: 12px; }
+
+  .rk-stat { display: flex; align-items: center; gap: 14px; }
+  .rk-stat-ic {
+    width: 46px; height: 46px; border-radius: 13px; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .rk-stat-ic.g { background: #E4F2E8; }
+  .rk-stat-ic.a { background: #FBF1E3; }
+  .rk-stat-ic.b { background: #E7F0FA; }
+  .rk-stat-ic.r { background: #FBEAE6; }
+  .rk-stat-num { font-size: 26px; font-weight: 800; line-height: 1.1; }
+  .rk-stat-lbl { font-size: 11.5px; color: var(--rk-muted); font-weight: 600; margin-top: 2px; }
+  .rk-stat-delta { font-size: 11px; font-weight: 700; margin-top: 3px; }
+
+  /* Tabel */
+  .rk-table-wrap { overflow-x: auto; border: 1px solid var(--rk-line); border-radius: 14px; background: #fff; }
+  table.rk-table { width: 100%; border-collapse: collapse; font-size: 12.8px; }
+  .rk-table th {
+    text-align: left; padding: 11px 14px; font-size: 11px; letter-spacing: 0.6px;
+    text-transform: uppercase; color: var(--rk-muted); font-weight: 700;
+    background: #F6FAF7; border-bottom: 1px solid var(--rk-line); white-space: nowrap;
+  }
+  .rk-table td { padding: 10px 14px; border-bottom: 1px solid #EFF5F0; vertical-align: middle; }
+  .rk-table tr:last-child td { border-bottom: none; }
+  .rk-table tbody tr:hover { background: #F6FAF7; }
+  .rk-ava {
+    width: 36px; height: 36px; border-radius: 50%; overflow: hidden; flex: 0 0 auto;
+    background: linear-gradient(140deg, #0E7A50, #004C33); color: #fff;
+    font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .rk-ava img { width: 100%; height: 100%; object-fit: cover; }
+  .rk-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .rk-pill.ok { background: #E4F2E8; color: #0B6B45; }
+  .rk-pill.no { background: #FBEAE6; color: #9C4A38; }
+  .rk-pill.warn { background: #FBF1E3; color: #96621F; }
+  .rk-pill.info { background: #E7F0FA; color: #2C5C8F; }
+  .rk-mini {
+    border: 1.5px solid var(--rk-line); background: #fff; border-radius: 8px;
+    font-size: 11.5px; font-weight: 700; padding: 5px 10px; cursor: pointer; color: #33503F;
+    font-family: inherit; transition: all .14s ease; white-space: nowrap;
+  }
+  .rk-mini:hover { border-color: var(--rk-green); color: var(--rk-green); background: #F0F7F2; }
+  .rk-mini.primary { background: var(--rk-green); border-color: var(--rk-green); color: #fff; }
+  .rk-mini.primary:hover { background: var(--rk-green-dark); }
+  .rk-mini.danger { color: #9C4A38; border-color: #F0D4CC; }
+  .rk-mini.danger:hover { background: #FBEFEC; border-color: #9C4A38; }
+
+  .rk-toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .rk-toolbar .rk-in, .rk-toolbar select.rk-in {
+    padding: 8px 13px; font-size: 12.8px; border: 1.5px solid var(--rk-line);
+    border-radius: 10px; background: #fff; font-family: inherit; color: var(--rk-ink);
+  }
+  .rk-toolbar .rk-in:focus { outline: none; border-color: var(--rk-green); }
+  .rk-btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: var(--rk-green); color: #fff; border: none; border-radius: 10px;
+    font-size: 12.8px; font-weight: 700; padding: 9px 16px; cursor: pointer; font-family: inherit;
+    box-shadow: 0 3px 10px rgba(0, 120, 80, 0.22); transition: background .15s ease;
+  }
+  .rk-btn:hover { background: var(--rk-green-dark); }
+  .rk-btn.ghost { background: #fff; color: #33503F; border: 1.5px solid var(--rk-line); box-shadow: none; }
+  .rk-btn.ghost:hover { border-color: var(--rk-green); color: var(--rk-green); }
+
+  .rk-empty { text-align: center; color: var(--rk-muted); font-size: 12.5px; padding: 34px 10px; }
+  .rk-note {
+    background: #FBF7EE; border: 1px dashed #D9C79A; color: #7A6435;
+    font-size: 11.8px; border-radius: 10px; padding: 10px 14px; line-height: 1.6;
+  }
+  .rk-loading { text-align: center; padding: 40px; color: var(--rk-muted); font-size: 13px; }
+
+  .rk-chart-legend { display: flex; flex-direction: column; gap: 7px; font-size: 12px; }
+  .rk-chart-legend .li { display: flex; align-items: center; gap: 8px; }
+  .rk-chart-legend .dot { width: 10px; height: 10px; border-radius: 3px; flex: 0 0 auto; }
+  .rk-chart-legend .val { margin-left: auto; font-weight: 800; }
+  .rk-chart-flex { display: flex; align-items: center; gap: 22px; }
+  .rk-chart-center { position: relative; }
+  .rk-chart-center .cc {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; pointer-events: none;
+  }
+  .rk-chart-center .cc b { font-size: 22px; }
+  .rk-chart-center .cc span { font-size: 10.5px; color: var(--rk-muted); font-weight: 600; }
+
+  .rk-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: 12px; }
+  .rk-bar-row .lbl { width: 150px; text-align: right; color: #33503F; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .rk-bar-row .trk { flex: 1; height: 22px; background: #EFF5F0; border-radius: 6px; overflow: hidden; display: block; }
+  .rk-bar-row .fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, #2E9E6B, #007850); transition: width .5s ease; min-width: 2px; display: block; }
+  .rk-bar-row .n { width: 30px; font-weight: 800; }
+
+  .rk-pager { display: flex; gap: 6px; align-items: center; justify-content: flex-end; padding: 12px 4px 0; font-size: 12px; color: var(--rk-muted); }
+  .rk-pager button { min-width: 30px; height: 30px; border-radius: 8px; border: 1.5px solid var(--rk-line); background: #fff; cursor: pointer; font-weight: 700; font-size: 12px; color: #33503F; }
+  .rk-pager button.on { background: var(--rk-green); border-color: var(--rk-green); color: #fff; }
+  .rk-pager button:disabled { opacity: .4; cursor: default; }
+
+  .rk-appr-item {
+    display: flex; align-items: center; gap: 14px; padding: 13px 16px;
+    border: 1px solid var(--rk-line); border-radius: 13px; background: #fff; margin-bottom: 10px;
+  }
+  .rk-appr-item .b { flex: 1; min-width: 0; }
+  .rk-appr-item .b b { font-size: 13.5px; }
+  .rk-appr-item .b .s { font-size: 12px; color: var(--rk-muted); margin-top: 2px; }
+
+  .rk-face-prog { height: 10px; background: #EFF5F0; border-radius: 6px; overflow: hidden; margin: 10px 0 6px; }
+  .rk-face-prog i { display: block; height: 100%; background: linear-gradient(90deg, #2E9E6B, #007850); border-radius: 6px; transition: width .5s ease; }
+
+  .rk-modal-shade {
+    position: fixed; inset: 0; background: rgba(10, 30, 20, 0.45); z-index: 900;
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .rk-modal {
+    background: #fff; border-radius: 18px; width: 100%; max-width: 480px;
+    padding: 22px 24px; box-shadow: 0 30px 80px rgba(0, 40, 26, 0.35);
+    max-height: 88vh; overflow-y: auto;
+  }
+  .rk-modal h3 { margin: 0 0 14px; font-size: 15px; }
+  .rk-modal .f { margin-bottom: 11px; }
+  .rk-modal .f label { display: block; font-size: 11.5px; font-weight: 700; color: var(--rk-muted); margin-bottom: 5px; }
+  .rk-modal .f input, .rk-modal .f select {
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--rk-line); border-radius: 10px;
+    font-size: 13px; font-family: inherit; color: var(--rk-ink); background: #fff;
+  }
+  .rk-modal .f input:focus, .rk-modal .f select:focus { outline: none; border-color: var(--rk-green); }
+  .rk-modal .row { display: flex; gap: 10px; }
+  .rk-modal .row .f { flex: 1; }
+  .rk-modal .acts { display: flex; gap: 10px; margin-top: 16px; }
+
+  .rk-toast {
+    position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
+    background: #14352A; color: #fff; padding: 11px 20px; border-radius: 12px;
+    font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none;
+    transition: all .25s ease; z-index: 1200; box-shadow: 0 12px 30px rgba(0,0,0,.25);
+  }
+  .rk-toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Overlay sheet bawaan (Tambah/Edit karyawan) tampil sebagai modal di desktop */
+  body.rh-desk-on #ov.on { z-index: 950; }
+  body.rh-desk-on .sheet { max-width: 560px; margin: 0 auto; border-radius: 18px 18px 0 0; }
+}
+</style>
+
+<!-- ================= ReHolz Desktop HR Console (HR/Admin only, >=1024px) ================= -->
+<div id="rhDesk" aria-hidden="true">
+  <aside class="rk-side">
+    <div class="rk-brand">
+      <span class="rk-logo" id="rkLogo"></span>
+      <span class="rk-tag">HR CONSOLE</span>
+    </div>
+    <div class="rk-nav-label">MENU UTAMA</div>
+    <nav class="rk-nav" id="rkNav">
+      <button data-p="dash" class="on"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
+      <button data-p="emp"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Karyawan</button>
+      <button data-p="att"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Presensi</button>
+      <button data-p="apr"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Persetujuan<span class="rk-badge" id="rkAprBadge" style="display:none">0</span></button>
+      <button data-p="face"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 19c.6-2.5 2.6-4 5-4s4.4 1.5 5 4"/></svg>Face ID</button>
+      <button data-p="loc"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Lokasi Kantor</button>
+    </nav>
+    <div class="rk-side-foot">
+      <button id="rkLogout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#8F4232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Keluar</button>
+    </div>
+  </aside>
+
+  <header class="rk-top">
+    <div>
+      <h1 id="rkTitle">Dashboard</h1>
+      <div class="rk-sub" id="rkSub">Ringkasan operasional HR</div>
+    </div>
+    <div class="rk-top-search">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5E6E63" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="rkSearch" placeholder="Cari karyawan (nama / NIK)...">
+    </div>
+    <button class="rk-iconbtn" id="rkRefresh" title="Muat ulang data">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    </button>
+    <div class="rk-user" id="rkUser" title="Profil saya">
+      <div class="rk-user-ava" id="rkUserAva">–</div>
+      <div>
+        <div class="rk-user-name" id="rkUserName">–</div>
+        <div class="rk-user-role" id="rkUserRole">–</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="rk-main">
+    <section class="rk-page on" id="rkp-dash"></section>
+    <section class="rk-page" id="rkp-emp"></section>
+    <section class="rk-page" id="rkp-att"></section>
+    <section class="rk-page" id="rkp-apr"></section>
+    <section class="rk-page" id="rkp-face"></section>
+    <section class="rk-page" id="rkp-loc"></section>
+  </main>
+</div>
+
+<script>
+/* ==========================================================================
+   ReHolz Desktop HR Console — logika tampilan desktop untuk role HR/Admin.
+   Prinsip:
+   - HANYA aktif pada layar >=1024px DAN role HR/ADMIN. Role lain & mobile
+     tidak terpengaruh (konsol tidak pernah di-render).
+   - Semua data lewat api()/RPC yang sama dengan aplikasi mobile.
+   - Foto lewat RHMediaCache (IndexedDB + faceVer) -> tidak download ulang.
+   ========================================================================== */
+(function () {
+  'use strict';
+  if (window.__RH_DESK_INIT) return;
+  window.__RH_DESK_INIT = true;
+
+  var MQ = window.matchMedia('(min-width: 1024px)');
+  var TITLES = {
+    dash: ['Dashboard', 'Ringkasan operasional HR'],
+    emp: ['Karyawan', 'Kelola data seluruh karyawan'],
+    att: ['Presensi', 'Pantau & telusuri riwayat kehadiran'],
+    apr: ['Persetujuan', 'Approval absensi & cuti'],
+    face: ['Face ID', 'Kelola registrasi wajah karyawan'],
+    loc: ['Lokasi Kantor', 'Titik presensi & radius per branch']
+  };
+  var cur = 'dash';
+  var empUI = { q: '', org: '', st: '', page: 1, per: 12 };
+  var attUI = { nik: '', y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
+  var dashCache = { at: 0 };
+  var aprCache = { at: 0 };
+
+  function isHR() { return !!(window.S && S.user && (S.user.role === 'HR' || S.user.role === 'ADMIN')); }
+  function escH(s) { try { return esc(s); } catch (e) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); } }
+  function ini(n) { try { return initials(n); } catch (e) { var p = String(n || '?').trim().split(/\s+/); return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase(); } }
+  function avaHtml(nik, nama, ver) {
+    try { if (typeof avaInner === 'function') return avaInner(nik, nama, ver); } catch (e) {}
+    try { var ph = RHMediaCache.get(nik, ver); if (ph) return '<img src="' + ph + '" alt="">'; } catch (e) {}
+    return escH(ini(nama));
+  }
+  function t(s) { try { return tglID(s); } catch (e) { return s; } }
+  function rkToast(m) {
+    var el = document.getElementById('rkToast');
+    if (!el) { try { toast(m); } catch (e) {} return; }
+    el.textContent = m; el.classList.add('on');
+    clearTimeout(el._h); el._h = setTimeout(function () { el.classList.remove('on'); }, 2600);
+  }
+
+  /* ---------------- Aktivasi / deaktivasi konsol ---------------- */
+  function activate() {
+    if (document.body.classList.contains('rh-desk-on')) return;
+    document.body.classList.add('rh-desk-on');
+    document.body.classList.remove('rh-role-staff');
+    var d = document.getElementById('rhDesk');
+    if (d) d.setAttribute('aria-hidden', 'false');
+    fillUser();
+    goPage(cur);
+    refreshBadge();
+  }
+  function deactivate() {
+    document.body.classList.remove('rh-desk-on');
+    var d = document.getElementById('rhDesk');
+    if (d) d.setAttribute('aria-hidden', 'true');
+  }
+  function evaluate() {
+    if (!MQ.matches) { deactivate(); document.body.classList.remove('rh-role-staff'); return; }
+    if (!window.S || !S.user) { deactivate(); document.body.classList.remove('rh-role-staff'); return; }
+    if (isHR()) { activate(); }
+    else { deactivate(); document.body.classList.add('rh-role-staff'); }
+  }
+
+  function fillUser() {
+    if (!S.user) return;
+    var nm = document.getElementById('rkUserName'), rl = document.getElementById('rkUserRole'), av = document.getElementById('rkUserAva');
+    if (nm) nm.textContent = S.user.nama || '-';
+    if (rl) rl.textContent = (S.user.role || '') + (S.user.employee && S.user.employee.position ? ' • ' + S.user.employee.position : '');
+    if (av) {
+      var e = S.user.employee || {};
+      var ph = null;
+      try { ph = RHMediaCache.get(S.user.nik, e.facePhotoVer || 0); } catch (er) {}
+      av.innerHTML = avaHtml(S.user.nik, S.user.nama, (e.facePhotoVer || 0));
+      av.setAttribute('data-facenik', escH(S.user.nik));
+      av.setAttribute('data-facever', (e.facePhotoVer || 0));
+      try { hydrateFaces(); } catch (er) {}
+    }
+  }
+
+  /* ---------------- Navigasi halaman ---------------- */
+  function goPage(p) {
+    if (!TITLES[p]) p = 'dash';
+    cur = p;
+    var btns = document.querySelectorAll('#rkNav button');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].getAttribute('data-p') === p);
+    var pages = document.querySelectorAll('#rhDesk .rk-page');
+    for (var j = 0; j < pages.length; j++) pages[j].classList.toggle('on', pages[j].id === 'rkp-' + p);
+    var T = document.getElementById('rkTitle'), Sb = document.getElementById('rkSub');
+    if (T) T.textContent = TITLES[p][0];
+    if (Sb) Sb.textContent = TITLES[p][1];
+    if (p === 'dash') renderDash();
+    if (p === 'emp') renderEmpPage();
+    if (p === 'att') renderAttPage();
+    if (p === 'apr') renderAprPage();
+    if (p === 'face') renderFacePage();
+    if (p === 'loc') renderLocPage();
+  }
+
+  /* ---------------- Data helpers (SWR ringan) ---------------- */
+  function ensureKar(force) {
+    // Pakai pipeline yang sama dengan mobile (mengisi DATA.karList + karOpts)
+    if (typeof loadKaryawanMgr === 'function') return Promise.resolve(loadKaryawanMgr(!!force));
+    return Promise.reject(new Error('loadKaryawanMgr tidak tersedia'));
+  }
+  function refreshBadge() {
+    api('getPendingApprovalsFull', [], 20000).then(function (r) {
+      var n = (r && (r.total != null ? r.total : ((r.absensi || []).length + (r.cuti || []).length))) || 0;
+      var b = document.getElementById('rkAprBadge');
+      if (b) { b.style.display = n > 0 ? '' : 'none'; b.textContent = n; }
+    }).catch(function () {});
+  }
+
+  /* ---------------- Grafik SVG ringan (tanpa dependensi baru) ---------------- */
+  var PALETTE = ['#007850', '#2E9E6B', '#B77932', '#5B8DB8', '#8F4232', '#6B5CA5', '#C99B3F', '#4E7C66', '#A3B86B', '#7A6435'];
+  function donut(segs, size, thick, centerB, centerS) {
+    size = size || 150; thick = thick || 26;
+    var total = segs.reduce(function (a, s) { return a + s.v; }, 0) || 1;
+    var r = (size - thick) / 2, cx = size / 2, cy = size / 2;
+    var circ = 2 * Math.PI * r, off = 0, out = '';
+    segs.forEach(function (s, i) {
+      var frac = s.v / total, len = frac * circ;
+      out += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + (s.c || PALETTE[i % PALETTE.length]) +
+        '" stroke-width="' + thick + '" stroke-dasharray="' + Math.max(len - 2, 0.5) + ' ' + (circ - len + 2) +
+        '" stroke-dashoffset="' + (-off) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')" stroke-linecap="butt"/>';
+      off += len;
+    });
+    var legend = segs.map(function (s, i) {
+      return '<div class="li"><span class="dot" style="background:' + (s.c || PALETTE[i % PALETTE.length]) + '"></span>' + escH(s.l) + '<span class="val">' + s.v + '</span></div>';
+    }).join('');
+    return '<div class="rk-chart-flex"><div class="rk-chart-center"><svg width="' + size + '" height="' + size + '">' + out + '</svg>' +
+      (centerB != null ? '<div class="cc"><b>' + centerB + '</b><span>' + escH(centerS || '') + '</span></div>' : '') +
+      '</div><div class="rk-chart-legend" style="flex:1">' + legend + '</div></div>';
+  }
+  function bars(rows, maxAbs) {
+    var max = maxAbs || rows.reduce(function (a, r) { return Math.max(a, r.v); }, 0) || 1;
+    return rows.map(function (r) {
+      return '<div class="rk-bar-row"><span class="lbl" title="' + escH(r.l) + '">' + escH(r.l) + '</span>' +
+        '<span class="trk"><span class="fill" style="width:' + Math.max(Math.round(r.v / max * 100), 1) + '%"></span></span>' +
+        '<span class="n">' + r.v + '</span></div>';
+    }).join('');
+  }
+
+  /* ---------------- DASHBOARD ---------------- */
+  function renderDash() {
+    var el = document.getElementById('rkp-dash');
+    if (!el) return;
+    var cachedOk = dashCache.at && (Date.now() - dashCache.at) < 45000 && el.dataset.filled === '1';
+    if (!cachedOk) {
+      el.innerHTML = '<div class="rk-loading">Memuat dashboard...</div>';
+      Promise.all([
+        ensureKar(false).catch(function () {}),
+        api('getFaceProgress', [], 20000).catch(function () { return null; }),
+        api('getPendingApprovalsFull', [], 20000).catch(function () { return null; })
+      ]).then(function (rs) {
+        dashCache.fp = rs[1] || null;
+        dashCache.ap = rs[2] || null;
+        dashCache.at = Date.now();
+        paintDash(el);
+      });
+    } else {
+      paintDash(el);
+    }
+    // Panel kehadiran hari ini: endpoint opsional hr_attendance_today (lihat Instruksi AI Backend)
+    rpcOptional('hr_attendance_today', { p_date: null }).then(function (r) {
+      var box = document.getElementById('rkDashToday');
+      if (!box) return;
+      if (r && r.ok !== false && (r.total != null || r.list)) {
+        var hadir = r.hadir != null ? r.hadir : (r.list || []).filter(function (x) { return x.status === 'HADIR'; }).length;
+        var total = r.total != null ? r.total : (r.list || []).length;
+        var belum = Math.max(total - hadir, 0);
+        box.innerHTML = '<h3>Kehadiran Hari Ini</h3><div class="rk-card-sub">' + escH(r.tanggal || t(new Date().toISOString().slice(0, 10))) + '</div>' +
+          donut([{ l: 'Hadir / Lengkap', v: hadir, c: '#007850' }, { l: 'Belum lengkap', v: belum, c: '#B77932' }], 150, 26, total, 'karyawan');
+      } else {
+        box.innerHTML = '<h3>Kehadiran Hari Ini</h3><div class="rk-note">Endpoint <b>hr_attendance_today</b> belum tersedia di backend. Pasang sesuai <i>Instruksi untuk AI Backend</i> untuk mengaktifkan panel ini.</div>';
+      }
+    });
+  }
+
+  function paintDash(el) {
+    var list = DATA.karList || [];
+    var aktif = list.filter(function (x) { return x.akun === 'AKTIF'; }).length;
+    var faceYes = list.filter(function (x) { return x.face === 'YES'; }).length;
+    var fp = dashCache.fp || null;
+    var ap = dashCache.ap || null;
+    el.dataset.filled = '1';
+
+    var orgCount = {};
+    list.forEach(function (x) { var k = x.org || 'Lainnya'; orgCount[k] = (orgCount[k] || 0) + 1; });
+    var orgRows = Object.keys(orgCount).sort(function (a, b) { return orgCount[b] - orgCount[a]; }).slice(0, 8)
+      .map(function (k) { return { l: k, v: orgCount[k] }; });
+
+    var apTotal = ap ? (ap.total != null ? ap.total : ((ap.absensi || []).length + (ap.cuti || []).length)) : 0;
+
+    el.innerHTML =
+      '<div class="rk-grid rk-g4" style="margin-bottom:16px">' +
+        statCard('g', 'Total Karyawan', list.length, 'Seluruh data terdaftar') +
+        statCard('b', 'Akun Aktif', aktif, (list.length - aktif) + ' nonaktif') +
+        statCard('a', 'Face ID Terdaftar', fp ? fp.registered : faceYes, fp ? ('Sisa ' + fp.remaining + ' belum registrasi') : 'dari ringkasan') +
+        statCard('r', 'Menunggu Approval', apTotal, 'Absensi & cuti pending') +
+      '</div>' +
+      '<div class="rk-grid rk-g2">' +
+        '<div class="rk-card" id="rkDashToday"><h3>Kehadiran Hari Ini</h3><div class="rk-loading">Memuat...</div></div>' +
+        '<div class="rk-card"><h3>Status Akun</h3><div class="rk-card-sub">Distribusi akun karyawan</div>' +
+          donut([{ l: 'Aktif', v: aktif, c: '#007850' }, { l: 'Nonaktif', v: list.length - aktif, c: '#8F4232' }], 150, 26, list.length, 'karyawan') +
+        '</div>' +
+      '</div>' +
+      '<div class="rk-grid rk-g2" style="margin-top:16px">' +
+        '<div class="rk-card"><h3>Karyawan per Organisasi</h3><div class="rk-card-sub">8 organisasi teratas</div>' + (orgRows.length ? bars(orgRows) : '<div class="rk-empty">Belum ada data.</div>') + '</div>' +
+        '<div class="rk-card"><h3>Registrasi Face ID</h3><div class="rk-card-sub">Progress pendaftaran wajah</div>' +
+          (fp ? donut([{ l: 'Sudah registrasi', v: fp.registered, c: '#007850' }, { l: 'Belum', v: fp.remaining, c: '#B77932' }], 150, 26, fp.total, 'karyawan')
+              : donut([{ l: 'Face aktif', v: faceYes, c: '#007850' }, { l: 'Belum', v: Math.max(list.length - faceYes, 0), c: '#B77932' }], 150, 26, list.length, 'karyawan')) +
+        '</div>' +
+      '</div>';
+  }
+
+  function statCard(cls, lbl, num, sub) {
+    var icons = {
+      g: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+      b: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#2C5C8F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+      a: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#96621F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 19c.6-2.5 2.6-4 5-4s4.4 1.5 5 4"/></svg>',
+      r: '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#9C4A38" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    };
+    return '<div class="rk-card rk-stat"><div class="rk-stat-ic ' + cls + '">' + icons[cls] + '</div>' +
+      '<div><div class="rk-stat-num">' + num + '</div><div class="rk-stat-lbl">' + escH(lbl) + '</div>' +
+      '<div class="rk-stat-delta" style="color:#8AA093">' + escH(sub || '') + '</div></div></div>';
+  }
+
+  /* RPC opsional: tidak error bila backend belum memasang */
+  function rpcOptional(fn, params) {
+    return new Promise(function (resolve) {
+      try {
+        var c = window.supabase && window.__rhSbClient;
+        var use = null;
+        if (typeof getSb === 'function') { use = getSb(); } else { return resolve(null); }
+        Promise.resolve(use).then(function (client) {
+          if (!client) return resolve(null);
+          var p = params || {};
+          p.p_token = getToken();
+          client.rpc(fn, p).then(function (r) {
+            if (r && r.error) return resolve(null);
+            resolve(r ? r.data : null);
+          }).catch(function () { resolve(null); });
+        }).catch(function () { resolve(null); });
+      } catch (e) { resolve(null); }
+    });
+  }
+
+  /* ---------------- KARYAWAN ---------------- */
+  function renderEmpPage() {
+    var el = document.getElementById('rkp-emp');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      el.innerHTML =
+        '<div class="rk-toolbar">' +
+          '<input class="rk-in" id="rkEmpQ" placeholder="Cari nama / NIK..." style="width:230px">' +
+          '<select class="rk-in" id="rkEmpOrg"><option value="">Semua Organisasi</option></select>' +
+          '<select class="rk-in" id="rkEmpSt"><option value="">Semua Status</option><option value="AKTIF">Aktif</option><option value="NONAKTIF">Nonaktif</option></select>' +
+          '<span style="flex:1"></span>' +
+          '<button class="rk-btn" id="rkEmpAdd">+ Tambah Karyawan</button>' +
+        '</div>' +
+        '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
+          '<th>Karyawan</th><th>NIK</th><th>Organisasi</th><th>Jabatan</th><th>Branch</th><th>Status</th><th>Face ID</th><th style="width:210px">Aksi</th>' +
+        '</tr></thead><tbody id="rkEmpBody"><tr><td colspan="8"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div>' +
+        '<div class="rk-pager" id="rkEmpPager"></div>';
+      document.getElementById('rkEmpQ').addEventListener('input', function () { empUI.q = this.value; empUI.page = 1; paintEmpRows(); });
+      document.getElementById('rkEmpOrg').addEventListener('change', function () { empUI.org = this.value; empUI.page = 1; paintEmpRows(); });
+      document.getElementById('rkEmpSt').addEventListener('change', function () { empUI.st = this.value; empUI.page = 1; paintEmpRows(); });
+      document.getElementById('rkEmpAdd').addEventListener('click', function () {
+        ensureKar(false).then(function () { try { karOpenAdd(); } catch (e) { rkToast(e.message); } });
+      });
+    }
+    ensureKar(false).then(function () {
+      fillOrgFilter();
+      paintEmpRows();
+    }).catch(function (e) {
+      var b = document.getElementById('rkEmpBody');
+      if (b) b.innerHTML = '<tr><td colspan="8"><div class="rk-empty">Gagal memuat: ' + escH(e && e.message || e) + '</div></td></tr>';
+    });
+  }
+
+  function fillOrgFilter() {
+    var sel = document.getElementById('rkEmpOrg');
+    if (!sel) return;
+    var curV = sel.value;
+    var orgs = {};
+    (DATA.karList || []).forEach(function (x) { if (x.org) orgs[x.org] = 1; });
+    var h = '<option value="">Semua Organisasi</option>';
+    Object.keys(orgs).sort().forEach(function (o) { h += '<option value="' + escH(o) + '">' + escH(o) + '</option>'; });
+    sel.innerHTML = h;
+    sel.value = curV;
+  }
+
+  function empFiltered() {
+    var q = empUI.q.toLowerCase();
+    return (DATA.karList || []).filter(function (x) {
+      if (empUI.org && x.org !== empUI.org) return false;
+      if (empUI.st && (x.akun || '') !== empUI.st) return false;
+      if (q && (x.nama || '').toLowerCase().indexOf(q) < 0 && (x.nik || '').toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+
+  function paintEmpRows() {
+    var body = document.getElementById('rkEmpBody');
+    if (!body) return;
+    var list = empFiltered();
+    var pages = Math.max(1, Math.ceil(list.length / empUI.per));
+    if (empUI.page > pages) empUI.page = pages;
+    var slice = list.slice((empUI.page - 1) * empUI.per, empUI.page * empUI.per);
+    if (!slice.length) {
+      body.innerHTML = '<tr><td colspan="8"><div class="rk-empty">Tidak ada data yang cocok.</div></td></tr>';
+    } else {
+      body.innerHTML = slice.map(function (x) {
+        var ava = '<span class="rk-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>';
+        var st = x.akun === 'AKTIF' ? '<span class="rk-pill ok">Aktif</span>' : '<span class="rk-pill no">Nonaktif</span>';
+        var fc = x.face === 'YES' ? '<span class="rk-pill ok">Terdaftar</span>' : '<span class="rk-pill warn">Belum</span>';
+        var tgl = x.joinDate ? t(x.joinDate) : '-';
+        return '<tr>' +
+          '<td><div style="display:flex;align-items:center;gap:10px">' + ava + '<div><b>' + escH(x.nama) + '</b><div style="font-size:11px;color:#5E6E63">Gabung ' + escH(tgl) + '</div></div></div></td>' +
+          '<td>' + escH(x.nik) + '</td>' +
+          '<td>' + escH(x.org || '-') + '</td>' +
+          '<td>' + escH(x.posisi || '-') + '</td>' +
+          '<td>' + escH(x.branch || '-') + '</td>' +
+          '<td>' + st + '</td>' +
+          '<td>' + fc + '</td>' +
+          '<td><div style="display:flex;gap:6px;flex-wrap:wrap">' +
+            '<button class="rk-mini" onclick="RHDeskApi.empDetail(\'' + escH(x.nik) + '\')">Detail</button>' +
+            '<button class="rk-mini" onclick="RHDeskApi.empEdit(\'' + escH(x.nik) + '\')">Edit</button>' +
+            (x.akun === 'AKTIF'
+              ? '<button class="rk-mini danger" onclick="RHDeskApi.empDeactivate(\'' + escH(x.nik) + '\')">Nonaktifkan</button>'
+              : '<button class="rk-mini primary" onclick="RHDeskApi.empReactivate(\'' + escH(x.nik) + '\')">Aktifkan</button>') +
+            '<button class="rk-mini" onclick="RHDeskApi.empResetPin(\'' + escH(x.nik) + '\')">Reset PIN</button>' +
+          '</div></td>' +
+        '</tr>';
+      }).join('');
+    }
+    try { hydrateFaces(); } catch (e) {}
+    var pg = document.getElementById('rkEmpPager');
+    if (pg) {
+      var h = '<span>Menampilkan ' + slice.length + ' dari ' + list.length + ' karyawan</span>';
+      h += '<button ' + (empUI.page <= 1 ? 'disabled' : '') + ' onclick="RHDeskApi.empPage(-1)">‹</button>';
+      for (var i = 1; i <= pages && i <= 7; i++) h += '<button class="' + (i === empUI.page ? 'on' : '') + '" onclick="RHDeskApi.empPageTo(' + i + ')">' + i + '</button>';
+      h += '<button ' + (empUI.page >= pages ? 'disabled' : '') + ' onclick="RHDeskApi.empPage(1)">›</button>';
+      pg.innerHTML = h;
+    }
+  }
+
+  /* ---------------- PRESENSI ---------------- */
+  function renderAttPage() {
+    var el = document.getElementById('rkp-att');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      el.innerHTML =
+        '<div class="rk-grid rk-g2" style="margin-bottom:16px">' +
+          '<div class="rk-card" id="rkAttToday"><h3>Ringkasan Hari Ini</h3><div class="rk-loading">Memuat...</div></div>' +
+          '<div class="rk-card"><h3>Tren 7 Hari Terakhir</h3><div class="rk-card-sub">Jumlah kehadiran per hari</div><div id="rkAttWeek"><div class="rk-loading">Memuat...</div></div></div>' +
+        '</div>' +
+        '<div class="rk-card">' +
+          '<h3>Riwayat Kehadiran per Karyawan</h3><div class="rk-card-sub">Pilih karyawan dan bulan untuk menelusuri log</div>' +
+          '<div class="rk-toolbar">' +
+            '<select class="rk-in" id="rkAttNik" style="min-width:260px"></select>' +
+            '<button class="rk-btn ghost" id="rkAttPrev">‹</button>' +
+            '<b id="rkAttMonth" style="font-size:13px;min-width:120px;text-align:center">-</b>' +
+            '<button class="rk-btn ghost" id="rkAttNext">›</button>' +
+          '</div>' +
+          '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Tanggal</th><th>Tipe</th><th>Jam</th><th>Status Approval</th></tr></thead>' +
+          '<tbody id="rkAttBody"><tr><td colspan="4"><div class="rk-empty">Pilih karyawan untuk melihat riwayat.</div></td></tr></tbody></table></div>' +
+        '</div>';
+      document.getElementById('rkAttNik').addEventListener('change', function () { attUI.nik = this.value; paintAttHistory(); });
+      document.getElementById('rkAttPrev').addEventListener('click', function () { attUI.m--; if (attUI.m < 1) { attUI.m = 12; attUI.y--; } paintAttHistory(); });
+      document.getElementById('rkAttNext').addEventListener('click', function () { attUI.m++; if (attUI.m > 12) { attUI.m = 1; attUI.y++; } paintAttHistory(); });
+    }
+    ensureKar(false).then(function () {
+      var sel = document.getElementById('rkAttNik');
+      if (sel && !sel.options.length) {
+        var h = '';
+        (DATA.karList || []).forEach(function (x) { h += '<option value="' + escH(x.nik) + '">' + escH(x.nama) + ' (' + escH(x.nik) + ')</option>'; });
+        sel.innerHTML = h;
+        attUI.nik = attUI.nik || ((DATA.karList || [])[0] || {}).nik || '';
+        if (attUI.nik) sel.value = attUI.nik;
+        paintAttHistory();
+      }
+    });
+    paintAttToday();
+  }
+
+  function paintAttToday() {
+    rpcOptional('hr_attendance_today', { p_date: null }).then(function (r) {
+      var box = document.getElementById('rkAttToday');
+      if (!box) return;
+      if (r && r.ok !== false && (r.total != null || r.list)) {
+        var l = r.list || [];
+        var hadir = r.hadir != null ? r.hadir : l.filter(function (x) { return x.status === 'HADIR'; }).length;
+        var total = r.total != null ? r.total : l.length;
+        box.innerHTML = '<h3>Ringkasan Hari Ini</h3><div class="rk-card-sub">' + escH(r.tanggal || '') + '</div>' +
+          donut([{ l: 'Hadir / Lengkap', v: hadir, c: '#007850' }, { l: 'Belum lengkap', v: Math.max(total - hadir, 0), c: '#B77932' }], 140, 24, total, 'karyawan');
+      } else {
+        box.innerHTML = '<h3>Ringkasan Hari Ini</h3><div class="rk-note">Endpoint <b>hr_attendance_today</b> belum tersedia. Pasang sesuai <i>Instruksi untuk AI Backend</i>.</div>';
+      }
+    });
+    rpcOptional('hr_attendance_week', { p_end: null }).then(function (r) {
+      var box = document.getElementById('rkAttWeek');
+      if (!box) return;
+      if (r && r.ok !== false && (r.days || r.list)) {
+        var d = r.days || r.list || [];
+        box.innerHTML = bars(d.map(function (x) { return { l: x.label || x.tanggal || '-', v: x.hadir != null ? x.hadir : (x.v || 0) }; }));
+      } else {
+        box.innerHTML = '<div class="rk-note">Endpoint <b>hr_attendance_week</b> belum tersedia. Pasang sesuai <i>Instruksi untuk AI Backend</i>.</div>';
+      }
+    });
+  }
+
+  function paintAttHistory() {
+    var body = document.getElementById('rkAttBody'), lbl = document.getElementById('rkAttMonth');
+    if (!body) return;
+    var bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    if (lbl) lbl.textContent = bulan[attUI.m - 1] + ' ' + attUI.y;
+    if (!attUI.nik) { body.innerHTML = '<tr><td colspan="4"><div class="rk-empty">Pilih karyawan untuk melihat riwayat.</div></td></tr>'; return; }
+    body.innerHTML = '<tr><td colspan="4"><div class="rk-loading">Memuat...</div></td></tr>';
+    api('hrGetEmployeeHistory', [attUI.nik, attUI.y, attUI.m], 25000).then(function (r) {
+      var a = (r && r.records) || [];
+      if (!a.length) { body.innerHTML = '<tr><td colspan="4"><div class="rk-empty">Belum ada riwayat pada bulan ini.</div></td></tr>'; return; }
+      body.innerHTML = a.map(function (v) {
+        var st = (v.statusApproval || '').toUpperCase();
+        var pill = st === 'APPROVED' ? '<span class="rk-pill ok">Approved</span>' : st === 'REJECTED' ? '<span class="rk-pill no">Rejected</span>' : '<span class="rk-pill warn">' + escH(v.statusApproval || '-') + '</span>';
+        return '<tr><td><b>' + escH(v.tanggal || '-') + '</b></td><td>' + escH(v.tipe || '-') + '</td><td>' + escH(v.jam || '-') + '</td><td>' + pill + '</td></tr>';
+      }).join('');
+    }).catch(function (e) {
+      body.innerHTML = '<tr><td colspan="4"><div class="rk-empty">Gagal memuat: ' + escH(e && e.message || e) + '</div></td></tr>';
+    });
+  }
+
+  /* ---------------- PERSETUJUAN ---------------- */
+  function renderAprPage(force) {
+    var el = document.getElementById('rkp-apr');
+    if (!el) return;
+    if (!force && aprCache.at && (Date.now() - aprCache.at) < 30000 && el.dataset.filled === '1') return;
+    el.innerHTML = '<div class="rk-loading">Memuat daftar persetujuan...</div>';
+    api('getPendingApprovalsFull', [], 25000).then(function (r) {
+      aprCache.at = Date.now();
+      el.dataset.filled = '1';
+      var abs = (r && r.absensi) || [];
+      var cut = (r && r.cuti) || [];
+      var h = '';
+      h += '<div class="rk-card" style="margin-bottom:16px"><h3>Absensi Pending (' + abs.length + ')</h3><div class="rk-card-sub">Pengajuan absensi yang menunggu persetujuan</div>';
+      h += abs.length ? abs.map(function (x) { return aprItem(x, 'absen'); }).join('') : '<div class="rk-empty">Tidak ada pengajuan absensi pending.</div>';
+      h += '</div>';
+      h += '<div class="rk-card"><h3>Cuti & Izin Pending (' + cut.length + ')</h3><div class="rk-card-sub">Pengajuan cuti yang menunggu persetujuan</div>';
+      h += cut.length ? cut.map(function (x) { return aprItem(x, 'cuti'); }).join('') : '<div class="rk-empty">Tidak ada pengajuan cuti pending.</div>';
+      h += '</div>';
+      el.innerHTML = h;
+      try { hydrateFaces(); } catch (e) {}
+    }).catch(function (e) {
+      el.innerHTML = '<div class="rk-empty">Gagal memuat: ' + escH(e && e.message || e) + '</div>';
+    });
+  }
+
+  function aprItem(x, kind) {
+    var id = x.id || x.absensiId || x.cutiId || x.requestId || '';
+    var nama = x.nama || x.employeeName || '-';
+    var nik = x.nik || x.employeeId || '';
+    var sub1 = kind === 'absen'
+      ? [x.tanggal, x.tipe, x.jam].filter(Boolean).join(' • ')
+      : [(x.tanggalMulai || x.mulai), 's/d', (x.tanggalSelesai || x.selesai), x.kode ? '(' + x.kode + ')' : ''].filter(Boolean).join(' ');
+    var alasan = x.alasan || x.catatan || '';
+    var _av = x.faceVer || (DATA.faceVer || {})[nik] || 0;
+    var ava = nik ? '<span class="rk-ava"' + faceWrap(nik, nama, _av) + '>' + avaHtml(nik, nama, _av) + '</span>' : '';
+    return '<div class="rk-appr-item">' + ava +
+      '<div class="b"><b>' + escH(nama) + '</b> <span style="color:#5E6E63;font-size:12px">(' + escH(nik) + ')</span>' +
+      '<div class="s">' + escH(sub1) + (alasan ? ' — ' + escH(alasan) : '') + '</div></div>' +
+      '<button class="rk-mini primary" onclick="RHDeskApi.approve(\'' + kind + '\',\'' + escH(id) + '\')">Setujui</button>' +
+      '<button class="rk-mini danger" onclick="RHDeskApi.reject(\'' + kind + '\',\'' + escH(id) + '\')">Tolak</button>' +
+      '</div>';
+  }
+
+  function aprAct(kind, id, action) {
+    var alasan = '';
+    if (action === 'REJECT') {
+      alasan = prompt('Alasan penolakan (wajib):') || '';
+      if (!alasan.trim()) return;
+    }
+    var fn = kind === 'cuti' ? 'processCutiApproval' : 'processApproval';
+    api(fn, [null, null, id, action, alasan], 25000).then(function (r) {
+      rkToast((r && r.message) || (action === 'APPROVE' ? 'Disetujui.' : 'Ditolak.'));
+      aprCache.at = 0;
+      renderAprPage(true);
+      refreshBadge();
+    }).catch(function (e) { rkToast('❌ ' + (e && e.message || e)); });
+  }
+
+  /* ---------------- FACE ID ---------------- */
+  function renderFacePage() {
+    var el = document.getElementById('rkp-face');
+    if (!el) return;
+    el.innerHTML =
+      '<div class="rk-card" style="margin-bottom:16px"><h3>Progress Registrasi Face ID</h3>' +
+      '<div id="rkFaceProg"><div class="rk-loading">Memuat...</div></div>' +
+      '<button class="rk-btn" id="rkFaceMass" style="margin-top:12px">🚀 Beri Akses Massal (60 menit)</button></div>' +
+      '<div class="rk-card"><h3>Status Face ID per Karyawan</h3><div class="rk-card-sub">Beri akses, reset, atau cabut sesi registrasi wajah</div>' +
+      '<div class="rk-toolbar"><input class="rk-in" id="rkFaceQ" placeholder="Cari nama / NIK..." style="width:240px"></div>' +
+      '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Karyawan</th><th>NIK</th><th>Status</th><th>Sesi Akses</th><th style="width:250px">Aksi</th></tr></thead>' +
+      '<tbody id="rkFaceBody"><tr><td colspan="5"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div></div>';
+    document.getElementById('rkFaceMass').addEventListener('click', function () {
+      try { faceMgrMass(); } catch (e) { rkToast(e.message); }
+      setTimeout(refreshFace, 1500);
+    });
+    document.getElementById('rkFaceQ').addEventListener('input', function () { paintFaceRows(this.value); });
+    refreshFace();
+  }
+  function refreshFace() {
+    api('getFaceProgress', [], 20000).then(function (p) {
+      var box = document.getElementById('rkFaceProg');
+      if (!box || !p) return;
+      var pct = p.total ? Math.round(p.registered / p.total * 100) : 0;
+      box.innerHTML = '<div style="font-size:13px;font-weight:700">' + p.registered + ' / ' + p.total + ' karyawan terdaftar (' + pct + '%)</div>' +
+        '<div class="rk-face-prog"><i style="width:' + pct + '%"></i></div>' +
+        '<div style="font-size:12px;color:#5E6E63">Sisa belum registrasi: ' + p.remaining + '</div>';
+    }).catch(function () {});
+    ensureKar(false).then(function () { paintFaceRows((document.getElementById('rkFaceQ') || {}).value || ''); });
+  }
+  function paintFaceRows(q) {
+    var body = document.getElementById('rkFaceBody');
+    if (!body) return;
+    q = (q || '').toLowerCase();
+    var list = (DATA.karList || []).filter(function (x) {
+      return !q || (x.nama || '').toLowerCase().indexOf(q) >= 0 || (x.nik || '').toLowerCase().indexOf(q) >= 0;
+    });
+    if (!list.length) { body.innerHTML = '<tr><td colspan="5"><div class="rk-empty">Tidak ada data.</div></td></tr>'; return; }
+    body.innerHTML = list.map(function (x) {
+      var ava = '<span class="rk-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>';
+      var st = x.face === 'YES' ? '<span class="rk-pill ok">Terdaftar</span>' : '<span class="rk-pill warn">Belum terdaftar</span>';
+      var sesi = x.faceSessionUntil ? ('<span class="rk-pill info">Akses s/d ' + escH(String(x.faceSessionUntil).slice(0, 16).replace('T', ' ')) + '</span>') : '<span style="color:#8AA093;font-size:12px">-</span>';
+      return '<tr>' +
+        '<td><div style="display:flex;align-items:center;gap:10px">' + ava + '<b>' + escH(x.nama) + '</b></div></td>' +
+        '<td>' + escH(x.nik) + '</td><td>' + st + '</td><td>' + sesi + '</td>' +
+        '<td><div style="display:flex;gap:6px;flex-wrap:wrap">' +
+          '<button class="rk-mini primary" onclick="RHDeskApi.faceGrant(\'' + escH(x.nik) + '\')">Beri Akses</button>' +
+          '<button class="rk-mini" onclick="RHDeskApi.faceReset(\'' + escH(x.nik) + '\')">Reset</button>' +
+          '<button class="rk-mini danger" onclick="RHDeskApi.faceRevoke(\'' + escH(x.nik) + '\')">Cabut Sesi</button>' +
+        '</div></td></tr>';
+    }).join('');
+    try { hydrateFaces(); } catch (e) {}
+  }
+
+  /* ---------------- LOKASI KANTOR ---------------- */
+  function renderLocPage() {
+    var el = document.getElementById('rkp-loc');
+    if (!el) return;
+    el.innerHTML =
+      '<div class="rk-card"><h3>Daftar Branch / Titik Presensi</h3>' +
+      '<div class="rk-card-sub">Koordinat, radius, dan akurasi GPS maksimum per lokasi</div>' +
+      '<div class="rk-toolbar"><button class="rk-btn" id="rkLocAdd">+ Tambah Branch</button></div>' +
+      '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
+      '<th>Branch</th><th>Alamat</th><th>Koordinat</th><th>Radius</th><th>Maks Akurasi</th><th>Status</th><th style="width:150px">Aksi</th>' +
+      '</tr></thead><tbody id="rkLocBody"><tr><td colspan="7"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div></div>';
+    document.getElementById('rkLocAdd').addEventListener('click', function () { locModal(null); });
+    api('getLokasiKantor', [], 20000).then(function (r) {
+      var list = (r && r.list) || [];
+      var body = document.getElementById('rkLocBody');
+      if (!body) return;
+      if (!list.length) { body.innerHTML = '<tr><td colspan="7"><div class="rk-empty">Belum ada lokasi.</div></td></tr>'; return; }
+      body.innerHTML = list.map(function (x) {
+        var st = x.status === 'AKTIF' ? '<span class="rk-pill ok">Aktif</span>' : '<span class="rk-pill no">Nonaktif</span>';
+        return '<tr><td><b>' + escH(x.branch) + '</b></td><td>' + escH(x.alamat || '-') + '</td>' +
+          '<td style="font-size:12px">' + escH(x.latitude) + ', ' + escH(x.longitude) + '</td>' +
+          '<td>' + escH(x.radius) + ' m</td><td>' + escH(x.maxAccuracy) + ' m</td><td>' + st + '</td>' +
+          '<td><div style="display:flex;gap:6px">' +
+          '<button class="rk-mini" onclick=\'RHDeskApi.locEdit(' + JSON.stringify(x).replace(/'/g, "&#39;") + ')\'>Edit</button>' +
+          '<button class="rk-mini danger" onclick="RHDeskApi.locDelete(\'' + escH(x.branch) + '\')">Hapus</button>' +
+          '</div></td></tr>';
+      }).join('');
+    }).catch(function (e) {
+      var body = document.getElementById('rkLocBody');
+      if (body) body.innerHTML = '<tr><td colspan="7"><div class="rk-empty">Gagal memuat: ' + escH(e && e.message || e) + '</div></td></tr>';
+    });
+  }
+
+  function locModal(x) {
+    var old = document.getElementById('rkLocShade');
+    if (old) old.remove();
+    var shade = document.createElement('div');
+    shade.className = 'rk-modal-shade';
+    shade.id = 'rkLocShade';
+    shade.innerHTML =
+      '<div class="rk-modal"><h3>' + (x ? 'Edit Branch: ' + escH(x.branch) : 'Tambah Branch Baru') + '</h3>' +
+      '<div class="f"><label>Nama Branch *</label><input id="rklBranch" value="' + escH(x ? x.branch : '') + '" ' + (x ? 'readonly' : '') + '></div>' +
+      '<div class="f"><label>Alamat</label><input id="rklAlamat" value="' + escH(x ? x.alamat || '' : '') + '"></div>' +
+      '<div class="row"><div class="f"><label>Latitude *</label><input id="rklLat" type="number" step="any" value="' + (x ? x.latitude : '') + '"></div>' +
+      '<div class="f"><label>Longitude *</label><input id="rklLon" type="number" step="any" value="' + (x ? x.longitude : '') + '"></div></div>' +
+      '<div class="row"><div class="f"><label>Radius (m) *</label><input id="rklRadius" type="number" value="' + (x ? x.radius : 200) + '"></div>' +
+      '<div class="f"><label>Maks Akurasi GPS (m)</label><input id="rklAcc" type="number" value="' + (x ? x.maxAccuracy : 100) + '"></div></div>' +
+      '<div class="f"><label>Status</label><select id="rklStatus"><option value="AKTIF"' + (!x || x.status === 'AKTIF' ? ' selected' : '') + '>Aktif</option><option value="NONAKTIF"' + (x && x.status !== 'AKTIF' ? ' selected' : '') + '>Nonaktif</option></select></div>' +
+      '<div class="acts"><button class="rk-btn" id="rklSave">💾 Simpan</button><button class="rk-btn ghost" id="rklCancel">Batal</button></div></div>';
+    document.body.appendChild(shade);
+    shade.addEventListener('click', function (e) { if (e.target === shade) shade.remove(); });
+    document.getElementById('rklCancel').addEventListener('click', function () { shade.remove(); });
+    document.getElementById('rklSave').addEventListener('click', function () {
+      var d = {
+        branch: document.getElementById('rklBranch').value.trim(),
+        alamat: document.getElementById('rklAlamat').value.trim(),
+        latitude: parseFloat(document.getElementById('rklLat').value),
+        longitude: parseFloat(document.getElementById('rklLon').value),
+        radius: parseInt(document.getElementById('rklRadius').value, 10),
+        maxAccuracy: parseInt(document.getElementById('rklAcc').value, 10),
+        status: document.getElementById('rklStatus').value
+      };
+      if (!d.branch || !isFinite(d.latitude) || !isFinite(d.longitude) || !isFinite(d.radius)) { rkToast('Lengkapi branch, koordinat, dan radius.'); return; }
+      api('saveLokasiKantor', [d], 25000).then(function (r) {
+        rkToast((r && r.message) || 'Lokasi tersimpan.');
+        shade.remove();
+        renderLocPage();
+      }).catch(function (e) { rkToast('❌ ' + (e && e.message || e)); });
+    });
+  }
+
+  /* ---------------- Integrasi & API publik konsol ---------------- */
+  function injectLoginSplit() {
+    // Sisipkan panel brand gaya Apps Script ke layar login (desktop saja; CSS menyembunyikan di mobile)
+    var card = document.querySelector('#s-login .login-card');
+    if (!card || card.classList.contains('rh-lg-split')) return;
+    var logoImg = card.querySelector('img');
+    var logoSrc = logoImg ? logoImg.getAttribute('src') : '';
+    var logoBox = card.querySelector('div');
+    if (logoBox) logoBox.classList.add('lg-logo-main');
+
+    var brand = document.createElement('div');
+    brand.className = 'rh-lg-brand';
+    brand.innerHTML =
+      '<span class="rh-lg-logo">' + (logoSrc ? '<img src="' + logoSrc + '" alt="ReHolz">' : '') + '</span>' +
+      '<h2>REHOLZ HRIS</h2>' +
+      '<h3>HR Management System</h3>' +
+      '<p>Sistem informasi manajemen karyawan untuk membantu pengelolaan data, cuti, absensi, dan kebutuhan HR secara lebih mudah dan terintegrasi.</p>';
+    card.insertBefore(brand, card.firstChild);
+
+    var head = document.createElement('div');
+    head.className = 'rh-lg-head';
+    head.innerHTML = '<h4>Selamat Datang</h4><p>Silakan masuk untuk melanjutkan ke sistem HR Management.</p>';
+    card.insertBefore(head, brand.nextSibling);
+    card.classList.add('rh-lg-split');
+  }
+
+  function initDom() {
+    // Logo sidebar konsol memakai logo login yang sama
+    var logoImg = document.querySelector('#s-login .login-card img');
+    var rkLogo = document.getElementById('rkLogo');
+    if (rkLogo && logoImg) rkLogo.innerHTML = '<img src="' + logoImg.getAttribute('src') + '" alt="ReHolz">';
+
+    // Toast khusus konsol
+    if (!document.getElementById('rkToast')) {
+      var tst = document.createElement('div');
+      tst.className = 'rk-toast'; tst.id = 'rkToast';
+      document.body.appendChild(tst);
+    }
+
+    // Navigasi sidebar konsol
+    var nav = document.getElementById('rkNav');
+    if (nav) {
+      nav.addEventListener('click', function (e) {
+        var b = e.target.closest('button[data-p]');
+        if (b) goPage(b.getAttribute('data-p'));
+      });
+    }
+    var lo = document.getElementById('rkLogout');
+    if (lo) lo.addEventListener('click', function () { try { doLogout(); } catch (e) {} });
+
+    var rf = document.getElementById('rkRefresh');
+    if (rf) rf.addEventListener('click', function () {
+      dashCache.at = 0; aprCache.at = 0;
+      if (cur === 'emp' || cur === 'face' || cur === 'att') { ensureKar(true).then(function () { goPage(cur); }); }
+      else goPage(cur);
+      rkToast('Memuat ulang data...');
+    });
+
+    var sr = document.getElementById('rkSearch');
+    if (sr) sr.addEventListener('input', function () {
+      empUI.q = this.value; empUI.page = 1;
+      if (cur !== 'emp') goPage('emp');
+      else paintEmpRows();
+    });
+
+    var usr = document.getElementById('rkUser');
+    if (usr) usr.addEventListener('click', function () { try { openProfileSheet(); } catch (e) {} });
+
+    injectLoginSplit();
+  }
+
+  // Publik untuk inline handler di markup konsol
+  window.RHDeskApi = {
+    empPage: function (d) { empUI.page += d; paintEmpRows(); },
+    empPageTo: function (p) { empUI.page = p; paintEmpRows(); },
+    empDetail: function (nik) { try { karOpenDetail(nik); } catch (e) { rkToast(e.message); } },
+    empEdit: function (nik) { try { karOpenEdit(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') paintEmpRows(); }, 1200); },
+    empDeactivate: function (nik) { try { karDeactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') paintEmpRows(); }, 1200); },
+    empReactivate: function (nik) { try { karReactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') paintEmpRows(); }, 1200); },
+    empResetPin: function (nik) { try { karResetPin(nik); } catch (e) { rkToast(e.message); } },
+    approve: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
+    reject: function (kind, id) { aprAct(kind, id, 'REJECT'); },
+    faceGrant: function (nik) { try { faceMgrGrant(nik); } catch (e) { rkToast(e.message); } setTimeout(refreshFace, 1500); },
+    faceReset: function (nik) { try { faceMgrReset(nik); } catch (e) { rkToast(e.message); } setTimeout(refreshFace, 1500); },
+    faceRevoke: function (nik) { try { faceMgrRevoke(nik); } catch (e) { rkToast(e.message); } setTimeout(refreshFace, 1500); },
+    locEdit: function (x) { locModal(x); },
+    locDelete: function (branch) {
+      if (!confirm('Hapus lokasi ' + branch + '?')) return;
+      api('deleteLokasiKantor', [branch], 20000).then(function (r) {
+        rkToast((r && r.message) || 'Lokasi dihapus.');
+        renderLocPage();
+      }).catch(function (e) { rkToast('❌ ' + (e && e.message || e)); });
+    }
+  };
+
+  // Hook status aplikasi: polling ringan (aman karena script utama berada dalam IIFE)
+  var _lastEvalKey = '';
+  function evaluateThrottled() {
+    var key = (window.S && S.user ? (S.user.nik + '|' + S.user.role) : 'anon') + '|' + MQ.matches;
+    if (key === _lastEvalKey) return;
+    _lastEvalKey = key;
+    evaluate();
+  }
+  function installHooks() {
+    setInterval(evaluateThrottled, 800);
+    if (typeof window.doLogout === 'function' && !window.doLogout.__rhWrapped) {
+      var _lo = window.doLogout;
+      var wrappedLo = function () {
+        deactivate();
+        document.body.classList.remove('rh-role-staff');
+        return _lo.apply(this, arguments);
+      };
+      wrappedLo.__rhWrapped = true;
+      window.doLogout = wrappedLo;
+    }
+  }
+
+  function boot() {
+    initDom();
+    installHooks();
+    evaluate();
+    if (MQ.addEventListener) MQ.addEventListener('change', evaluate);
+    else if (MQ.addListener) MQ.addListener(evaluate);
+    // Cadangan: evaluasi ulang ringan setelah boot aplikasi
+    setTimeout(evaluate, 1200);
+    setTimeout(evaluate, 4000);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 
