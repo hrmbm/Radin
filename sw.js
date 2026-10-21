@@ -1,7 +1,10 @@
 'use strict';
 
 /* ==========================================================================
-   ReHolz HRIS Service Worker v14
+   ReHolz HRIS Service Worker v15
+   Perubahan dari v14:
+   0. Shell index.html baru (konsol desktop gaya HRMSMBM) -> versi cache dinaikkan
+      agar semua klien mengambil shell terbaru secara bersih.
    Perubahan dari v13.5:
    1. Versi cache dinaikkan (v14) agar shell lama tergantikan bersih.
    2. supabase-js (pinned @2) ikut di-cache -> boot lebih cepat & stabil.
@@ -13,10 +16,10 @@
    5. Cache v12.1 tetap dipertahankan sebagai fallback sesuai kebijakan lama.
    ========================================================================== */
 
-var SW_VERSION = 'v14-0';
-var CACHE_NAME = 'presensi-static-v14-0';
-var SHELL_CACHE = 'presensi-shell-v14-0';
-var CDN_CACHE = 'presensi-cdn-v14-0';
+var SW_VERSION = 'v15-0';
+var CACHE_NAME = 'presensi-static-v15-0';
+var SHELL_CACHE = 'presensi-shell-v15-0';
+var CDN_CACHE = 'presensi-cdn-v15-0';
 var APP_SHELL = ['./'];
 
 self.addEventListener('install', function (event) {
