@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="13.5-desktop-console-photocache">
+<meta name="app-release" content="14.0-hrmsmbm-desktop-console">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Aplikasi Presensi Karyawan ReHolz dengan tema More-Than-Wood material, Face ID AI, GPS Geofencing, dan Manajemen Cuti.">
 <meta property="og:title" content="Presensi ReHolz">
@@ -2662,6 +2662,7 @@ html[data-theme="midnight"] .topbar:not(.red) .back, html[data-theme="graphite"]
 /* Terapkan tema & ukuran font tersimpan sedini mungkin (mencegah kedip tampilan) */
 (function(){try{var t=localStorage.getItem('rh_theme_v1');if(t)document.documentElement.setAttribute('data-theme',t);var f=JSON.parse(localStorage.getItem('rh_fonts_v1')||'null');if(f){var m={menu:'--fz-menu',sheet:'--fz-sheet',tab:'--fz-tab',top:'--fz-top',nav:'--fz-nav',drop:'--fz-drop',flabel:'--fz-flabel',finput:'--fz-finput',btn:'--fz-btn',card:'--fz-card'},s=document.documentElement.style;for(var k in m){if(f[k])s.setProperty(m[k],f[k]+'px');}}}catch(e){}})();
 </script>
+<base target="_blank">
 </head>
 <body>
 
@@ -4213,7 +4214,7 @@ window.__APP_PREPARING_ASSETS = true;
 <script type="module">
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
-var APP_VERSION = '6.4-SUPABASE-REHOLZ-DESKTOP-CONSOLE-PHOTOCACHE';
+var APP_VERSION = '6.5-SUPABASE-REHOLZ-HRMSMBM-DESKTOP';
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 var FACE_API_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
 var FACE_MATCH_THRESHOLD = 0.55;
@@ -8216,6 +8217,69 @@ function showHrPlaceholder(title, group, description) {
 }
 </style>
 
+
+<style id="rh-desk-v2-css">
+/* ==========================================================================
+   ReHolz Desktop HR Console v15 — struktur menu & halaman mengikuti HRMSMBM
+   (grup submenu lipat, halaman Cuti/Rekap/Laporan/User/Log/Personal File),
+   dengan palet hijau ReHolz. Semua aturan di-scope ke >=1024px agar tampilan
+   mobile tidak berubah sama sekali.
+   ========================================================================== */
+@media (min-width: 1024px) {
+  body.rh-desk-on #rhDesk { grid-template-columns: 252px 1fr; grid-template-rows: 60px 1fr; }
+
+  /* Grup menu lipat (pola HRMSMBM) */
+  .rk-group { margin: 1px 0; }
+  .rk-parent {
+    display: flex; align-items: center; gap: 11px; width: 100%;
+    padding: 9px 12px; border: none; background: transparent; border-radius: 9px;
+    font-size: 13px; font-weight: 800; letter-spacing: 0.2px; color: #2E4A3A;
+    cursor: pointer; font-family: inherit; text-align: left;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .rk-parent svg { flex: 0 0 auto; }
+  .rk-parent:hover { background: #EDF5EF; color: #007850; }
+  .rk-chev { margin-left: auto; font-size: 10px; color: #8AA093; transition: transform 0.18s ease; }
+  .rk-group.closed .rk-chev { transform: rotate(-90deg); }
+  .rk-sub {
+    display: flex; flex-direction: column; gap: 2px;
+    margin: 2px 0 8px 18px; padding-left: 12px; border-left: 2px solid #E4F0E8;
+  }
+  .rk-group.closed .rk-sub { display: none; }
+  .rk-sub button {
+    display: flex; align-items: center; gap: 9px; width: 100%;
+    padding: 7px 12px; border: none; background: transparent; border-radius: 8px;
+    font-size: 12.8px; font-weight: 600; color: #4A6355; cursor: pointer;
+    text-align: left; font-family: inherit;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .rk-sub button:hover { background: #EDF5EF; color: #007850; }
+  .rk-sub button.on { background: var(--rk-green); color: #fff; box-shadow: 0 4px 12px rgba(0, 120, 80, 0.22); }
+  .rk-sub button .rk-badge { margin-left: auto; background: #B77932; color: #fff; font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 7px; }
+  .rk-sub button.on .rk-badge { background: rgba(255, 255, 255, 0.25); }
+
+  /* Komponen halaman baru */
+  .rk-profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 18px; }
+  .rk-profile-grid .pf { background: #F8FBF9; border: 1px solid var(--rk-line); border-radius: 10px; padding: 9px 12px; }
+  .rk-profile-grid .pf label { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; color: var(--rk-muted); text-transform: uppercase; }
+  .rk-profile-grid .pf b { font-size: 13px; color: var(--rk-ink); word-break: break-word; }
+  .rk-chipbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .rk-chip { padding: 5px 12px; border-radius: 20px; border: 1.5px solid var(--rk-line); background: #fff; font-size: 11.5px; font-weight: 700; color: #33503F; }
+  .rk-chip b { color: var(--rk-green); }
+  select.rk-role { padding: 5px 8px; border: 1.5px solid var(--rk-line); border-radius: 8px; font-size: 12px; font-family: inherit; background: #fff; color: var(--rk-ink); }
+  .rk-pct { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--rk-green); }
+
+  /* Cetak Laporan HR: hanya halaman aktif yang tercetak */
+  @media print {
+    body.rh-desk-on .rk-side, body.rh-desk-on .rk-top,
+    body.rh-desk-on .rk-toolbar, body.rh-desk-on .rk-btn { display: none !important; }
+    body.rh-desk-on #rhDesk { position: static; display: block; }
+    body.rh-desk-on .rk-main { overflow: visible; padding: 0; }
+    body.rh-desk-on .rk-card { box-shadow: none; }
+  }
+}
+</style>
+
 <!-- ================= ReHolz Desktop HR Console (HR/Admin only, >=1024px) ================= -->
 <div id="rhDesk" aria-hidden="true">
   <aside class="rk-side">
@@ -8226,11 +8290,41 @@ function showHrPlaceholder(title, group, description) {
     <div class="rk-nav-label">MENU UTAMA</div>
     <nav class="rk-nav" id="rkNav">
       <button data-p="dash" class="on"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
-      <button data-p="emp"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Karyawan</button>
-      <button data-p="att"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Presensi</button>
-      <button data-p="apr"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Persetujuan<span class="rk-badge" id="rkAprBadge" style="display:none">0</span></button>
-      <button data-p="face"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 19c.6-2.5 2.6-4 5-4s4.4 1.5 5 4"/></svg>Face ID</button>
+
+      <div class="rk-group">
+        <button type="button" class="rk-parent" onclick="RHDeskApi.rkToggleGroup(this)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Data Karyawan<span class="rk-chev">▾</span></button>
+        <div class="rk-sub">
+      <button data-p="emp"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Daftar Karyawan</button>
+          <button data-p="pfile"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Personal File Karyawan</button>
+        </div>
+      </div>
+
+      <div class="rk-group">
+        <button type="button" class="rk-parent" onclick="RHDeskApi.rkToggleGroup(this)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Waktu &amp; Kehadiran<span class="rk-chev">▾</span></button>
+        <div class="rk-sub">
+      <button data-p="att"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Monitoring Presensi</button>
+          <button data-p="rekap"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h4"/></svg>Rekap Absensi</button>
       <button data-p="loc"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Lokasi Kantor</button>
+        </div>
+      </div>
+
+      <div class="rk-group">
+        <button type="button" class="rk-parent" onclick="RHDeskApi.rkToggleGroup(this)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01"/></svg>Cuti &amp; Persetujuan<span class="rk-chev">▾</span></button>
+        <div class="rk-sub">
+          <button data-p="cuti"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>Cuti Karyawan</button>
+      <button data-p="apr"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Persetujuan<span class="rk-badge" id="rkAprBadge" style="display:none">0</span></button>
+        </div>
+      </div>
+
+      <div class="rk-group">
+        <button type="button" class="rk-parent" onclick="RHDeskApi.rkToggleGroup(this)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Sistem &amp; Laporan<span class="rk-chev">▾</span></button>
+        <div class="rk-sub">
+      <button data-p="face"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 19c.6-2.5 2.6-4 5-4s4.4 1.5 5 4"/></svg>Face ID</button>
+          <button data-p="lap"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="0.5"/><rect x="12" y="8" width="3" height="10" rx="0.5"/><rect x="17" y="5" width="3" height="13" rx="0.5"/></svg>Laporan HR</button>
+          <button data-p="users"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/><path d="M18.5 8.5l1 1 2-2"/></svg>Manajemen User</button>
+          <button data-p="log"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 2.5"/><circle cx="12" cy="12" r="9"/></svg>Log Aktivitas</button>
+        </div>
+      </div>
     </nav>
     <div class="rk-side-foot">
       <button id="rkLogout"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#8F4232" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Keluar</button>
@@ -8265,6 +8359,12 @@ function showHrPlaceholder(title, group, description) {
     <section class="rk-page" id="rkp-apr"></section>
     <section class="rk-page" id="rkp-face"></section>
     <section class="rk-page" id="rkp-loc"></section>
+    <section class="rk-page" id="rkp-pfile"></section>
+    <section class="rk-page" id="rkp-rekap"></section>
+    <section class="rk-page" id="rkp-cuti"></section>
+    <section class="rk-page" id="rkp-lap"></section>
+    <section class="rk-page" id="rkp-users"></section>
+    <section class="rk-page" id="rkp-log"></section>
   </main>
 </div>
 
@@ -8285,11 +8385,17 @@ function showHrPlaceholder(title, group, description) {
   var MQ = window.matchMedia('(min-width: 1024px)');
   var TITLES = {
     dash: ['Dashboard', 'Ringkasan operasional HR'],
-    emp: ['Karyawan', 'Kelola data seluruh karyawan'],
-    att: ['Presensi', 'Pantau & telusuri riwayat kehadiran'],
+    emp: ['Daftar Karyawan', 'Kelola data seluruh karyawan'],
+    pfile: ['Personal File Karyawan', 'Profil lengkap & dokumen karyawan'],
+    att: ['Monitoring Presensi', 'Pantau & telusuri riwayat kehadiran'],
+    rekap: ['Rekap Absensi', 'Rekapitulasi kehadiran bulanan per karyawan'],
+    cuti: ['Cuti Karyawan', 'Daftar cuti & izin beserta jenis cutinya'],
     apr: ['Persetujuan', 'Approval absensi & cuti'],
     face: ['Face ID', 'Kelola registrasi wajah karyawan'],
-    loc: ['Lokasi Kantor', 'Titik presensi & radius per branch']
+    loc: ['Lokasi Kantor', 'Titik presensi & radius per branch'],
+    lap: ['Laporan HR', 'Laporan bulanan HR siap cetak & ekspor'],
+    users: ['Manajemen User', 'Role, status akun, dan keamanan akses'],
+    log: ['Log Aktivitas', 'Jejak aktivitas pengguna sistem']
   };
   var cur = 'dash';
   var empUI = { q: '', org: '', st: '', page: 1, per: 12 };
@@ -8365,10 +8471,19 @@ function showHrPlaceholder(title, group, description) {
     if (Sb) Sb.textContent = TITLES[p][1];
     if (p === 'dash') renderDash();
     if (p === 'emp') renderEmpPage();
+    if (p === 'pfile') renderPfilePage();
     if (p === 'att') renderAttPage();
+    if (p === 'rekap') renderRekapPage();
+    if (p === 'cuti') renderCutiPage();
     if (p === 'apr') renderAprPage();
     if (p === 'face') renderFacePage();
     if (p === 'loc') renderLocPage();
+    if (p === 'lap') renderLapPage();
+    if (p === 'users') renderUsersPage();
+    if (p === 'log') renderLogPage();
+    /* Buka otomatis grup sidebar yang memuat halaman aktif (pola HRMSMBM) */
+    var actBtn = document.querySelector('#rkNav button[data-p="' + p + '"]');
+    if (actBtn) { var grp = actBtn.closest('.rk-group'); if (grp) grp.classList.remove('closed'); }
   }
 
   /* ---------------- Data helpers (SWR ringan) ---------------- */
@@ -8446,7 +8561,42 @@ function showHrPlaceholder(title, group, description) {
         box.innerHTML = '<h3>Kehadiran Hari Ini</h3><div class="rk-card-sub">' + escH(r.tanggal || t(new Date().toISOString().slice(0, 10))) + '</div>' +
           donut([{ l: 'Hadir / Lengkap', v: hadir, c: '#007850' }, { l: 'Belum lengkap', v: belum, c: '#B77932' }], 150, 26, total, 'karyawan');
       } else {
-        box.innerHTML = '<h3>Kehadiran Hari Ini</h3><div class="rk-note">Endpoint <b>hr_attendance_today</b> belum tersedia di backend. Pasang sesuai <i>Instruksi untuk AI Backend</i> untuk mengaktifkan panel ini.</div>';
+        box.innerHTML = '<h3>Kehadiran Hari Ini</h3><div class="rk-note">Endpoint <b>hr_attendance_today</b> belum tersedia di backend. Pasang sesuai <i>Instruksi Penyesuaian Backend Supabase</i> untuk mengaktifkan panel ini.</div>';
+      }
+    });
+    fillDashExtras();
+  }
+
+  /* Panel tambahan dashboard (gaya HRMSMBM): pengambilan cuti & kontrak berakhir.
+     Keduanya memakai RPC opsional — bila backend belum dipasang, kartu menampilkan
+     catatan panduan tanpa mengganggu panel lain. */
+  function fillDashExtras() {
+    rpcOptional('hr_leave_yearly_stats', { p_year: new Date().getFullYear() }).then(function (r) {
+      var box = document.getElementById('rkDashCuti');
+      if (!box) return;
+      var arr = r && (r.months || r.list);
+      if (arr && arr.length) {
+        box.innerHTML = '<h3>Pengambilan Cuti</h3><div class="rk-card-sub">Jumlah pengajuan per bulan, ' + new Date().getFullYear() + '</div>' +
+          bars(arr.map(function (x) { return { l: x.label || x.bulan || '-', v: (x.total != null ? x.total : (x.v || 0)) }; }));
+      } else {
+        box.innerHTML = '<h3>Pengambilan Cuti</h3>' + optNote('hr_leave_yearly_stats');
+      }
+    });
+    rpcOptional('hr_contract_expiring', { p_days: 60 }).then(function (r) {
+      var box = document.getElementById('rkDashKontrak');
+      if (!box) return;
+      var arr = normArr(r);
+      if (arr) {
+        box.innerHTML = '<h3>Kontrak Berakhir (60 Hari)</h3><div class="rk-card-sub">Karyawan dengan kontrak yang perlu segera diproses</div>' +
+          (arr.length
+            ? '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>NIK</th><th>Nama</th><th>Berakhir</th></tr></thead><tbody>' +
+              arr.map(function (x) {
+                return '<tr><td>' + escH(x.nik || x.employee_id || '-') + '</td><td><b>' + escH(x.nama || '-') + '</b></td><td>' + escH(x.contractEnd || x.contract_end_date || '-') + '</td></tr>';
+              }).join('') + '</tbody></table></div>'
+            : '<div class="rk-empty">Tidak ada kontrak berakhir dalam 60 hari ke depan.</div>');
+      } else {
+        box.innerHTML = '<h3>Kontrak Berakhir (60 Hari)</h3>' + optNote('hr_contract_expiring') +
+          '<div class="rk-note" style="margin-top:8px">Memerlukan kolom <b>karyawan.contract_end_date</b> — lihat Instruksi Penyesuaian Backend Supabase.</div>';
       }
     });
   }
@@ -8485,6 +8635,10 @@ function showHrPlaceholder(title, group, description) {
           (fp ? donut([{ l: 'Sudah registrasi', v: fp.registered, c: '#007850' }, { l: 'Belum', v: fp.remaining, c: '#B77932' }], 150, 26, fp.total, 'karyawan')
               : donut([{ l: 'Face aktif', v: faceYes, c: '#007850' }, { l: 'Belum', v: Math.max(list.length - faceYes, 0), c: '#B77932' }], 150, 26, list.length, 'karyawan')) +
         '</div>' +
+      '</div>' +
+      '<div class="rk-grid rk-g2" style="margin-top:16px">' +
+        '<div class="rk-card" id="rkDashCuti"><h3>Pengambilan Cuti</h3><div class="rk-loading">Memuat...</div></div>' +
+        '<div class="rk-card" id="rkDashKontrak"><h3>Kontrak Berakhir (60 Hari)</h3><div class="rk-loading">Memuat...</div></div>' +
       '</div>';
   }
 
@@ -8890,6 +9044,649 @@ function showHrPlaceholder(title, group, description) {
     });
   }
 
+
+  /* ==========================================================================
+     HALAMAN BARU v15 — mengikuti struktur HRMSMBM, tema & data ReHolz.
+     ATK, Performance Appraisal, dan Performance Check-in sengaja TIDAK diikutsertakan.
+     Semua endpoint baru bersifat opsional (rpcOptional): bila RPC belum dipasang,
+     halaman menampilkan catatan panduan, bukan error.
+     ========================================================================== */
+  function optNote(fnName) {
+    return '<div class="rk-note">Endpoint <b>' + fnName + '</b> belum tersedia di backend. Pasang sesuai <i>Instruksi Penyesuaian Backend Supabase</i> untuk mengaktifkan bagian ini.</div>';
+  }
+  function normArr(r) {
+    if (!r) return null;
+    if (Object.prototype.toString.call(r) === '[object Array]') return r;
+    if (r.list) return r.list;
+    if (r.rows) return r.rows;
+    if (r.data) return r.data;
+    return null;
+  }
+  function pillSt(st) {
+    var s = String(st == null ? '' : st).toUpperCase();
+    if (!s) return '<span class="rk-pill info">-</span>';
+    if (s === 'DISETUJUI' || s === 'APPROVED' || s === 'VALID' || s === 'AKTIF' || s === 'SUCCESS') return '<span class="rk-pill ok">' + escH(st) + '</span>';
+    if (s.indexOf('DITOLAK') >= 0 || s === 'REJECTED' || s === 'NONAKTIF' || s === 'FAILED') return '<span class="rk-pill no">' + escH(st) + '</span>';
+    if (s.indexOf('PENDING') >= 0 || s === 'MENUNGGU') return '<span class="rk-pill warn">' + escH(st) + '</span>';
+    return '<span class="rk-pill info">' + escH(st) + '</span>';
+  }
+  function csvDownload(filename, rows) {
+    var csv = rows.map(function (r) {
+      return r.map(function (c) {
+        var s = String(c == null ? '' : c);
+        return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }).join(';');
+    }).join('\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  function yearOptions(selId, cur) {
+    var y0 = new Date().getFullYear(), h = '';
+    for (var y = y0 + 1; y >= y0 - 4; y--) h += '<option value="' + y + '"' + (y === cur ? ' selected' : '') + '>' + y + '</option>';
+    var el = document.getElementById(selId); if (el) el.innerHTML = h;
+  }
+  var BULAN_ID = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+  /* ---------------- CUTI KARYAWAN (dengan jenis cuti) ---------------- */
+  var cutiUI = { y: new Date().getFullYear(), jenis: '', q: '', data: null, dataYear: 0, fallback: false };
+  function renderCutiPage() {
+    var el = document.getElementById('rkp-cuti');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      el.innerHTML =
+        '<div class="rk-toolbar">' +
+          '<select class="rk-in" id="rkCutiYear"></select>' +
+          '<select class="rk-in" id="rkCutiJenis"><option value="">Semua Jenis Cuti</option></select>' +
+          '<input class="rk-in" id="rkCutiQ" placeholder="Cari nama / NIK..." style="width:220px">' +
+          '<span style="flex:1"></span>' +
+          '<button class="rk-btn ghost" id="rkCutiReload">↻ Muat Ulang</button>' +
+          '<button class="rk-btn" id="rkCutiCsv">⬇ Export CSV</button>' +
+        '</div>' +
+        '<div class="rk-grid rk-g4" id="rkCutiStats" style="margin-bottom:16px"></div>' +
+        '<div class="rk-card"><h3>Daftar Cuti &amp; Izin Karyawan</h3>' +
+        '<div class="rk-card-sub" id="rkCutiSub">Tanggal beserta jenis cuti (kode &amp; keterangan dari master cuti)</div>' +
+        '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
+          '<th>No</th><th>Karyawan</th><th>NIK</th><th>Jenis Cuti</th><th>Mulai</th><th>Selesai</th><th>Hari</th><th>Atasan</th><th>HR</th><th>Alasan</th>' +
+        '</tr></thead><tbody id="rkCutiBody"><tr><td colspan="10"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div></div>';
+      yearOptions('rkCutiYear', cutiUI.y);
+      document.getElementById('rkCutiYear').addEventListener('change', function () { cutiUI.y = +this.value; loadCutiData(true); });
+      document.getElementById('rkCutiJenis').addEventListener('change', function () { cutiUI.jenis = this.value; paintCuti(); });
+      document.getElementById('rkCutiQ').addEventListener('input', function () { cutiUI.q = this.value; paintCuti(); });
+      document.getElementById('rkCutiReload').addEventListener('click', function () { loadCutiData(true); });
+      document.getElementById('rkCutiCsv').addEventListener('click', exportCutiCsv);
+    }
+    loadCutiData(false);
+  }
+  function loadCutiData(force) {
+    var body = document.getElementById('rkCutiBody');
+    if (!force && cutiUI.data && cutiUI.dataYear === cutiUI.y) { paintCuti(); return; }
+    if (body) body.innerHTML = '<tr><td colspan="10"><div class="rk-loading">Memuat data cuti...</div></td></tr>';
+    rpcOptional('hr_get_leave_list', { p_year: cutiUI.y }).then(function (r) {
+      var arr = normArr(r);
+      if (arr) {
+        cutiUI.data = arr; cutiUI.dataYear = cutiUI.y; cutiUI.fallback = false;
+        paintCuti();
+        return;
+      }
+      /* Fallback sementara: antrean persetujuan yang sudah tersedia (jenis cuti tetap tampil dari kode/keterangan) */
+      api('getPendingApprovalsFull', [], 25000).then(function (r2) {
+        cutiUI.data = (r2 && r2.cuti) || []; cutiUI.dataYear = cutiUI.y; cutiUI.fallback = true;
+        paintCuti();
+      }).catch(function (e) {
+        if (body) body.innerHTML = '<tr><td colspan="10"><div class="rk-empty">Gagal memuat: ' + escH(e && e.message || e) + '</div></td></tr>';
+      });
+    });
+  }
+  function cutiFiltered() {
+    var q = cutiUI.q.toLowerCase();
+    return (cutiUI.data || []).filter(function (x) {
+      var kode = (x.kode || x.kodeCuti || '') + ' ' + (x.keterangan || '');
+      if (cutiUI.jenis && (x.kode || x.kodeCuti) !== cutiUI.jenis) return false;
+      if (q && (x.nama || '').toLowerCase().indexOf(q) < 0 && (x.nik || '').toLowerCase().indexOf(q) < 0) return false;
+      return true;
+    });
+  }
+  function paintCuti() {
+    var body = document.getElementById('rkCutiBody'), stats = document.getElementById('rkCutiStats'), sub = document.getElementById('rkCutiSub');
+    if (!body) return;
+    var list = cutiFiltered();
+    /* Isi filter jenis dari data yang ada */
+    var jn = document.getElementById('rkCutiJenis');
+    if (jn) {
+      var curV = jn.value, seen = {}, h = '<option value="">Semua Jenis Cuti</option>';
+      (cutiUI.data || []).forEach(function (x) {
+        var k = x.kode || x.kodeCuti || '';
+        if (k && !seen[k]) { seen[k] = 1; h += '<option value="' + escH(k) + '">' + escH(k + (x.keterangan ? ' — ' + x.keterangan : '')) + '</option>'; }
+      });
+      jn.innerHTML = h; jn.value = curV;
+    }
+    if (stats) {
+      var pend = list.filter(function (x) { return String(x.statusAtasan || x.statusHR || '').toUpperCase().indexOf('PENDING') >= 0; }).length;
+      var appr = list.filter(function (x) { return String(x.statusHR || '').toUpperCase() === 'DISETUJUI'; }).length;
+      var days = list.reduce(function (a, x) { return a + (+x.totalHari || 0); }, 0);
+      stats.innerHTML =
+        statCard('g', 'Total Pengajuan', list.length, 'Tahun ' + cutiUI.y) +
+        statCard('a', 'Menunggu Persetujuan', pend, 'Atasan / HR') +
+        statCard('b', 'Disetujui HR', appr, 'Cuti berlaku') +
+        statCard('r', 'Total Hari Cuti', days, 'Akumulasi pengajuan');
+    }
+    if (sub) sub.innerHTML = cutiUI.fallback
+      ? 'Menampilkan antrean persetujuan saja. Pasang endpoint <b>hr_get_leave_list</b> untuk daftar cuti setahun penuh (lihat Instruksi Penyesuaian Backend Supabase).'
+      : 'Tanggal beserta jenis cuti (kode &amp; keterangan dari master cuti)';
+    if (!list.length) {
+      body.innerHTML = '<tr><td colspan="10"><div class="rk-empty">Belum ada data cuti pada periode ini.</div></td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(function (x, i) {
+      var jenis = (x.kode || x.kodeCuti || '-') + (x.keterangan ? ' · ' + x.keterangan : '');
+      return '<tr>' +
+        '<td>' + (i + 1) + '</td>' +
+        '<td><b>' + escH(x.nama || '-') + '</b></td>' +
+        '<td>' + escH(x.nik || '-') + '</td>' +
+        '<td><span class="rk-pill info">' + escH(jenis) + '</span></td>' +
+        '<td>' + escH(x.tanggalMulai || '-') + '</td>' +
+        '<td>' + escH(x.tanggalSelesai || '-') + '</td>' +
+        '<td>' + escH(x.totalHari != null ? x.totalHari : '-') + '</td>' +
+        '<td>' + pillSt(x.statusAtasan) + '</td>' +
+        '<td>' + pillSt(x.statusHR) + '</td>' +
+        '<td style="max-width:220px">' + escH(x.alasan || '-') + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+  function exportCutiCsv() {
+    var list = cutiFiltered();
+    if (!list.length) { rkToast('Tidak ada data untuk diekspor.'); return; }
+    var rows = [['No', 'Nama', 'NIK', 'Kode Cuti', 'Jenis Cuti', 'Tanggal Mulai', 'Tanggal Selesai', 'Total Hari', 'Status Atasan', 'Status HR', 'Alasan']];
+    list.forEach(function (x, i) {
+      rows.push([i + 1, x.nama, x.nik, x.kode || x.kodeCuti, x.keterangan, x.tanggalMulai, x.tanggalSelesai, x.totalHari, x.statusAtasan, x.statusHR, x.alasan]);
+    });
+    csvDownload('Cuti_Karyawan_' + cutiUI.y + '.csv', rows);
+    rkToast('CSV cuti diunduh.');
+  }
+
+  /* ---------------- REKAP ABSENSI (tipe ReHolz: MASUK/PULANG) ---------------- */
+  var rekapUI = { y: new Date().getFullYear(), m: new Date().getMonth() + 1, org: '', data: null, key: '' };
+  function renderRekapPage() {
+    var el = document.getElementById('rkp-rekap');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      var mh = '';
+      BULAN_ID.forEach(function (b, i) { mh += '<option value="' + (i + 1) + '"' + (i + 1 === rekapUI.m ? ' selected' : '') + '>' + b + '</option>'; });
+      el.innerHTML =
+        '<div class="rk-toolbar">' +
+          '<select class="rk-in" id="rkRekapYear"></select>' +
+          '<select class="rk-in" id="rkRekapMonth">' + mh + '</select>' +
+          '<select class="rk-in" id="rkRekapOrg"><option value="">Semua Organisasi</option></select>' +
+          '<span style="flex:1"></span>' +
+          '<button class="rk-btn ghost" id="rkRekapReload">↻ Muat Ulang</button>' +
+          '<button class="rk-btn" id="rkRekapCsv">⬇ Export CSV</button>' +
+        '</div>' +
+        '<div class="rk-card" style="margin-bottom:16px"><h3>Detail Persentase</h3>' +
+        '<div class="rk-card-sub">Distribusi status kehadiran periode terpilih (tipe absensi ReHolz: Clock In / Clock Out)</div>' +
+        '<div class="rk-chipbar" id="rkRekapChips"></div></div>' +
+        '<div class="rk-card"><h3>Rekap Karyawan</h3>' +
+        '<div class="rk-card-sub">Hadir = hari dengan Clock In · Lengkap = Clock In &amp; Clock Out · Alpha = hari kerja tanpa absen &amp; tanpa cuti</div>' +
+        '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
+          '<th>NIK</th><th>Nama</th><th>Bagian</th><th>Hari Kerja</th><th>Hadir</th><th>Lengkap</th><th>Cuti/Izin</th><th>Alpha</th><th>% Kehadiran</th>' +
+        '</tr></thead><tbody id="rkRekapBody"><tr><td colspan="9"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div></div>';
+      yearOptions('rkRekapYear', rekapUI.y);
+      document.getElementById('rkRekapYear').addEventListener('change', function () { rekapUI.y = +this.value; loadRekap(true); });
+      document.getElementById('rkRekapMonth').addEventListener('change', function () { rekapUI.m = +this.value; loadRekap(true); });
+      document.getElementById('rkRekapOrg').addEventListener('change', function () { rekapUI.org = this.value; paintRekap(); });
+      document.getElementById('rkRekapReload').addEventListener('click', function () { loadRekap(true); });
+      document.getElementById('rkRekapCsv').addEventListener('click', exportRekapCsv);
+    }
+    ensureKar(false).then(function () {
+      var sel = document.getElementById('rkRekapOrg');
+      if (sel && sel.options.length <= 1) {
+        var orgs = {}, h = '<option value="">Semua Organisasi</option>';
+        (DATA.karList || []).forEach(function (x) { if (x.org && !orgs[x.org]) { orgs[x.org] = 1; h += '<option value="' + escH(x.org) + '">' + escH(x.org) + '</option>'; } });
+        sel.innerHTML = h;
+      }
+    });
+    loadRekap(false);
+  }
+  function loadRekap(force) {
+    var key = rekapUI.y + '-' + rekapUI.m;
+    if (!force && rekapUI.data && rekapUI.key === key) { paintRekap(); return; }
+    var body = document.getElementById('rkRekapBody');
+    if (body) body.innerHTML = '<tr><td colspan="9"><div class="rk-loading">Memuat rekap...</div></td></tr>';
+    rpcOptional('hr_attendance_recap', { p_year: rekapUI.y, p_month: rekapUI.m }).then(function (r) {
+      var arr = normArr(r);
+      if (arr) {
+        rekapUI.data = arr; rekapUI.key = key;
+        paintRekap();
+      } else {
+        rekapUI.data = null; rekapUI.key = key;
+        if (body) body.innerHTML = '<tr><td colspan="9">' + optNote('hr_attendance_recap') + '</td></tr>';
+        var ch = document.getElementById('rkRekapChips'); if (ch) ch.innerHTML = '';
+      }
+    });
+  }
+  function rekapRow(x) {
+    return {
+      nik: x.nik || x.employee_id || '-',
+      nama: x.nama || '-',
+      bagian: x.bagian || x.org || x.organization || '-',
+      hariKerja: +(x.hariKerja != null ? x.hariKerja : (x.hari_kerja != null ? x.hari_kerja : x.workdays)) || 0,
+      hadir: +x.hadir || 0,
+      lengkap: +(x.lengkap != null ? x.lengkap : x.full) || 0,
+      cuti: +(x.cuti != null ? x.cuti : x.cutiIzin) || 0,
+      alpha: +x.alpha || 0,
+      persen: +(x.persen != null ? x.persen : x.pct) || 0
+    };
+  }
+  function rekapFiltered() {
+    return (rekapUI.data || []).map(rekapRow).filter(function (x) {
+      return !rekapUI.org || x.bagian === rekapUI.org;
+    });
+  }
+  function paintRekap() {
+    var body = document.getElementById('rkRekapBody'), ch = document.getElementById('rkRekapChips');
+    if (!body) return;
+    var list = rekapFiltered();
+    if (ch) {
+      var th = list.reduce(function (a, x) { return a + x.hadir; }, 0);
+      var tl = list.reduce(function (a, x) { return a + x.lengkap; }, 0);
+      var tc = list.reduce(function (a, x) { return a + x.cuti; }, 0);
+      var ta = list.reduce(function (a, x) { return a + x.alpha; }, 0);
+      var tw = list.reduce(function (a, x) { return a + x.hariKerja; }, 0);
+      var pct = tw ? Math.round(th / tw * 100) : 0;
+      ch.innerHTML =
+        '<span class="rk-chip">Karyawan <b>' + list.length + '</b></span>' +
+        '<span class="rk-chip">Hadir <b>' + th + '</b> hari</span>' +
+        '<span class="rk-chip">Lengkap In+Out <b>' + tl + '</b></span>' +
+        '<span class="rk-chip">Cuti/Izin <b>' + tc + '</b></span>' +
+        '<span class="rk-chip">Alpha <b>' + ta + '</b></span>' +
+        '<span class="rk-chip">Rata-rata Kehadiran <b>' + pct + '%</b></span>';
+    }
+    if (!list.length) {
+      body.innerHTML = '<tr><td colspan="9"><div class="rk-empty">Belum ada data absensi untuk periode ini.</div></td></tr>';
+      return;
+    }
+    body.innerHTML = list.map(function (x) {
+      return '<tr><td>' + escH(x.nik) + '</td><td><b>' + escH(x.nama) + '</b></td><td>' + escH(x.bagian) + '</td>' +
+        '<td>' + x.hariKerja + '</td><td>' + x.hadir + '</td><td>' + x.lengkap + '</td><td>' + x.cuti + '</td><td>' + x.alpha + '</td>' +
+        '<td><span class="rk-pct">' + x.persen + '%</span></td></tr>';
+    }).join('');
+  }
+  function exportRekapCsv() {
+    var list = rekapFiltered();
+    if (!list.length) { rkToast('Tidak ada data untuk diekspor.'); return; }
+    var rows = [['NIK', 'Nama', 'Bagian', 'Hari Kerja', 'Hadir', 'Lengkap (In+Out)', 'Cuti/Izin', 'Alpha', '% Kehadiran']];
+    list.forEach(function (x) { rows.push([x.nik, x.nama, x.bagian, x.hariKerja, x.hadir, x.lengkap, x.cuti, x.alpha, x.persen + '%']); });
+    csvDownload('Rekap_Absensi_' + rekapUI.y + '_' + String(rekapUI.m).padStart(2, '0') + '.csv', rows);
+    rkToast('CSV rekap diunduh.');
+  }
+
+  /* ---------------- PERSONAL FILE KARYAWAN ---------------- */
+  var pfileUI = { nik: '', extra: null, docs: null };
+  function renderPfilePage() {
+    var el = document.getElementById('rkp-pfile');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      el.innerHTML =
+        '<div class="rk-toolbar">' +
+          '<select class="rk-in" id="rkPfNik" style="min-width:280px"></select>' +
+          '<span style="flex:1"></span>' +
+          '<button class="rk-btn ghost" id="rkPfReload">↻ Muat Ulang</button>' +
+        '</div>' +
+        '<div class="rk-card" style="margin-bottom:16px"><h3>Profil Karyawan</h3>' +
+        '<div class="rk-card-sub">Data kepegawaian &amp; personal file</div>' +
+        '<div id="rkPfBody"><div class="rk-empty">Pilih karyawan untuk melihat personal file.</div></div></div>' +
+        '<div class="rk-card"><h3>Dokumen Karyawan</h3>' +
+        '<div class="rk-card-sub">KTP, KK, ijazah, kontrak, dan dokumen pendukung lainnya</div>' +
+        '<div class="rk-toolbar">' +
+          '<select class="rk-in" id="rkPfJenis"><option value="KTP">KTP</option><option value="KK">Kartu Keluarga</option><option value="IJAZAH">Ijazah</option><option value="KONTRAK">Kontrak Kerja</option><option value="BPJS">BPJS</option><option value="LAINNYA">Lainnya</option></select>' +
+          '<input type="file" id="rkPfFile" class="rk-in" style="padding:6px 10px">' +
+          '<button class="rk-btn" id="rkPfUpload">⬆ Unggah Dokumen</button>' +
+        '</div>' +
+        '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Jenis</th><th>Nama File</th><th>Diunggah</th><th style="width:170px">Aksi</th></tr></thead>' +
+        '<tbody id="rkPfDocBody"><tr><td colspan="4"><div class="rk-empty">Pilih karyawan terlebih dahulu.</div></td></tr></tbody></table></div></div>';
+      document.getElementById('rkPfNik').addEventListener('change', function () { pfileUI.nik = this.value; pfileUI.extra = null; pfileUI.docs = null; paintPfile(); loadPfileDocs(); });
+      document.getElementById('rkPfReload').addEventListener('click', function () { pfileUI.extra = null; pfileUI.docs = null; paintPfile(); loadPfileDocs(); });
+      document.getElementById('rkPfUpload').addEventListener('click', pfileUpload);
+    }
+    ensureKar(false).then(function () {
+      var sel = document.getElementById('rkPfNik');
+      if (sel && !sel.options.length) {
+        var h = '';
+        (DATA.karList || []).forEach(function (x) { h += '<option value="' + escH(x.nik) + '">' + escH(x.nama) + ' (' + escH(x.nik) + ')</option>'; });
+        sel.innerHTML = h;
+        pfileUI.nik = pfileUI.nik || ((DATA.karList || [])[0] || {}).nik || '';
+        if (pfileUI.nik) { sel.value = pfileUI.nik; paintPfile(); loadPfileDocs(); }
+      }
+    });
+  }
+  function pfRow(label, val) {
+    return '<div class="pf"><label>' + escH(label) + '</label><b>' + escH(val == null || val === '' ? '-' : val) + '</b></div>';
+  }
+  function paintPfile() {
+    var body = document.getElementById('rkPfBody');
+    if (!body) return;
+    var x = (DATA.karList || []).filter(function (k) { return k.nik === pfileUI.nik; })[0];
+    if (!x) { body.innerHTML = '<div class="rk-empty">Pilih karyawan untuk melihat personal file.</div>'; return; }
+    var e = pfileUI.extra || {};
+    body.innerHTML =
+      '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">' +
+        '<span class="rk-ava" style="width:52px;height:52px;font-size:16px"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>' +
+        '<div><b style="font-size:16px">' + escH(x.nama) + '</b><div style="font-size:12px;color:#5E6E63">' + escH(x.nik) + ' · ' + escH(x.posisi || '-') + ' · ' + escH(x.org || '-') + '</div></div>' +
+      '</div>' +
+      '<div class="rk-profile-grid">' +
+        pfRow('Branch', x.branch) + pfRow('Level', x.level) + pfRow('Grade / Class', (x.grade || '-') + ' / ' + (x.class || '-')) +
+        pfRow('Status Kerja', x.statusKerja) + pfRow('Bergabung', x.joinDate) + pfRow('Atasan', x.atasanNama) +
+        pfRow('Status Akun', x.akun) + pfRow('Role', x.role) +
+        pfRow('Kontrak Berakhir', e.contractEnd || e.contract_end_date) +
+        pfRow('Email', e.email) + pfRow('Telepon', e.phone) +
+        pfRow('Tanggal Lahir', e.birthDate || e.birth_date) + pfRow('Jenis Kelamin', e.gender) + pfRow('Status Pernikahan', e.maritalStatus || e.marital_status) +
+        pfRow('No. KTP', e.ktpNumber || e.ktp_number) + pfRow('NPWP', e.npwp) +
+        pfRow('BPJS Kesehatan', e.bpjsKesehatan || e.bpjs_kesehatan) + pfRow('BPJS Ketenagakerjaan', e.bpjsTk || e.bpjs_ketenagakerjaan) +
+        pfRow('Bank', e.bankName || e.bank_name) + pfRow('No. Rekening', e.bankAccount || e.bank_account) +
+        pfRow('Alamat', e.address) +
+      '</div>' +
+      (pfileUI.extra ? '' : '<div style="margin-top:12px">' + optNote('hr_get_personal_file') + '</div>');
+    try { hydrateFaces(); } catch (er) {}
+    if (!pfileUI.extra) {
+      rpcOptional('hr_get_personal_file', { p_nik: pfileUI.nik }).then(function (r) {
+        if (r && typeof r === 'object') { pfileUI.extra = r; paintPfile(); }
+      });
+    }
+  }
+  function loadPfileDocs() {
+    var body = document.getElementById('rkPfDocBody');
+    if (!body) return;
+    if (!pfileUI.nik) { body.innerHTML = '<tr><td colspan="4"><div class="rk-empty">Pilih karyawan terlebih dahulu.</div></td></tr>'; return; }
+    body.innerHTML = '<tr><td colspan="4"><div class="rk-loading">Memuat dokumen...</div></td></tr>';
+    rpcOptional('hr_list_employee_docs', { p_nik: pfileUI.nik }).then(function (r) {
+      var arr = normArr(r);
+      if (!arr) { body.innerHTML = '<tr><td colspan="4">' + optNote('hr_list_employee_docs') + '</td></tr>'; return; }
+      pfileUI.docs = arr;
+      if (!arr.length) { body.innerHTML = '<tr><td colspan="4"><div class="rk-empty">Belum ada dokumen.</div></td></tr>'; return; }
+      body.innerHTML = arr.map(function (d) {
+        return '<tr><td><span class="rk-pill info">' + escH(d.jenis || '-') + '</span></td><td><b>' + escH(d.filename || '-') + '</b></td>' +
+          '<td>' + escH(d.uploadedAt || d.created_at || '-') + '</td>' +
+          '<td><div style="display:flex;gap:6px">' +
+            '<button class="rk-mini" onclick="RHDeskApi.pfileDocDl(\'' + escH(d.id) + '\')">Unduh</button>' +
+            '<button class="rk-mini danger" onclick="RHDeskApi.pfileDocDel(\'' + escH(d.id) + '\')">Hapus</button>' +
+          '</div></td></tr>';
+      }).join('');
+    });
+  }
+  function pfileUpload() {
+    if (!pfileUI.nik) { rkToast('Pilih karyawan dulu.'); return; }
+    var f = document.getElementById('rkPfFile');
+    var file = f && f.files && f.files[0];
+    if (!file) { rkToast('Pilih file dokumen.'); return; }
+    if (file.size > 2 * 1024 * 1024) { rkToast('Maksimum ukuran dokumen 2 MB.'); return; }
+    var rd = new FileReader();
+    rd.onload = function () {
+      var b64 = String(rd.result || '').split(',')[1] || '';
+      rpcOptional('hr_save_employee_doc', {
+        p_nik: pfileUI.nik, p_jenis: document.getElementById('rkPfJenis').value,
+        p_filename: file.name, p_mime: file.type || 'application/octet-stream', p_base64: b64
+      }).then(function (r) {
+        if (r && r.ok !== false) { rkToast('Dokumen terunggah.'); f.value = ''; loadPfileDocs(); }
+        else rkToast('Endpoint hr_save_employee_doc belum dipasang — lihat Instruksi Backend.');
+      });
+    };
+    rd.readAsDataURL(file);
+  }
+  function pfileDocDl(id) {
+    rpcOptional('hr_get_employee_doc', { p_id: id }).then(function (r) {
+      if (!r || !r.fileData) { rkToast('Dokumen tidak dapat diunduh (endpoint belum dipasang).'); return; }
+      var a = document.createElement('a');
+      a.href = 'data:' + (r.mime || 'application/octet-stream') + ';base64,' + r.fileData;
+      a.download = r.filename || 'dokumen';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    });
+  }
+  function pfileDocDel(id) {
+    if (!confirm('Hapus dokumen ini?')) return;
+    rpcOptional('hr_delete_employee_doc', { p_id: id }).then(function (r) {
+      if (r && r.ok !== false) { rkToast('Dokumen dihapus.'); loadPfileDocs(); }
+      else rkToast('Endpoint hr_delete_employee_doc belum dipasang.');
+    });
+  }
+
+  /* ---------------- MANAJEMEN USER ---------------- */
+  var usersUI = { q: '' };
+  function renderUsersPage() {
+    var el = document.getElementById('rkp-users');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      el.innerHTML =
+        '<div class="rk-toolbar">' +
+          '<input class="rk-in" id="rkUsersQ" placeholder="Cari nama / NIK..." style="width:240px">' +
+          '<span style="flex:1"></span>' +
+          '<button class="rk-btn ghost" id="rkUsersReload">↻ Muat Ulang</button>' +
+        '</div>' +
+        '<div class="rk-card"><h3>Akun Pengguna</h3>' +
+        '<div class="rk-card-sub">Kelola role akses (KARYAWAN / HR / ADMIN), status akun, dan reset PIN</div>' +
+        '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
+          '<th>Karyawan</th><th>NIK</th><th>Role</th><th>Status Akun</th><th>Face ID</th><th style="width:280px">Aksi</th>' +
+        '</tr></thead><tbody id="rkUsersBody"><tr><td colspan="6"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div></div>';
+      document.getElementById('rkUsersQ').addEventListener('input', function () { usersUI.q = this.value; paintUsers(); });
+      document.getElementById('rkUsersReload').addEventListener('click', function () { ensureKar(true).then(paintUsers); });
+    }
+    ensureKar(false).then(paintUsers).catch(function (e) {
+      var b = document.getElementById('rkUsersBody');
+      if (b) b.innerHTML = '<tr><td colspan="6"><div class="rk-empty">Gagal memuat: ' + escH(e && e.message || e) + '</div></td></tr>';
+    });
+  }
+  function paintUsers() {
+    var body = document.getElementById('rkUsersBody');
+    if (!body) return;
+    var q = usersUI.q.toLowerCase();
+    var list = (DATA.karList || []).filter(function (x) {
+      return !q || (x.nama || '').toLowerCase().indexOf(q) >= 0 || (x.nik || '').toLowerCase().indexOf(q) >= 0;
+    });
+    if (!list.length) { body.innerHTML = '<tr><td colspan="6"><div class="rk-empty">Tidak ada data.</div></td></tr>'; return; }
+    var isAdmin = S.user && S.user.role === 'ADMIN';
+    body.innerHTML = list.map(function (x) {
+      var ava = '<span class="rk-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>';
+      var roleSel = '<select class="rk-role" data-role-for="' + escH(x.nik) + '"' + (isAdmin ? '' : ' disabled') + '>' +
+        ['KARYAWAN', 'HR', 'ADMIN'].map(function (r) { return '<option value="' + r + '"' + (x.role === r ? ' selected' : '') + '>' + r + '</option>'; }).join('') + '</select>';
+      return '<tr>' +
+        '<td><div style="display:flex;align-items:center;gap:10px">' + ava + '<b>' + escH(x.nama) + '</b></div></td>' +
+        '<td>' + escH(x.nik) + '</td>' +
+        '<td>' + roleSel + '</td>' +
+        '<td>' + pillSt(x.akun) + '</td>' +
+        '<td>' + (x.face === 'YES' ? '<span class="rk-pill ok">Terdaftar</span>' : '<span class="rk-pill warn">Belum</span>') + '</td>' +
+        '<td><div style="display:flex;gap:6px;flex-wrap:wrap">' +
+          (isAdmin ? '<button class="rk-mini primary" onclick="RHDeskApi.userSetRole(\'' + escH(x.nik) + '\')">Simpan Role</button>' : '') +
+          '<button class="rk-mini" onclick="RHDeskApi.empResetPin(\'' + escH(x.nik) + '\')">Reset PIN</button>' +
+          (x.akun === 'AKTIF'
+            ? '<button class="rk-mini danger" onclick="RHDeskApi.empDeactivate(\'' + escH(x.nik) + '\')">Nonaktifkan</button>'
+            : '<button class="rk-mini primary" onclick="RHDeskApi.empReactivate(\'' + escH(x.nik) + '\')">Aktifkan</button>') +
+        '</div></td></tr>';
+    }).join('');
+    try { hydrateFaces(); } catch (e) {}
+  }
+  function userSetRole(nik) {
+    var sel = document.querySelector('select[data-role-for="' + nik + '"]');
+    if (!sel) return;
+    rpcOptional('hr_set_role', { p_nik: nik, p_role: sel.value }).then(function (r) {
+      if (r && r.ok !== false) { rkToast((r && r.message) || 'Role diperbarui.'); ensureKar(true).then(paintUsers); }
+      else rkToast('Endpoint hr_set_role belum dipasang — lihat Instruksi Backend.');
+    });
+  }
+
+  /* ---------------- LOG AKTIVITAS ---------------- */
+  var logUI = { q: '', module: '', status: '', from: '', to: '' };
+  function renderLogPage() {
+    var el = document.getElementById('rkp-log');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      el.innerHTML =
+        '<div class="rk-toolbar">' +
+          '<input class="rk-in" id="rkLogQ" placeholder="Cari user / target..." style="width:200px">' +
+          '<select class="rk-in" id="rkLogModule"><option value="">Semua Modul</option><option>AUTH</option><option>KARYAWAN</option><option>CUTI</option><option>ABSENSI</option><option>FACE ID</option><option>LOKASI</option><option>USER</option><option>LAPORAN</option></select>' +
+          '<select class="rk-in" id="rkLogStatus"><option value="">Semua Status</option><option value="SUCCESS">SUCCESS</option><option value="FAILED">FAILED</option></select>' +
+          '<input type="date" class="rk-in" id="rkLogFrom"><input type="date" class="rk-in" id="rkLogTo">' +
+          '<button class="rk-btn" id="rkLogApply">Terapkan</button>' +
+          '<button class="rk-btn ghost" id="rkLogReload">↻</button>' +
+        '</div>' +
+        '<div class="rk-card"><h3>Log Aktivitas</h3>' +
+        '<div class="rk-card-sub">Aktivitas terbaru ditampilkan lebih dahulu (maks 200 baris)</div>' +
+        '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
+          '<th>Waktu</th><th>User</th><th>Role</th><th>Aktivitas</th><th>Modul</th><th>Target</th><th>Detail</th><th>Status</th>' +
+        '</tr></thead><tbody id="rkLogBody"><tr><td colspan="8"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div></div>';
+      var apply = function () {
+        logUI.q = document.getElementById('rkLogQ').value;
+        logUI.module = document.getElementById('rkLogModule').value;
+        logUI.status = document.getElementById('rkLogStatus').value;
+        logUI.from = document.getElementById('rkLogFrom').value;
+        logUI.to = document.getElementById('rkLogTo').value;
+        loadActivityLog();
+      };
+      document.getElementById('rkLogApply').addEventListener('click', apply);
+      document.getElementById('rkLogReload').addEventListener('click', loadActivityLog);
+    }
+    loadActivityLog();
+  }
+  function loadActivityLog() {
+    var body = document.getElementById('rkLogBody');
+    if (body) body.innerHTML = '<tr><td colspan="8"><div class="rk-loading">Memuat log...</div></td></tr>';
+    rpcOptional('hr_get_activity_log', {
+      p_q: logUI.q || null, p_module: logUI.module || null, p_status: logUI.status || null,
+      p_from: logUI.from || null, p_to: logUI.to || null, p_limit: 200
+    }).then(function (r) {
+      var arr = normArr(r);
+      if (!body) return;
+      if (!arr) { body.innerHTML = '<tr><td colspan="8">' + optNote('hr_get_activity_log') + '</td></tr>'; return; }
+      if (!arr.length) { body.innerHTML = '<tr><td colspan="8"><div class="rk-empty">Belum ada aktivitas.</div></td></tr>'; return; }
+      body.innerHTML = arr.map(function (x) {
+        return '<tr><td style="white-space:nowrap">' + escH(x.waktu || x.created_at || '-') + '</td>' +
+          '<td><b>' + escH(x.nama || x.employee_id || '-') + '</b></td>' +
+          '<td>' + escH(x.role || '-') + '</td>' +
+          '<td>' + escH(x.aktivitas || x.action || '-') + '</td>' +
+          '<td>' + escH(x.modul || x.module || '-') + '</td>' +
+          '<td>' + escH(x.target || '-') + '</td>' +
+          '<td style="max-width:240px">' + escH(x.detail || '-') + '</td>' +
+          '<td>' + pillSt(x.status) + '</td></tr>';
+      }).join('');
+    });
+  }
+
+  /* ---------------- LAPORAN HR ---------------- */
+  var lapUI = { y: new Date().getFullYear(), m: new Date().getMonth() + 1, data: null };
+  function renderLapPage() {
+    var el = document.getElementById('rkp-lap');
+    if (!el) return;
+    if (!el.dataset.built) {
+      el.dataset.built = '1';
+      var mh = '';
+      BULAN_ID.forEach(function (b, i) { mh += '<option value="' + (i + 1) + '"' + (i + 1 === lapUI.m ? ' selected' : '') + '>' + b + '</option>'; });
+      el.innerHTML =
+        '<div class="rk-toolbar">' +
+          '<select class="rk-in" id="rkLapYear"></select>' +
+          '<select class="rk-in" id="rkLapMonth">' + mh + '</select>' +
+          '<button class="rk-btn" id="rkLapApply">Tampilkan</button>' +
+          '<span style="flex:1"></span>' +
+          '<button class="rk-btn ghost" id="rkLapCsv">⬇ Export CSV</button>' +
+          '<button class="rk-btn ghost" id="rkLapPrint">🖨 Print</button>' +
+        '</div>' +
+        '<div id="rkLapBody"><div class="rk-empty">Pilih periode lalu tekan Tampilkan.</div></div>';
+      yearOptions('rkLapYear', lapUI.y);
+      document.getElementById('rkLapApply').addEventListener('click', function () {
+        lapUI.y = +document.getElementById('rkLapYear').value;
+        lapUI.m = +document.getElementById('rkLapMonth').value;
+        loadLap();
+      });
+      document.getElementById('rkLapCsv').addEventListener('click', exportLapCsv);
+      document.getElementById('rkLapPrint').addEventListener('click', function () { window.print(); });
+    }
+    loadLap();
+  }
+  function loadLap() {
+    var body = document.getElementById('rkLapBody');
+    if (!body) return;
+    body.innerHTML = '<div class="rk-loading">Menyusun laporan...</div>';
+    rpcOptional('hr_monthly_report', { p_year: lapUI.y, p_month: lapUI.m }).then(function (r) {
+      if (r && typeof r === 'object' && (r.ringkasan || r.rekap)) {
+        lapUI.data = r;
+        paintLap(r);
+      } else {
+        lapUI.data = null;
+        body.innerHTML = '<div class="rk-card"><h3>HR Monthly Report — ' + BULAN_ID[lapUI.m - 1] + ' ' + lapUI.y + '</h3>' + optNote('hr_monthly_report') + '</div>';
+      }
+    });
+  }
+  function paintLap(r) {
+    var body = document.getElementById('rkLapBody');
+    if (!body) return;
+    var rk = r.ringkasan || {};
+    var rekap = r.rekap || [];
+    var kontrak = r.kontrak || [];
+    var cuti = r.cuti || [];
+    var inout = r.inout || [];
+    var h = '<div class="rk-card" style="margin-bottom:16px"><h3>HR Monthly Report</h3>' +
+      '<div class="rk-card-sub">Ringkasan workforce, absensi, cuti, dan kontrak — ' + BULAN_ID[lapUI.m - 1] + ' ' + lapUI.y + '</div>' +
+      '<div class="rk-grid rk-g4">' +
+        statCard('g', 'Karyawan Aktif', rk.karyawanAktif != null ? rk.karyawanAktif : '-', 'Posisi akhir periode') +
+        statCard('b', 'Total Absensi', rk.totalAbsensi != null ? rk.totalAbsensi : '-', 'Rekap bulan terpilih') +
+        statCard('a', 'Kontrak Berakhir', rk.kontrakBerakhir != null ? rk.kontrakBerakhir : '-', 'Perlu monitoring HR') +
+        statCard('r', 'Pengambilan Cuti', rk.pengambilanCuti != null ? rk.pengambilanCuti : '-', 'Kejadian cuti') +
+      '</div></div>';
+    h += '<div class="rk-card" style="margin-bottom:16px"><h3>Rekap Absensi Bulanan</h3><div class="rk-card-sub">Jumlah setiap kategori pada periode terpilih</div>' +
+      (rekap.length
+        ? '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Kategori</th><th>Jumlah</th><th>Keterangan</th></tr></thead><tbody>' +
+          rekap.map(function (x) { return '<tr><td><b>' + escH(x.kategori || '-') + '</b></td><td>' + escH(x.jumlah != null ? x.jumlah : '-') + '</td><td>' + escH(x.keterangan || '-') + '</td></tr>'; }).join('') +
+          '</tbody></table></div>'
+        : '<div class="rk-empty">Belum ada data.</div>') + '</div>';
+    h += '<div class="rk-grid rk-g2">';
+    h += '<div class="rk-card"><h3>Kontrak Berakhir</h3><div class="rk-card-sub">Karyawan dengan kontrak berakhir pada periode ini</div>' +
+      (kontrak.length
+        ? '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>NIK</th><th>Nama</th><th>Bagian</th><th>Tanggal Berakhir</th></tr></thead><tbody>' +
+          kontrak.map(function (x) { return '<tr><td>' + escH(x.nik || '-') + '</td><td><b>' + escH(x.nama || '-') + '</b></td><td>' + escH(x.bagian || '-') + '</td><td>' + escH(x.tanggal || x.contractEnd || '-') + '</td></tr>'; }).join('') +
+          '</tbody></table></div>'
+        : '<div class="rk-empty">Tidak ada.</div>') + '</div>';
+    h += '<div class="rk-card"><h3>Rekap Cuti</h3><div class="rk-card-sub">Cuti pada periode ini — beserta jenis cutinya</div>' +
+      (cuti.length
+        ? '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Nama</th><th>Departemen</th><th>Jenis Cuti</th><th>Tanggal</th></tr></thead><tbody>' +
+          cuti.map(function (x) {
+            var jenis = (x.kode || '') + (x.keterangan ? ' · ' + x.keterangan : '');
+            return '<tr><td><b>' + escH(x.nama || '-') + '</b></td><td>' + escH(x.departemen || x.bagian || '-') + '</td><td>' + escH(jenis || '-') + '</td><td>' + escH((x.tanggalMulai || '') + (x.tanggalSelesai ? ' s/d ' + x.tanggalSelesai : '')) + '</td></tr>';
+          }).join('') + '</tbody></table></div>'
+        : '<div class="rk-empty">Tidak ada.</div>') + '</div>';
+    h += '</div>';
+    h += '<div class="rk-card" style="margin-top:16px"><h3>Karyawan IN / OUT</h3><div class="rk-card-sub">Pergerakan karyawan pada periode ini</div>' +
+      (inout.length
+        ? '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Status</th><th>NIK</th><th>Nama</th><th>Bagian</th><th>Tanggal</th></tr></thead><tbody>' +
+          inout.map(function (x) { return '<tr><td>' + pillSt(x.status === 'MASUK' ? 'AKTIF' : 'NONAKTIF') + ' ' + escH(x.status || '-') + '</td><td>' + escH(x.nik || '-') + '</td><td><b>' + escH(x.nama || '-') + '</b></td><td>' + escH(x.bagian || '-') + '</td><td>' + escH(x.tanggal || '-') + '</td></tr>'; }).join('') +
+          '</tbody></table></div>'
+        : '<div class="rk-empty">Tidak ada pergerakan.</div>') + '</div>';
+    body.innerHTML = h;
+  }
+  function exportLapCsv() {
+    var r = lapUI.data;
+    if (!r) { rkToast('Belum ada data laporan. Tekan Tampilkan dulu.'); return; }
+    var rows = [['HR MONTHLY REPORT — ' + BULAN_ID[lapUI.m - 1] + ' ' + lapUI.y], []];
+    var rk = r.ringkasan || {};
+    rows.push(['Ringkasan']); 
+    rows.push(['Karyawan Aktif', rk.karyawanAktif]); rows.push(['Total Absensi', rk.totalAbsensi]);
+    rows.push(['Kontrak Berakhir', rk.kontrakBerakhir]); rows.push(['Pengambilan Cuti', rk.pengambilanCuti]); rows.push([]);
+    rows.push(['Rekap Absensi']); rows.push(['Kategori', 'Jumlah', 'Keterangan']);
+    (r.rekap || []).forEach(function (x) { rows.push([x.kategori, x.jumlah, x.keterangan]); }); rows.push([]);
+    rows.push(['Kontrak Berakhir']); rows.push(['NIK', 'Nama', 'Bagian', 'Tanggal']);
+    (r.kontrak || []).forEach(function (x) { rows.push([x.nik, x.nama, x.bagian, x.tanggal || x.contractEnd]); }); rows.push([]);
+    rows.push(['Rekap Cuti']); rows.push(['Nama', 'Departemen', 'Jenis Cuti', 'Tanggal Mulai', 'Tanggal Selesai']);
+    (r.cuti || []).forEach(function (x) { rows.push([x.nama, x.departemen || x.bagian, (x.kode || '') + (x.keterangan ? ' ' + x.keterangan : ''), x.tanggalMulai, x.tanggalSelesai]); }); rows.push([]);
+    rows.push(['Karyawan IN/OUT']); rows.push(['Status', 'NIK', 'Nama', 'Bagian', 'Tanggal']);
+    (r.inout || []).forEach(function (x) { rows.push([x.status, x.nik, x.nama, x.bagian, x.tanggal]); });
+    csvDownload('Laporan_HR_' + lapUI.y + '_' + String(lapUI.m).padStart(2, '0') + '.csv', rows);
+    rkToast('CSV laporan diunduh.');
+  }
+
   /* ---------------- Integrasi & API publik konsol ---------------- */
   function injectLoginSplit() {
     // Sisipkan panel brand gaya Apps Script ke layar login (desktop saja; CSS menyembunyikan di mobile)
@@ -8972,6 +9769,10 @@ function showHrPlaceholder(title, group, description) {
     empResetPin: function (nik) { try { karResetPin(nik); } catch (e) { rkToast(e.message); } },
     approve: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
     reject: function (kind, id) { aprAct(kind, id, 'REJECT'); },
+    rkToggleGroup: function (btn) { var g = btn && btn.parentNode; if (g && g.classList) g.classList.toggle('closed'); },
+    userSetRole: function (nik) { userSetRole(nik); },
+    pfileDocDl: function (id) { pfileDocDl(id); },
+    pfileDocDel: function (id) { pfileDocDel(id); },
     faceGrant: function (nik) { try { faceMgrGrant(nik); } catch (e) { rkToast(e.message); } setTimeout(refreshFace, 1500); },
     faceReset: function (nik) { try { faceMgrReset(nik); } catch (e) { rkToast(e.message); } setTimeout(refreshFace, 1500); },
     faceRevoke: function (nik) { try { faceMgrRevoke(nik); } catch (e) { rkToast(e.message); } setTimeout(refreshFace, 1500); },
