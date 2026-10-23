@@ -2663,8 +2663,52 @@ html[data-theme="midnight"] .topbar:not(.red) .back, html[data-theme="graphite"]
 (function(){try{var t=localStorage.getItem('rh_theme_v1');if(t)document.documentElement.setAttribute('data-theme',t);var f=JSON.parse(localStorage.getItem('rh_fonts_v1')||'null');if(f){var m={menu:'--fz-menu',sheet:'--fz-sheet',tab:'--fz-tab',top:'--fz-top',nav:'--fz-nav',drop:'--fz-drop',flabel:'--fz-flabel',finput:'--fz-finput',btn:'--fz-btn',card:'--fz-card'},s=document.documentElement.style;for(var k in m){if(f[k])s.setProperty(m[k],f[k]+'px');}}}catch(e){}})();
 </script>
 <base target="_blank">
+<style id="rh-login-startup-and-role-gate">
+/* Desktop only: suppress legacy app screens until the role-specific shell is ready. */
+@media (min-width: 1024px) {
+  body:not(.rh-desk-on) .scr:not(#s-splash):not(#s-login) {
+    display: none !important;
+  }
+  #rhLimitedAccess {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: #F2F7F4;
+    color: #14352A;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    text-align: center;
+  }
+  body.rh-role-staff .scr,
+  body.rh-role-staff #rhDesk,
+  body.rh-role-staff #tabbar,
+  body.rh-role-staff .desktop-sidebar,
+  body.rh-role-staff .desktop-topbar,
+  body.rh-role-staff .overlay,
+  body.rh-role-staff #toast,
+  body.rh-role-staff #rkToast {
+    display: none !important;
+  }
+  body.rh-role-staff #rhLimitedAccess {
+    display: flex !important;
+  }
+  /* Keep the Limited access message as the only visible body-level content. */
+  body.rh-role-staff > :not(#rhLimitedAccess) {
+    display: none !important;
+  }
+}
+@media (max-width: 1023.98px) {
+  #rhLimitedAccess { display: none !important; }
+}
+</style>
 </head>
 <body>
+<div id="rhLimitedAccess" role="status" aria-live="polite">Limited access</div>
 
 <!-- Desktop Navigation Sidebar -->
 <aside class="desktop-sidebar" id="desktopSidebar" style="">
@@ -2970,7 +3014,7 @@ window.__APP_PREPARING_ASSETS = true;
     <!-- Desktop Dashboard Header (Talenta Style with ReHolz Eco-Craft Theme) -->
     <div class="desktop-only-block d-welcome-header">
       <div>
-        <div class="d-welcome-title">Welcome, <span id="homeGreetName">DIANA ANITA SARI</span>!</div>
+        <div class="d-welcome-title">Welcome, <span id="homeGreetName"></span>!</div>
         <div class="d-welcome-sub">Tuesday, October 13, 2026 • REHOLZ - LUCEO HRIS Portal</div>
         <div class="d-shortcuts">
           <button class="d-shortcut-btn" onclick="startAttendance('MASUK')">
@@ -7735,10 +7779,10 @@ function syncDesktopNav(id) {
     if (dTb) dTb.style.display = '';
   }
   if (S.user) {
-    if ($('dUserName')) $('dUserName').textContent = S.user.nama || 'Diana Anita Sari';
-    if ($('dUserRole')) $('dUserRole').textContent = S.user.role || 'HR GA Manager';
+    if ($('dUserName')) $('dUserName').textContent = S.user.nama || '-';
+    if ($('dUserRole')) $('dUserRole').textContent = S.user.role || '-';
     if ($('dUserAva')) {
-      var n = (S.user.nama || 'DA').trim().split(' ');
+      var n = (S.user.nama || '-').trim().split(' ');
       var ini = (n[0][0] + (n[1] ? n[1][0] : '')).toUpperCase();
       $('dUserAva').textContent = ini;
     }
@@ -8673,11 +8717,210 @@ function showHrPlaceholder(title, group, description) {
 }
 </style>
 
+<style id="rh-desk-v6-toolbar-notifications-profile-css">
+/* Desktop toolbar: ReHolz header, desktop notifications and desktop profile page.
+   All visual changes are limited to the HR/Admin desktop console (>=1024px). */
+@media (min-width: 1024px) {
+  body.rh-desk-on .rk-top {
+    position: relative;
+    justify-content: flex-end;
+    gap: 10px;
+    background: #FFFFFF;
+    border-bottom: 1px solid var(--rk-line);
+    box-shadow: none;
+    padding-left: 18px;
+    padding-right: 20px;
+  }
+  body.rh-desk-on .rk-top .rk-iconbtn {
+    color: var(--rk-green);
+    background: #FFFFFF;
+    border-color: var(--rk-line);
+  }
+  body.rh-desk-on .rk-top .rk-iconbtn:hover,
+  body.rh-desk-on .rk-top .rk-iconbtn:focus-visible {
+    color: var(--wood-dark);
+    background: #F0F7F2;
+    border-color: var(--rk-green);
+    outline: none;
+  }
+  body.rh-desk-on .rk-user-wrap { position: relative; z-index: 510; }
+  body.rh-desk-on .rk-user {
+    background: #FFFFFF;
+    border-color: var(--rk-line);
+    min-width: 0;
+    max-width: 320px;
+    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+  }
+  body.rh-desk-on .rk-user:hover,
+  body.rh-desk-on .rk-user:focus-visible,
+  body.rh-desk-on .rk-user[aria-expanded="true"] {
+    background: #F7FAF8;
+    border-color: #B8D7C4;
+    box-shadow: 0 0 0 3px rgba(0,120,80,.08);
+    outline: none;
+  }
+  body.rh-desk-on .rk-user-name { color: #173D2C; }
+  body.rh-desk-on .rk-user-role { color: #557062; }
+  body.rh-desk-on .rk-notif-wrap { position: relative; display: flex; align-items: center; z-index: 520; }
+  body.rh-desk-on .rk-user-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 530;
+    display: none;
+    width: 218px;
+    padding: 6px;
+    background: #FFFFFF;
+    color: var(--rk-ink);
+    border: 1px solid var(--rk-line);
+    border-radius: 12px;
+    box-shadow: 0 14px 36px rgba(0,45,29,.16);
+  }
+  body.rh-desk-on .rk-user-menu.on { display: block; }
+  body.rh-desk-on .rk-user-menu-label {
+    padding: 8px 10px 7px;
+    color: #809087;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  body.rh-desk-on .rk-user-menu button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #2F4739;
+    text-align: left;
+    font: inherit;
+    font-size: 12.5px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+  body.rh-desk-on .rk-user-menu button svg { width: 16px; height: 16px; flex: 0 0 16px; color: var(--rk-green); }
+  body.rh-desk-on .rk-user-menu button:hover,
+  body.rh-desk-on .rk-user-menu button:focus-visible { background: #F0F7F2; outline: none; }
+  body.rh-desk-on .rk-user-menu button.danger { color: #9C4A38; }
+  body.rh-desk-on .rk-user-menu button.danger svg { color: #9C4A38; }
+  body.rh-desk-on .rk-user-menu-divider { height: 1px; margin: 5px 4px; background: #EDF3EE; }
+  body.rh-desk-on .rk-user-menu button:disabled { opacity: .55; cursor: not-allowed; }
+  body.rh-desk-on .rk-notif-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--wood-amber);
+    border: 2px solid var(--wood-dark);
+    color: #FFFFFF;
+    font-size: 10px;
+    line-height: 1;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  body.rh-desk-on .rk-notif-panel {
+    position: absolute;
+    top: calc(100% + 11px);
+    right: 0;
+    z-index: 500;
+    display: none;
+    flex-direction: column;
+    width: 370px;
+    max-width: min(370px, calc(100vw - 255px));
+    max-height: min(72vh, 620px);
+    overflow: hidden;
+    background: #FFFFFF;
+    color: var(--rk-ink);
+    border: 1px solid var(--rk-line);
+    border-radius: 14px;
+    box-shadow: 0 18px 44px rgba(0,45,29,.22);
+  }
+  body.rh-desk-on .rk-notif-panel.on { display: flex; }
+  body.rh-desk-on .rk-notif-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 15px 12px;
+    background: #F5FAF6;
+    border-bottom: 1px solid var(--rk-line);
+  }
+  body.rh-desk-on .rk-notif-panel-head strong { display: block; font-size: 14px; color: var(--wood-dark); }
+  body.rh-desk-on .rk-notif-panel-head span { display: block; margin-top: 3px; font-size: 11px; color: var(--rk-muted); }
+  body.rh-desk-on #rkNotifReload {
+    width: 30px; height: 30px; flex: 0 0 auto;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1px solid var(--rk-line); border-radius: 8px;
+    color: var(--wood); background: #FFFFFF; cursor: pointer;
+  }
+  body.rh-desk-on #rkNotifReload:hover { background: #EAF4ED; border-color: var(--wood-light); }
+  body.rh-desk-on .rk-notif-list { overflow-y: auto; min-height: 64px; max-height: min(60vh, 540px); }
+  body.rh-desk-on .rk-notif-item {
+    width: 100%; display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; text-align: left; background: #FFFFFF; color: var(--rk-ink);
+    border: 0; border-bottom: 1px solid #EDF3EE; cursor: pointer; font-family: inherit;
+  }
+  body.rh-desk-on .rk-notif-item:last-child { border-bottom: 0; }
+  body.rh-desk-on .rk-notif-item:hover,
+  body.rh-desk-on .rk-notif-item:focus-visible { background: #F3F8F4; outline: none; }
+  body.rh-desk-on .rk-notif-item-ic {
+    flex: 0 0 34px; width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: #E3F1E7; color: var(--wood-dark); font-size: 16px;
+  }
+  body.rh-desk-on .rk-notif-item-ic.amber { background: #F8EDDF; color: #8C5B21; }
+  body.rh-desk-on .rk-notif-item-ic.blue { background: #E8F0F8; color: #285C86; }
+  body.rh-desk-on .rk-notif-item-body { flex: 1; min-width: 0; }
+  body.rh-desk-on .rk-notif-item-body b { display: block; font-size: 12.5px; line-height: 1.4; color: #203B2D; font-weight: 750; }
+  body.rh-desk-on .rk-notif-item-body span { display: block; margin-top: 3px; font-size: 11px; line-height: 1.45; color: #6B7E71; overflow-wrap: anywhere; }
+  body.rh-desk-on .rk-notif-empty { padding: 30px 20px; text-align: center; font-size: 12px; line-height: 1.55; color: var(--rk-muted); }
+  body.rh-desk-on .rk-appr-item.rk-notif-target {
+    outline: 2px solid var(--wood-amber);
+    box-shadow: 0 0 0 4px rgba(183,121,50,.12);
+    border-radius: 10px;
+    background: #FFFAF2;
+  }
+  body.rh-desk-on .rk-profile-hero {
+    display: flex; align-items: center; gap: 16px; padding: 4px 0 18px; margin-bottom: 18px;
+    border-bottom: 1px solid var(--rk-line);
+  }
+  body.rh-desk-on .rk-profile-large-ava {
+    width: 64px; height: 64px; flex: 0 0 64px; border-radius: 50%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center; color: #FFFFFF;
+    background: linear-gradient(140deg, #0E7A50, #004C33); border: 3px solid #D8EBDE;
+    font-size: 18px; font-weight: 800;
+  }
+  body.rh-desk-on .rk-profile-large-ava img { width: 100%; height: 100%; object-fit: cover; }
+  body.rh-desk-on .rk-profile-hero h2 { margin: 0 0 4px; color: var(--rk-ink); font-size: 20px; }
+  body.rh-desk-on .rk-profile-hero p { margin: 0; color: var(--rk-muted); font-size: 12px; }
+  body.rh-desk-on .rk-profile-section-title { margin: 0 0 12px; color: var(--wood-dark); font-size: 14px; font-weight: 800; }
+  body.rh-desk-on .rk-desktop-pin { max-width: 680px; }
+  body.rh-desk-on .rk-desktop-pin h2 { margin: 0 0 6px; color: var(--rk-ink); font-size: 20px; }
+  body.rh-desk-on .rk-desktop-pin .rk-pin-intro { margin: 0 0 20px; color: var(--rk-muted); font-size: 12.5px; line-height: 1.6; }
+  body.rh-desk-on .rk-pin-form { display: grid; gap: 15px; max-width: 440px; }
+  body.rh-desk-on .rk-pin-field { display: grid; gap: 6px; }
+  body.rh-desk-on .rk-pin-field label { color: #40584A; font-size: 12px; font-weight: 750; }
+  body.rh-desk-on .rk-pin-field input { width: 100%; min-height: 40px; padding: 9px 12px; border: 1px solid var(--rk-line); border-radius: 9px; background: #FFFFFF; color: var(--rk-ink); font: inherit; font-size: 13px; }
+  body.rh-desk-on .rk-pin-field input:focus { outline: 2px solid rgba(0,120,80,.16); border-color: var(--rk-green); }
+  body.rh-desk-on .rk-pin-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  body.rh-desk-on .rk-pin-error { min-height: 17px; color: #9C382A; font-size: 12px; line-height: 1.45; }
+  body.rh-desk-on .rk-pin-help { margin-top: 16px; padding: 11px 12px; border-radius: 9px; background: #F2F8F4; color: #64776B; font-size: 11.5px; line-height: 1.55; }
+}
+</style>
+
 <div id="rhDesk" aria-hidden="true">
   <aside class="rk-side">
     <div class="rk-brand">
       <span class="rk-logo" id="rkLogo"></span>
-      <span class="rk-tag">HR CONSOLE</span>
     </div>
     <div class="rk-nav-label">MAIN MENU</div>
     <nav class="rk-nav" id="rkNav">
@@ -8723,23 +8966,48 @@ function showHrPlaceholder(title, group, description) {
     </div>
   </aside>
 
-  <header class="rk-top">
-    <div>
-      <h1 id="rkTitle">Dashboard</h1>
-      <div class="rk-sub" id="rkSub">HR Operations Overview</div>
-    </div>
-    <div class="rk-top-search">
-      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#5E6E63" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="rkSearch" placeholder="Search employees (name / Employee ID)...">
-    </div>
-    <button class="rk-iconbtn" id="rkRefresh" title="Reload data">
-      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+  <header class="rk-top" aria-label="Desktop toolbar">
+    <button class="rk-iconbtn" id="rkRefresh" type="button" title="Refresh data" aria-label="Refresh data">
+      <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
     </button>
-    <div class="rk-user" id="rkUser" title="My Profile">
-      <div class="rk-user-ava" id="rkUserAva">–</div>
-      <div>
-        <div class="rk-user-name" id="rkUserName">–</div>
-        <div class="rk-user-role" id="rkUserRole">–</div>
+    <div class="rk-notif-wrap">
+      <button class="rk-iconbtn rk-notif-toggle" id="rkNotifToggle" type="button" title="Notifications" aria-label="Notifications" aria-expanded="false" aria-controls="rkNotifPanel">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+        <span class="rk-notif-badge" id="rkNotifBadge" style="display:none">0</span>
+      </button>
+      <section class="rk-notif-panel" id="rkNotifPanel" aria-label="Notifications" aria-hidden="true">
+        <div class="rk-notif-panel-head">
+          <div><strong>Notifications</strong><span id="rkNotifSummary">Latest updates and pending items</span></div>
+          <button id="rkNotifReload" type="button" title="Refresh notifications" aria-label="Refresh notifications">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          </button>
+        </div>
+        <div class="rk-notif-list" id="rkNotifList"><div class="rk-empty">Open notifications to load updates.</div></div>
+      </section>
+    </div>
+    <div class="rk-user-wrap">
+      <div class="rk-user" id="rkUser" role="button" tabindex="0" title="Open account menu" aria-label="Open account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="rkUserMenu">
+        <div class="rk-user-ava" id="rkUserAva">–</div>
+        <div>
+          <div class="rk-user-name" id="rkUserName">–</div>
+          <div class="rk-user-role" id="rkUserRole">–</div>
+        </div>
+      </div>
+      <div class="rk-user-menu" id="rkUserMenu" role="menu" aria-label="Account menu" aria-hidden="true">
+        <div class="rk-user-menu-label">Account</div>
+        <button type="button" role="menuitem" data-rk-user-action="info" id="rkUserMenuInfo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 11v5M12 7h.01"/></svg>
+          <span>Info</span>
+        </button>
+        <button type="button" role="menuitem" data-rk-user-action="pin" id="rkUserMenuPin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 1 1 8 0v3M12 14v3"/></svg>
+          <span>Change PIN</span>
+        </button>
+        <div class="rk-user-menu-divider" role="separator"></div>
+        <button type="button" role="menuitem" class="danger" data-rk-user-action="logout" id="rkUserMenuLogout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17l5-5-5-5M15 12H3"/><path d="M12 3h6a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-6"/></svg>
+          <span>Log Out</span>
+        </button>
       </div>
     </div>
   </header>
@@ -8757,6 +9025,8 @@ function showHrPlaceholder(title, group, description) {
     <section class="rk-page" id="rkp-lap"></section>
     <section class="rk-page" id="rkp-users"></section>
     <section class="rk-page" id="rkp-log"></section>
+    <section class="rk-page" id="rkp-myprofile"></section>
+    <section class="rk-page" id="rkp-changepin"></section>
   </main>
 </div>
 
@@ -8787,7 +9057,9 @@ function showHrPlaceholder(title, group, description) {
     loc: ['Office Locations', 'Attendance locations and geofence radius by branch'],
     lap: ['HR Reports', 'Monthly HR reports ready to print and export'],
     users: ['User Management', 'Roles, account status, and access security'],
-    log: ['Activity Log', 'System user activity trail']
+    log: ['Activity Log', 'System user activity trail'],
+    myprofile: ['My Profile', 'Personal account information'],
+    changepin: ['Change PIN', 'Update your account PIN']
   };
   var cur = 'dash';
   var empUI = { q: '', org: '', st: '', page: 1, per: 12 };
@@ -8824,6 +9096,7 @@ function showHrPlaceholder(title, group, description) {
   }
   function deactivate() {
     document.body.classList.remove('rh-desk-on');
+    try { setDeskNotifPanel(false); } catch (e) {}
     var d = document.getElementById('rhDesk');
     if (d) d.setAttribute('aria-hidden', 'true');
   }
@@ -8873,6 +9146,8 @@ function showHrPlaceholder(title, group, description) {
     if (p === 'lap') renderLapPage();
     if (p === 'users') renderUsersPage();
     if (p === 'log') renderLogPage();
+    if (p === 'myprofile') renderMyProfilePage();
+    if (p === 'changepin') renderChangePinPage();
     /* Buka otomatis grup sidebar yang memuat halaman aktif (pola HRMSMBM) */
     var actBtn = document.querySelector('#rkNav button[data-p="' + p + '"]');
     if (actBtn) { var grp = actBtn.closest('.rk-group'); if (grp) grp.classList.remove('closed'); }
@@ -9440,6 +9715,7 @@ function showHrPlaceholder(title, group, description) {
 
   function aprItem(x, kind) {
     var id = x.id || x.absensiId || x.cutiId || x.requestId || '';
+    var anchorId = 'rkApproval_' + String(kind + '_' + id).replace(/[^A-Za-z0-9_-]/g, '_');
     var nama = x.nama || x.employeeName || '-';
     var nik = x.nik || x.employeeId || '';
     var sub1 = kind === 'absen'
@@ -9448,7 +9724,7 @@ function showHrPlaceholder(title, group, description) {
     var alasan = x.alasan || x.catatan || '';
     var _av = x.faceVer || (DATA.faceVer || {})[nik] || 0;
     var ava = nik ? '<span class="rk-ava"' + faceWrap(nik, nama, _av) + '>' + avaHtml(nik, nama, _av) + '</span>' : '';
-    return '<div class="rk-appr-item">' + ava +
+    return '<div class="rk-appr-item" id="' + anchorId + '">' + ava +
       '<div class="b"><b>' + escH(nama) + '</b> <span style="color:#5E6E63;font-size:12px">(' + escH(nik) + ')</span>' +
       '<div class="s">' + escH(sub1) + (alasan ? ' — ' + escH(alasan) : '') + '</div></div>' +
       '<button class="rk-mini primary" onclick="RHDeskApi.approve(\'' + kind + '\',\'' + escH(id) + '\')">Approve</button>' +
@@ -10263,9 +10539,9 @@ function showHrPlaceholder(title, group, description) {
     brand.className = 'rh-lg-brand';
     brand.innerHTML =
       '<span class="rh-lg-logo">' + (logoSrc ? '<img src="' + logoSrc + '" alt="ReHolz">' : '') + '</span>' +
-      '<h2>REHOLZ HRIS</h2>' +
+      '<h2>PT Radin Mitra Lestari</h2>' +
       '<h3>HR Management System</h3>' +
-      '<p>An HR management information system designed to simplify and integrate employee data, time off, attendance, and other HR needs.</p>';
+      '<p>An HR management information system designed to simplify and integrate employee data, time off, attendance, and other HR needs</p>';
     card.insertBefore(brand, card.firstChild);
 
     var head = document.createElement('div');
@@ -10273,6 +10549,226 @@ function showHrPlaceholder(title, group, description) {
     head.innerHTML = '<h4>Welcome</h4><p>Sign in to continue to the HR Management system.</p>';
     card.insertBefore(head, brand.nextSibling);
     card.classList.add('rh-lg-split');
+  }
+
+  function desktopProfileValue(v) {
+    if (v == null || String(v).trim() === '') return '—';
+    return String(v);
+  }
+
+  function paintMyProfilePage(profile) {
+    var el = document.getElementById('rkp-myprofile');
+    if (!el) return;
+    var u = window.S && S.user ? S.user : {};
+    var e = profile || u.employee || {};
+    var role = e.role || u.role || '-';
+    if (role === 'KARYAWAN') role = 'Employee';
+    else if (role === 'ADMIN') role = 'Administrator';
+    var name = u.nama || e.nama || 'User';
+    var nik = u.nik || e.nik || '-';
+    var pos = e.position || e.posisi || e.jabatan || role;
+    var faceVersion = e.facePhotoVer || e.face_ver || 0;
+    var avatar = '';
+    try { avatar = avaHtml(nik, name, faceVersion); } catch (er) { avatar = escH(ini(name)); }
+    var fields = [
+      ['Employee ID', e.nik || nik],
+      ['Role', role],
+      ['Job Position', e.position || e.posisi || e.jabatan],
+      ['Organization', e.organization || e.org || e.divisi],
+      ['Branch', e.branch || e.cabang],
+      ['Department', e.department || e.departemen],
+      ['Level', e.level],
+      ['Employment Status', e.statusKerja || e.employmentStatus || e.status_kerja],
+      ['Direct Manager', e.atasanNama || e.directManager || e.manager],
+      ['Start Date', e.joinDate || e.startDate || e.tanggalMasuk],
+      ['Email', e.email],
+      ['Phone', e.phone || e.telepon || e.noHp],
+      ['Gender', e.gender],
+      ['Office', e.office || e.lokasiKantor]
+    ];
+    var fieldHtml = fields.map(function (f) {
+      return '<div class="pf"><label>' + escH(f[0]) + '</label><b>' + escH(desktopProfileValue(f[1])) + '</b></div>';
+    }).join('');
+    el.innerHTML =
+      '<div class="rk-card" style="margin-bottom:16px">' +
+        '<div class="rk-profile-hero"><div class="rk-profile-large-ava" data-facenik="' + escH(nik) + '" data-facever="' + escH(faceVersion) + '">' + avatar + '</div>' +
+          '<div><h2>' + escH(name) + '</h2><p>' + escH(pos || role) + ' · ' + escH(role) + '</p><p style="margin-top:5px">Employee ID: ' + escH(nik) + '</p></div></div>' +
+        '<h3 class="rk-profile-section-title">Account &amp; Employment Information</h3>' +
+        '<div class="rk-profile-grid">' + fieldHtml + '</div>' +
+      '</div>';
+    try { hydrateFaces(); } catch (er) {}
+  }
+
+  function renderMyProfilePage() {
+    var el = document.getElementById('rkp-myprofile');
+    if (!el) return;
+    el.innerHTML = '<div class="rk-card"><div class="rk-loading">Loading profile...</div></div>';
+    paintMyProfilePage((window.S && S.user && S.user.employee) || {});
+    api('getMyProfile', [], 12000).then(function (r) {
+      var profile = r && r.profile ? r.profile : r;
+      if (profile && typeof profile === 'object') {
+        if (window.S && S.user) S.user.employee = Object.assign({}, S.user.employee || {}, profile);
+        if (profile.facePhotoVer != null && window.S && S.user) DATA.faceVer[S.user.nik] = profile.facePhotoVer;
+        fillUser();
+        paintMyProfilePage((window.S && S.user && S.user.employee) || profile);
+      }
+    }).catch(function () {
+      // Keep the desktop profile usable from the session cache if the optional refresh fails.
+      paintMyProfilePage((window.S && S.user && S.user.employee) || {});
+    });
+  }
+
+  function setDeskUserMenu(open) {
+    var menu = document.getElementById('rkUserMenu');
+    var trigger = document.getElementById('rkUser');
+    if (!menu || !trigger) return;
+    menu.classList.toggle('on', !!open);
+    menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+    trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) setDeskNotifPanel(false);
+  }
+
+  function renderChangePinPage() {
+    var el = document.getElementById('rkp-changepin');
+    if (!el) return;
+    el.innerHTML =
+      '<div class="rk-card rk-desktop-pin">' +
+        '<h2>Change PIN</h2>' +
+        '<p class="rk-pin-intro">Change the PIN used to access your ReHolz account. Your current PIN is required to save a new one.</p>' +
+        '<form class="rk-pin-form" id="rkDeskPinForm" autocomplete="off">' +
+          '<div class="rk-pin-field"><label for="rkDeskPinOld">Current PIN</label><input id="rkDeskPinOld" name="currentPin" type="password" inputmode="numeric" autocomplete="current-password" required></div>' +
+          '<div class="rk-pin-field"><label for="rkDeskPinNew">New PIN</label><input id="rkDeskPinNew" name="newPin" type="password" inputmode="numeric" autocomplete="new-password" required></div>' +
+          '<div class="rk-pin-field"><label for="rkDeskPinNew2">Confirm New PIN</label><input id="rkDeskPinNew2" name="confirmPin" type="password" inputmode="numeric" autocomplete="new-password" required></div>' +
+          '<div class="rk-pin-error" id="rkDeskPinErr" role="alert" aria-live="polite"></div>' +
+          '<div class="rk-pin-actions"><button class="rk-btn" type="submit" id="rkDeskPinSubmit">Save New PIN</button><button class="rk-btn ghost" type="button" id="rkDeskPinCancel">Cancel</button></div>' +
+        '</form>' +
+        '<div class="rk-pin-help">For account security, keep your PIN private and do not share it with other people.</div>' +
+      '</div>';
+    var form = document.getElementById('rkDeskPinForm');
+    if (form) form.addEventListener('submit', function (e) { e.preventDefault(); submitDesktopPinChange(); });
+    var cancel = document.getElementById('rkDeskPinCancel');
+    if (cancel) cancel.addEventListener('click', function () { goPage('myprofile'); });
+  }
+
+  function submitDesktopPinChange() {
+    var oldEl = document.getElementById('rkDeskPinOld');
+    var newEl = document.getElementById('rkDeskPinNew');
+    var confirmEl = document.getElementById('rkDeskPinNew2');
+    var errEl = document.getElementById('rkDeskPinErr');
+    var submit = document.getElementById('rkDeskPinSubmit');
+    if (!oldEl || !newEl || !confirmEl || !errEl || !window.S || !S.user) return;
+    var oldPin = oldEl.value.trim();
+    var newPin = newEl.value.trim();
+    var confirmPin = confirmEl.value.trim();
+    errEl.textContent = '';
+    if (!oldPin || !newPin || !confirmPin) {
+      errEl.textContent = 'Please fill in all three PIN fields.';
+      return;
+    }
+    if (newPin !== confirmPin) {
+      errEl.textContent = 'PIN confirmation does not match.';
+      confirmEl.focus();
+      return;
+    }
+    if (submit) { submit.disabled = true; submit.textContent = 'Saving…'; }
+    api('changeMyPassword', [S.user.nik, oldPin, newPin]).then(function (r) {
+      oldEl.value = ''; newEl.value = ''; confirmEl.value = '';
+      rkToast((r && r.message) || 'PIN changed successfully.');
+    }).catch(function (e) {
+      if (e && e.message === 'STALE') return;
+      errEl.textContent = (e && e.message) || 'Unable to change PIN. Please try again.';
+    }).then(function () {
+      if (submit) { submit.disabled = false; submit.textContent = 'Save New PIN'; }
+    });
+  }
+
+  function setDeskNotifPanel(open) {
+    var panel = document.getElementById('rkNotifPanel');
+    var toggle = document.getElementById('rkNotifToggle');
+    if (!panel || !toggle) return;
+    panel.classList.toggle('on', !!open);
+    panel.setAttribute('aria-hidden', open ? 'false' : 'true');
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) renderDeskNotifications();
+  }
+
+  function renderDeskNotifications() {
+    var list = document.getElementById('rkNotifList');
+    var badge = document.getElementById('rkNotifBadge');
+    var summary = document.getElementById('rkNotifSummary');
+    if (!list) return;
+    list.innerHTML = '<div class="rk-notif-empty">Loading notifications...</div>';
+    var requestPromise = (typeof loadMyRequests === 'function')
+      ? loadMyRequests().catch(function () { return DATA.myReq || { absensi: [], cuti: [] }; })
+      : Promise.resolve(DATA.myReq || { absensi: [], cuti: [] });
+    var approvalPromise = isHR()
+      ? api('getPendingApprovalsFull', [], 20000).catch(function () { return null; })
+      : Promise.resolve(null);
+    Promise.all([requestPromise, approvalPromise]).then(function (results) {
+      var requests = results[0] || DATA.myReq || {};
+      var approvals = results[1] || {};
+      var items = [];
+      (requests.absensi || []).forEach(function (a) {
+        items.push({
+          icon: '◷', tone: 'blue', title: 'Attendance request pending',
+          detail: (a.tipe === 'MASUK' ? 'Clock In' : 'Clock Out') + ' · ' + (a.tanggal || '') + (a.jam ? ' · ' + String(a.jam).slice(0, 5) : ''),
+          page: 'att', id: a.id
+        });
+      });
+      (requests.cuti || []).forEach(function (x) {
+        items.push({
+          icon: '▦', tone: 'amber', title: 'Time Off request pending',
+          detail: (x.keterangan || 'Time Off') + ' · ' + (x.tanggalMulai || '') + (x.totalHari != null ? ' · ' + x.totalHari + ' day(s)' : ''),
+          page: 'cuti', id: x.id
+        });
+      });
+      var status = window.S && S.status ? S.status : {};
+      if (status.masuk) items.push({ icon: '✓', tone: '', title: 'Clock In recorded', detail: 'Attendance status updated' + (status.jamMasuk ? ' · ' + String(status.jamMasuk).slice(0, 5) : ''), page: 'att' });
+      if (status.pulang) items.push({ icon: '✓', tone: '', title: 'Clock Out recorded', detail: 'Attendance status updated' + (status.jamPulang ? ' · ' + String(status.jamPulang).slice(0, 5) : ''), page: 'att' });
+      if (isHR()) {
+        (approvals.absensi || []).forEach(function (a) {
+          items.push({
+            icon: '◷', tone: 'blue', title: 'Attendance approval pending',
+            detail: (a.nama || a.employeeName || a.nik || 'Employee') + ' · ' + [a.tanggal, a.tipe === 'MASUK' ? 'Clock In' : (a.tipe === 'PULANG' ? 'Clock Out' : a.tipe), a.jam].filter(Boolean).join(' · '),
+            page: 'apr', kind: 'absen', id: a.id || a.absensiId || a.requestId
+          });
+        });
+        (approvals.cuti || []).forEach(function (x) {
+          items.push({
+            icon: '▦', tone: 'amber', title: 'Time Off approval pending',
+            detail: (x.nama || x.employeeName || x.nik || 'Employee') + ' · ' + [x.tanggalMulai || x.mulai, x.tanggalSelesai || x.selesai, x.kode].filter(Boolean).join(' · '),
+            page: 'apr', kind: 'cuti', id: x.id || x.cutiId || x.requestId
+          });
+        });
+      }
+      if (typeof localNotifs === 'function') {
+        localNotifs().forEach(function (n) {
+          items.push({ icon: '•', tone: '', title: String(n.txt || 'Application notification'), detail: n.t ? new Date(n.t).toLocaleString('en-US') : '', page: 'log' });
+        });
+      }
+      // Most recent local messages first, with active/pending requests and approvals still included.
+      items.reverse();
+      if (badge) {
+        badge.textContent = items.length > 99 ? '99+' : String(items.length);
+        badge.style.display = items.length ? 'inline-flex' : 'none';
+      }
+      if (summary) summary.textContent = items.length ? items.length + ' update(s) and pending item(s)' : 'You are all caught up';
+      if (!items.length) {
+        list.innerHTML = '<div class="rk-notif-empty">You have no notifications right now.</div>';
+        return;
+      }
+      list.innerHTML = items.map(function (n) {
+        var page = ['dash','emp','pfile','att','rekap','cuti','apr','face','loc','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
+        return '<button type="button" class="rk-notif-item" data-rk-notif-page="' + page + '"' + (n.id ? ' data-rk-notif-id="' + escH(n.id) + '"' : '') + (n.kind ? ' data-rk-notif-kind="' + escH(n.kind) + '"' : '') +
+          (n.kind && n.id ? ' data-rk-notif-anchor="rkApproval_' + escH(String(n.kind + '_' + n.id).replace(/[^A-Za-z0-9_-]/g, '_')) + '"' : '') + '>' +
+          '<span class="rk-notif-item-ic ' + escH(n.tone || '') + '">' + escH(n.icon || '•') + '</span>' +
+          '<span class="rk-notif-item-body"><b>' + escH(n.title || 'Notification') + '</b><span>' + escH(n.detail || '') + '</span></span>' +
+          '</button>';
+      }).join('');
+    }).catch(function () {
+      list.innerHTML = '<div class="rk-notif-empty">Notifications could not be loaded. Please try again.</div>';
+      if (summary) summary.textContent = 'Unable to refresh';
+    });
   }
 
   function initDom() {
@@ -10314,8 +10810,91 @@ function showHrPlaceholder(title, group, description) {
       else paintEmpRows();
     });
 
+    var notifToggle = document.getElementById('rkNotifToggle');
+    var notifPanel = document.getElementById('rkNotifPanel');
+    if (notifToggle && notifPanel) {
+      notifToggle.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setDeskNotifPanel(!notifPanel.classList.contains('on'));
+      });
+      notifPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+      document.addEventListener('click', function (e) {
+        if (!document.body.classList.contains('rh-desk-on')) return;
+        if (!e.target.closest || !e.target.closest('.rk-notif-wrap')) setDeskNotifPanel(false);
+        if (!e.target.closest || !e.target.closest('.rk-user-wrap')) setDeskUserMenu(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (!document.body.classList.contains('rh-desk-on')) return;
+        if (e.key === 'Escape') {
+          var userMenuWasOpen = !!document.querySelector('#rkUserMenu.on');
+          setDeskNotifPanel(false);
+          setDeskUserMenu(false);
+          if (userMenuWasOpen) {
+            var userTrigger = document.getElementById('rkUser');
+            if (userTrigger) userTrigger.focus();
+          }
+        }
+      });
+    }
+    var notifReload = document.getElementById('rkNotifReload');
+    if (notifReload) notifReload.addEventListener('click', function (e) { e.stopPropagation(); renderDeskNotifications(); });
+    var notifList = document.getElementById('rkNotifList');
+    if (notifList) notifList.addEventListener('click', function (e) {
+      var item = e.target.closest ? e.target.closest('.rk-notif-item') : null;
+      if (!item) return;
+      var dest = item.getAttribute('data-rk-notif-page') || 'dash';
+      var anchor = item.getAttribute('data-rk-notif-anchor');
+      setDeskNotifPanel(false);
+      if (dest === 'apr' && anchor) {
+        aprCache.at = 0;
+        goPage(dest);
+        var tries = 0;
+        var locateApproval = function () {
+          var target = document.getElementById(anchor);
+          if (target) {
+            target.classList.add('rk-notif-target');
+            try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+            setTimeout(function () { target.classList.remove('rk-notif-target'); }, 2400);
+          } else if (tries++ < 20) setTimeout(locateApproval, 140);
+        };
+        setTimeout(locateApproval, 120);
+      } else {
+        goPage(dest);
+      }
+    });
+
     var usr = document.getElementById('rkUser');
-    if (usr) usr.addEventListener('click', function () { try { openProfileSheet(); } catch (e) {} });
+    var userMenu = document.getElementById('rkUserMenu');
+    if (usr && userMenu) {
+      usr.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setDeskUserMenu(!userMenu.classList.contains('on'));
+      });
+      usr.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          e.stopPropagation();
+          var opening = !userMenu.classList.contains('on');
+          setDeskUserMenu(opening);
+          if (opening) {
+            var first = userMenu.querySelector('button[role="menuitem"]');
+            if (first) first.focus();
+          }
+        }
+      });
+      userMenu.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var item = e.target.closest ? e.target.closest('button[data-rk-user-action]') : null;
+        if (!item) return;
+        var action = item.getAttribute('data-rk-user-action');
+        setDeskUserMenu(false);
+        if (action === 'info') goPage('myprofile');
+        else if (action === 'pin') goPage('changepin');
+        else if (action === 'logout') {
+          try { if (typeof window.doLogout === 'function') window.doLogout(); } catch (er) { rkToast('Unable to sign out. Please try again.'); }
+        }
+      });
+    }
 
     injectLoginSplit();
   }
@@ -10332,6 +10911,7 @@ function showHrPlaceholder(title, group, description) {
     approve: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
     reject: function (kind, id) { aprAct(kind, id, 'REJECT'); },
     rkToggleGroup: function (btn) { var g = btn && btn.parentNode; if (g && g.classList) g.classList.toggle('closed'); },
+    changePin: function () { submitDesktopPinChange(); },
     userSetRole: function (nik) { userSetRole(nik); },
     pfileDocDl: function (id) { pfileDocDl(id); },
     pfileDocDel: function (id) { pfileDocDel(id); },
@@ -10357,7 +10937,7 @@ function showHrPlaceholder(title, group, description) {
     evaluate();
   }
   function installHooks() {
-    setInterval(evaluateThrottled, 800);
+    setInterval(evaluateThrottled, 150);
     if (typeof window.doLogout === 'function' && !window.doLogout.__rhWrapped) {
       var _lo = window.doLogout;
       var wrappedLo = function () {
@@ -10385,5 +10965,70 @@ function showHrPlaceholder(title, group, description) {
   else boot();
 })();
 </script>
+
+
+<style id="rh-login-layout-refinement-desktop">
+@media (min-width: 1024px) {
+  #s-login .login-card.rh-lg-split {
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, 1fr) !important;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-brand {
+    align-items: flex-start !important;
+    text-align: left !important;
+    min-width: 0;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-brand .rh-lg-logo {
+    align-self: flex-start;
+    margin-bottom: 28px !important;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-brand h2 {
+    font-size: clamp(18px, 1.55vw, 22px) !important;
+    line-height: 1.25 !important;
+    letter-spacing: 0 !important;
+    text-align: left !important;
+    max-width: 100%;
+    overflow-wrap: normal;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-brand h3,
+  #s-login .login-card.rh-lg-split > .rh-lg-brand p {
+    text-align: left !important;
+    max-width: 100%;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-brand p {
+    line-height: 1.65 !important;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-head {
+    min-width: 0;
+    box-sizing: border-box;
+  }
+  #s-login .login-card.rh-lg-split > .rh-lg-head p {
+    text-align: left !important;
+    max-width: 100%;
+  }
+  #s-login .login-card.rh-lg-split > .field,
+  #s-login .login-card.rh-lg-split > .btn,
+  #s-login .login-card.rh-lg-split > .err,
+  #s-login .login-card.rh-lg-split > .hint {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  #s-login .login-card.rh-lg-split > .btn {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    justify-self: stretch;
+    margin-left: 46px !important;
+    margin-right: 46px !important;
+  }
+  #s-login .login-card.rh-lg-split > .field input,
+  #s-login .login-card.rh-lg-split > .field select,
+  #s-login .login-card.rh-lg-split > .field textarea {
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+}
+</style>
 
 </body></html>
