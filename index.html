@@ -7041,18 +7041,19 @@ function locInitMap(lat, lon) {
 }
 
 function locInitMapInner(lat, lon) {
-  if (typeof L === 'undefined') return;
+  var Leaflet = window.L;
+  if (!Leaflet || typeof Leaflet.map !== 'function') { toast('Leaflet map library is not available yet.'); return; }
   var hasPoint = isFinite(lat) && isFinite(lon);
   var center = hasPoint ? [lat, lon] : (GPS.pos ? [GPS.pos.latitude, GPS.pos.longitude] : [-2.5, 118]);
   var zoom = hasPoint ? MAP_CONFIG.zoom.editorEdit : (GPS.pos ? MAP_CONFIG.zoom.editorNewWithGps : MAP_CONFIG.zoom.editorNewNoGps);
   var r = +($('locRadius').value) || 100;
   if (LOC_MAP) { try { LOC_MAP.remove(); } catch (e) {} }
-  LOC_MAP = L.map('locMap', { zoomControl: MAP_CONFIG.controls.editorZoom, attributionControl: false }).setView(center, zoom);
+  LOC_MAP = Leaflet.map('locMap', { zoomControl: MAP_CONFIG.controls.editorZoom, attributionControl: false }).setView(center, zoom);
   MAPS.loc = { map: LOC_MAP };
   attachTiles(LOC_MAP, 'loc', $('locMap'), function() { locInitMap(lat, lon); });
   var mLat = hasPoint ? lat : center[0], mLon = hasPoint ? lon : center[1];
-  LOC_MARKER = L.marker([mLat, mLon], { draggable: true }).addTo(LOC_MAP);
-  LOC_CIRCLE = L.circle([mLat, mLon], {
+  LOC_MARKER = Leaflet.marker([mLat, mLon], { draggable: true }).addTo(LOC_MAP);
+  LOC_CIRCLE = Leaflet.circle([mLat, mLon], {
     radius: r,
     color: MAP_CONFIG.radiusCircle.color, fillColor: MAP_CONFIG.radiusCircle.fillColor,
     fillOpacity: MAP_CONFIG.radiusCircle.fillOpacity, weight: MAP_CONFIG.radiusCircle.weight
@@ -7068,7 +7069,7 @@ function locInitMapInner(lat, lon) {
     LOC_CIRCLE.setLatLng(ll);
     $('locLat').value = ll.lat.toFixed(6); $('locLon').value = ll.lng.toFixed(6);
   });
-  setTimeout(function() { try { LOC_MAP.invalidateSize(); } catch (e) {} }, 300);
+  setTimeout(function() { try { LOC_MAP.invalidateSize({pan:false}); } catch (e) {} }, 300);
 }
 
 function locUpdateCircle() {
@@ -9056,6 +9057,8 @@ function showHrPlaceholder(title, group, description) {
           <button data-p="users"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/><path d="M18.5 8.5l1 1 2-2"/></svg>User Management</button>
           <button data-p="log"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 2.5"/><circle cx="12" cy="12" r="9"/></svg>Activity Log</button>
           <button data-p="loc"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Office Locations</button>
+          <button data-p="attset"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.78.47l-.06.06h-3.4l-.06-.08a1.7 1.7 0 0 0-1.78-.47l-.08.02-1.7-2.94.06-.06A1.7 1.7 0 0 0 9.6 15l-.02-.08V11.5l.08-.06a1.7 1.7 0 0 0 .47-1.78l-.02-.08 2.94-1.7.06.06a1.7 1.7 0 0 0 1.88.34l.08-.02h3.4l.06.08a1.7 1.7 0 0 0 1.78.47l.08-.02 1.7 2.94-.06.06A1.7 1.7 0 0 0 21.7 13l.02.08V15z"/></svg>Attendance Rules</button>
+          <button data-p="calendar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/></svg>Working Calendar</button>
         </div>
       </div>
     </nav>
@@ -9117,6 +9120,8 @@ function showHrPlaceholder(title, group, description) {
     <section class="rk-page" id="rkp-apr"></section>
     <section class="rk-page" id="rkp-face"></section>
     <section class="rk-page" id="rkp-loc"></section>
+    <section class="rk-page" id="rkp-attset"></section>
+    <section class="rk-page" id="rkp-calendar"></section>
     <section class="rk-page" id="rkp-pfile"></section>
     <section class="rk-page" id="rkp-rekap"></section>
     <section class="rk-page" id="rkp-cuti"></section>
@@ -9161,7 +9166,9 @@ function showHrPlaceholder(title, group, description) {
     emp: ['Employee Directory', 'Manage all employee data'],
     pfile: ['Employee Records', 'Printable employee personal file'],
     att: ['Attendance Monitoring', 'Monitor and review attendance history'],
-    rekap: ['Attendance Summary', 'Monthly attendance summary by employee'],
+    rekap: ['Attendance Summary', 'Daily attendance codes by employee and date range'],
+    attset: ['Attendance Rules & Shifts', 'Configure branch schedules and early/late rules'],
+    calendar: ['Working Calendar', 'Manage national holidays, working days, and day-off overrides'],
     cuti: ['Time Off Request', 'Time-off and absence requests by type'],
     apr: ['Approval List', 'Attendance & time-off approvals'],
     face: ['Face ID', 'Manage employee face registration'],
@@ -9178,7 +9185,7 @@ function showHrPlaceholder(title, group, description) {
   var dashCache = { at: 0, employeeList: null };
   var aprCache = { at: 0 };
 
-  function isHR() { return !!(window.S && S.user && (S.user.role === 'HR' || S.user.role === 'ADMIN')); }
+  function isHR() { return !!(window.S && S.user && ['HR','ADMIN','SUPERADMIN'].indexOf(String(S.user.role || '').toUpperCase()) >= 0); }
   function escH(s) { try { return esc(s); } catch (e) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); } }
   function ini(n) { try { return initials(n); } catch (e) { var p = String(n || '?').trim().split(/\s+/); return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase(); } }
   function avaHtml(nik, nama, ver) {
@@ -9261,6 +9268,8 @@ function showHrPlaceholder(title, group, description) {
     if (p === 'apr') renderAprPage();
     if (p === 'face') renderFacePage();
     if (p === 'loc') renderLocPage();
+    if (p === 'attset') renderAttendanceRulesPage();
+    if (p === 'calendar') renderWorkingCalendarPage();
     if (p === 'lap') renderLapPage();
     if (p === 'users') renderUsersPage();
     if (p === 'log') renderLogPage();
@@ -10318,7 +10327,7 @@ function showHrPlaceholder(title, group, description) {
     var roleField = isAdd ? '<div class="rk-emp-edit-field"><label for="edRole">System Role</label><select id="edRole"><option value="KARYAWAN" selected>Employee</option><option value="HR">HR</option><option value="ADMIN">Administrator</option></select></div>' : '';
     shade.innerHTML = '<section class="rk-emp-modal rk-emp-editor-modal" role="dialog" aria-modal="true" aria-labelledby="rkEmpEditorTitle"><header class="rk-emp-modal-head"><div><h2 id="rkEmpEditorTitle">' + (isAdd ? 'Add Employee' : 'Edit Employee Profile') + '</h2><p>' + (isAdd ? 'Create an employee record' : escH(x.nama) + ' · ' + escH(x.nik)) + '</p></div><button class="rk-emp-modal-close" type="button" data-emp-edit-close aria-label="Close">×</button></header><div class="rk-emp-modal-content">' +
       '<div class="rk-emp-form-section"><h3>Employment Information</h3><div class="rk-emp-edit-grid">' +
-      empEditorField('Employee ID (NIK)','edNik',x.nik,'text','') + empEditorField('Full Name','edName',x.nama,'text','') + empEditorField('Department','edDepartment',x.department,'text','') + empEditorField('Branch','edBranch',x.branch,'text','') +
+      empEditorField('Employee ID (NIK)','edNik',x.nik,'text','') + empEditorField('Full Name','edName',x.nama,'text','') + empEditorField('Department','edDepartment',x.department,'text','') + '<div class="rk-emp-edit-field"><label for="edBranch">Branch (attendance schedule)</label><select id="edBranch">'+(isAdd?'<option value="" selected>Select branch</option>':'')+profileBranchOptions(x.branch,false)+'</select></div>' +
       empEditorField('Job Level','edJobLevel',x.job_level,'text','') + empEditorField('Job Position','edJobPosition',x.job_position,'text','') + empEditorField('Job Code','edJobCode',x.jobCode,'text','') + empEditorField('Grade','edGrade',x.grade,'text','') + empEditorField('Class','edClass',x.class,'text','') +
       '<div class="rk-emp-edit-field"><label for="edEmploymentStatus">Employment Status</label><select id="edEmploymentStatus">' + ['Contract','Permanent','Outsourcing','Intern'].map(function(v){return '<option'+(String(x.employment_status).toLowerCase()===v.toLowerCase()?' selected':'')+'>'+v+'</option>';}).join('') + '</select></div>' + roleField +
       '<div class="rk-emp-edit-field"><label for="edManager">Manager / Approval Line</label><select id="edManager">' + managerOptions + '</select></div>' +
@@ -10373,43 +10382,263 @@ function showHrPlaceholder(title, group, description) {
   }
 
   /* ---------------- PRESENSI ---------------- */
+  /* ---------------- ATTENDANCE MONITORING (DESKTOP) ---------------- */
+  var attMonitorState = { rows: [], payload: null, from: '', to: '', query: '', loaded: false };
+  function attMonLocalISO(date) {
+    var d = date instanceof Date ? date : new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function attMonRows(payload) {
+    if (Array.isArray(payload)) return payload;
+    if (!payload || typeof payload !== 'object') return null;
+    var keys = ['records','list','rows','attendance','absensi','items','results','data','detail'];
+    for (var i=0;i<keys.length;i++) {
+      var value = payload[keys[i]];
+      if (Array.isArray(value)) return value;
+      if (value && typeof value === 'object') {
+        for (var j=0;j<keys.length;j++) if (Array.isArray(value[keys[j]])) return value[keys[j]];
+      }
+    }
+    return null;
+  }
+  function attMonHasPayload(payload) {
+    if (Array.isArray(payload)) return true;
+    if (!payload || typeof payload !== 'object' || payload.ok === false || payload.success === false) return false;
+    if (attMonRows(payload)) return true;
+    var summary = payload.summary || payload.stats || payload.counts || payload.ringkasan;
+    if (summary && typeof summary === 'object') return true;
+    return ['ontime','on_time','late_clock_in','late','early_clock_in','no_clock_out','no_clock_in','hadir','total'].some(function(k){return payload[k] != null;});
+  }
+  function attMonFirst(row, keys) {
+    for (var i=0;i<keys.length;i++) {
+      var v = row && row[keys[i]];
+      if (v !== undefined && v !== null && String(v).trim() !== '') return v;
+    }
+    return '';
+  }
+  function attMonType(row) {
+    var raw = String(attMonFirst(row,['type','tipe','attendance_type','event_type','jenis_absensi','jenis']) || '').trim();
+    var s = raw.toUpperCase().replace(/[_-]+/g,' ');
+    if (s === 'MASUK' || s === 'IN' || s === 'CLOCKIN' || s === 'CLOCK IN' || s === 'CLOCK-IN') return 'Clock In';
+    if (s === 'PULANG' || s === 'OUT' || s === 'CLOCKOUT' || s === 'CLOCK OUT' || s === 'CLOCK-OUT') return 'Clock Out';
+    return raw || '—';
+  }
+  function attMonDate(row) {
+    var v = attMonFirst(row,['date','tanggal','attendance_date','tanggal_absensi','waktu','timestamp','created_at']);
+    if (!v) return '—';
+    var s=String(v);
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+    var d=new Date(s); return isFinite(d.getTime()) ? attMonLocalISO(d) : s;
+  }
+  function attMonTime(row) {
+    var v=attMonFirst(row,['time','jam','attendance_time','waktu_absen','clock_time','created_at','timestamp']);
+    if (!v) return '—';
+    var s=String(v);
+    if (s.indexOf('T')>=0) { var ix=s.indexOf('T'); return s.slice(ix+1,ix+6) || s; }
+    return s.length>=16 && s.charAt(10)===' ' ? s.slice(11,16) : s.slice(0,8);
+  }
+  function attMonApproval(row) {
+    var raw=String(attMonFirst(row,['approval_status','status_approval','statusApproval','approvalStatus','status_persetujuan','status_atasan','status_hr']) || '').toUpperCase();
+    if (/DITOLAK_ATASAN/.test(raw)) return '<span class="rk-pill no">Rejected by Manager</span>';
+    if (/DITOLAK_HR|REJECT/.test(raw)) return '<span class="rk-pill no">Rejected</span>';
+    if (raw === 'DISETUJUI' || raw === 'APPROVED') return '<span class="rk-pill ok">Approved</span>';
+    if (raw === 'VALID') return '<span class="rk-pill ok">Valid</span>';
+    if (raw === 'PENDING_ATASAN') return '<span class="rk-pill warn">Pending Manager</span>';
+    if (raw === 'PENDING_HR') return '<span class="rk-pill warn">Pending HR</span>';
+    if (/PENDING|MENUNGGU/.test(raw)) return '<span class="rk-pill warn">Pending</span>';
+    return '<span class="rk-pill info">' + escH(raw || '—') + '</span>';
+  }
+  function attMonCountValue(obj, aliases) {
+    if (!obj || typeof obj !== 'object') return null;
+    var wanted=aliases.map(function(x){return String(x).toLowerCase().replace(/[^a-z0-9]/g,'');});
+    var keys=Object.keys(obj);
+    for (var i=0;i<keys.length;i++) {
+      if (wanted.indexOf(keys[i].toLowerCase().replace(/[^a-z0-9]/g,''))>=0 && obj[keys[i]]!=null && obj[keys[i]]!=='') {
+        var n=Number(obj[keys[i]]); if (isFinite(n)) return n;
+      }
+    }
+    return null;
+  }
+  function attMonSummary(payload, rows) {
+    var summary=(payload && (payload.summary || payload.stats || payload.counts || payload.ringkasan)) || payload || {};
+    var ontime=attMonCountValue(summary,['ontime','on_time','onTimeCount','tepat_waktu','hadir_tepat_waktu']);
+    var late=attMonCountValue(summary,['lateClockIn','late_clock_in','late','terlambat','terlambat_masuk']);
+    var early=attMonCountValue(summary,['earlyClockIn','early_clock_in','early','masuk_awal','lebih_awal']);
+    var noOut=attMonCountValue(summary,['noClockOut','no_clock_out','belum_pulang','belum_clock_out']);
+    var noIn=attMonCountValue(summary,['noClockIn','no_clock_in','belum_masuk','tanpa_clock_in','alpha']);
+    var groups=Object.create(null), punctual=Object.create(null), lateKeys=Object.create(null), earlyKeys=Object.create(null);
+    var hasTimingData=false, hasClockEvent=false;
+    var now=new Date(), jakartaToday=now.toLocaleDateString('en-CA',{timeZone:'Asia/Jakarta'});
+    (rows||[]).forEach(function(row,idx){
+      var nik=String(attMonFirst(row,['employee_id','employeeId','nik','karyawan_id','id_karyawan']) || ('row-'+idx));
+      var dt=attMonDate(row), key=nik+'|'+dt, typ=attMonType(row).toLowerCase();
+      if(!groups[key]) groups[key]={in:false,out:false,date:dt};
+      if(typ==='clock in') groups[key].in=true;
+      if(typ==='clock out') groups[key].out=true;
+      if(typ==='clock in'||typ==='clock out') hasClockEvent=true;
+      var timeStatus=String(attMonFirst(row,['punctuality_status','clock_in_status','attendance_status','status_kehadiran','timing_status','late_status','keterangan_status'])||'').toUpperCase();
+      if(timeStatus || row.is_ontime===true || row.on_time===true || row.ontime===true || row.is_late===true || row.late===true || row.is_early===true || row.early_clock_in===true) hasTimingData=true;
+      if (typ==='clock in') {
+        if (row && (row.is_ontime===true || row.on_time===true || row.ontime===true) || /ON_TIME|ONTIME|TEPAT WAKTU/.test(timeStatus)) punctual[key]=1;
+        if (row && (row.is_late===true || row.late===true) || /(^|[^A-Z])LATE([^A-Z]|$)|TERLAMBAT/.test(timeStatus)) lateKeys[key]=1;
+        if (row && (row.is_early===true || row.early_clock_in===true) || /(^|[^A-Z])EARLY([^A-Z]|$)|MASUK AWAL|LEBIH AWAL/.test(timeStatus)) earlyKeys[key]=1;
+      }
+    });
+    if(ontime==null) ontime=hasTimingData ? Object.keys(punctual).length : null;
+    if(late==null) late=hasTimingData ? Object.keys(lateKeys).length : null;
+    if(early==null) early=hasTimingData ? Object.keys(earlyKeys).length : null;
+    if(noOut==null) noOut=hasClockEvent ? Object.keys(groups).filter(function(k){return groups[k].in&&!groups[k].out&&groups[k].date<jakartaToday;}).length : null;
+    // No Clock In cannot be inferred from attendance events alone; backend must return the scheduled employee-day set.
+    if(noIn==null) noIn=null;
+    return {ontime:ontime,late:late,early:early,noOut:noOut,noIn:noIn};
+  }
   function renderAttPage() {
     var el = document.getElementById('rkp-att');
     if (!el) return;
-    if (!el.dataset.built) {
-      el.dataset.built = '1';
-      el.innerHTML =
-        '<div class="rk-grid rk-g2" style="margin-bottom:16px">' +
-          '<div class="rk-card" id="rkAttToday"><h3>Today’s Summary</h3><div class="rk-loading">Loading...</div></div>' +
-          '<div class="rk-card"><h3>Last 7 Days Trend</h3><div class="rk-card-sub">Daily attendance count</div><div id="rkAttWeek"><div class="rk-loading">Loading...</div></div></div>' +
-        '</div>' +
-        '<div class="rk-card">' +
-          '<h3>Employee Attendance History</h3><div class="rk-card-sub">Select an employee and month to browse the logs</div>' +
-          '<div class="rk-toolbar">' +
-            '<select class="rk-in" id="rkAttNik" style="min-width:260px"></select>' +
-            '<button class="rk-btn ghost" id="rkAttPrev">‹</button>' +
-            '<b id="rkAttMonth" style="font-size:13px;min-width:120px;text-align:center">-</b>' +
-            '<button class="rk-btn ghost" id="rkAttNext">›</button>' +
-          '</div>' +
-          '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Date</th><th>Type</th><th>Time</th><th>Approval Status</th></tr></thead>' +
-          '<tbody id="rkAttBody"><tr><td colspan="4"><div class="rk-empty">Select an employee to view history.</div></td></tr></tbody></table></div>' +
-        '</div>';
-      document.getElementById('rkAttNik').addEventListener('change', function () { attUI.nik = this.value; paintAttHistory(); });
-      document.getElementById('rkAttPrev').addEventListener('click', function () { attUI.m--; if (attUI.m < 1) { attUI.m = 12; attUI.y--; } paintAttHistory(); });
-      document.getElementById('rkAttNext').addEventListener('click', function () { attUI.m++; if (attUI.m > 12) { attUI.m = 1; attUI.y++; } paintAttHistory(); });
-    }
-    ensureKar(false).then(function () {
-      var sel = document.getElementById('rkAttNik');
-      if (sel && !sel.options.length) {
-        var h = '';
-        (DATA.karList || []).forEach(function (x) { h += '<option value="' + escH(x.nik) + '">' + escH(x.nama) + ' (' + escH(x.nik) + ')</option>'; });
-        sel.innerHTML = h;
-        attUI.nik = attUI.nik || ((DATA.karList || [])[0] || {}).nik || '';
-        if (attUI.nik) sel.value = attUI.nik;
-        paintAttHistory();
-      }
+    var now=new Date(), today=attMonLocalISO(now), monthStart=today.slice(0,8)+'01';
+    attMonitorState.from=monthStart; attMonitorState.to=today; attMonitorState.query=''; attMonitorState.rows=[]; attMonitorState.payload=null; attMonitorState.loaded=false;
+    el.innerHTML =
+      '<div class="rk-card rk-att-monitor-toolbar"><div class="rk-att-monitor-dates">' +
+        '<label>From date<input class="rk-in" id="rkAttFrom" type="date" value="'+monthStart+'"></label>' +
+        '<label>To date<input class="rk-in" id="rkAttTo" type="date" value="'+today+'"></label>' +
+        '<button type="button" class="rk-btn" id="rkAttFetch">Fetch Attendance</button>' +
+      '</div><div class="rk-att-monitor-search"><input class="rk-in" id="rkAttMonitorSearch" type="search" placeholder="Search employee, ID, location, type, status..." aria-label="Search attendance records"><button type="button" class="rk-btn ghost" id="rkAttMonitorReload">↻ Refresh</button><button type="button" class="rk-btn ghost" id="rkAttCsv">Export CSV</button><button type="button" class="rk-btn" id="rkAttXlsx">Export XLSX</button></div></div>' +
+      '<div class="rk-att-monitor-summary" id="rkAttMonitorSummary">' +
+        attMonSummaryCard('ontime','On Time','—','green')+attMonSummaryCard('late','Late Clock In','—','amber')+attMonSummaryCard('early','Early Clock In','—','blue')+attMonSummaryCard('noOut','No Clock Out','—','red')+attMonSummaryCard('noIn','No Clock In','—','gray')+
+      '</div>' +
+      '<div class="rk-card rk-att-monitor-records"><div class="rk-att-monitor-title"><div><h3>Attendance Monitoring</h3><div class="rk-card-sub" id="rkAttMonitorSub">Select a date range, then fetch attendance.</div></div><span id="rkAttMonitorCount" class="rk-pill info">0 records</span></div>' +
+      '<div class="rk-table-wrap"><table class="rk-table rk-att-monitor-table"><thead><tr><th>Employee Name</th><th>Employee ID</th><th>Date</th><th>Time</th><th>Type</th><th>Job Position</th><th>Photo</th><th>Face Recognition</th><th>Liveness Validation</th><th>Location</th><th>Area</th><th>Note</th><th>Status</th><th>Address</th></tr></thead><tbody id="rkAttMonitorBody"><tr><td colspan="14"><div class="rk-loading">Loading attendance records...</div></td></tr></tbody></table></div></div>';
+    document.getElementById('rkAttFetch').addEventListener('click', fetchAttendanceMonitoring);
+    document.getElementById('rkAttMonitorReload').addEventListener('click', fetchAttendanceMonitoring);
+    document.getElementById('rkAttCsv').addEventListener('click', exportAttendanceMonitoringCsv);
+    document.getElementById('rkAttXlsx').addEventListener('click', exportAttendanceMonitoringXlsx);
+    document.getElementById('rkAttMonitorSearch').addEventListener('input', function(){attMonitorState.query=this.value||'';paintAttendanceMonitoringRows();});
+    var body=document.getElementById('rkAttMonitorBody');
+    if(body) body.addEventListener('click', function(ev){
+      var photo=ev.target.closest&&ev.target.closest('[data-att-photo-index]');
+      if(photo){ev.preventDefault();openAttendanceMonitorPhoto(Number(photo.getAttribute('data-att-photo-index')));return;}
+      var map=ev.target.closest&&ev.target.closest('[data-att-map-index]');
+      if(map){ev.preventDefault();var r=attMonitorState.rows[Number(map.getAttribute('data-att-map-index'))];var lat=attMonFirst(r,['latitude','lat','gps_latitude','gps_lat']),lon=attMonFirst(r,['longitude','lon','lng','gps_longitude','gps_lon']);if(lat!==''&&lon!==''&&isFinite(Number(lat))&&isFinite(Number(lon)))window.open('https://www.google.com/maps?q='+encodeURIComponent(lat+','+lon),'_blank','noopener');}
     });
-    paintAttToday();
+    fetchAttendanceMonitoring();
+  }
+  function attMonSummaryCard(key,label,value,tone) {
+    return '<div class="rk-att-monitor-stat '+tone+'"><span>'+escH(label)+'</span><strong id="rkAttMetric_'+key+'">'+escH(value)+'</strong></div>';
+  }
+  function fetchAttendanceMonitoring() {
+    var fromEl=document.getElementById('rkAttFrom'),toEl=document.getElementById('rkAttTo'),body=document.getElementById('rkAttMonitorBody'),btn=document.getElementById('rkAttFetch');
+    if(!fromEl||!toEl||!body)return;
+    var from=fromEl.value,to=toEl.value;
+    if(!from||!to){rkToast('Please select both dates.');return;}
+    if(from>to){rkToast('The From date cannot be after the To date.');return;}
+    attMonitorState.from=from;attMonitorState.to=to;attMonitorState.loaded=false;
+    body.innerHTML='<tr><td colspan="14"><div class="rk-loading">Loading attendance records...</div></td></tr>';
+    var sub=document.getElementById('rkAttMonitorSub');if(sub)sub.textContent='Loading records from '+from+' to '+to+'…';
+    if(btn){btn.disabled=true;btn.textContent='Loading…';}
+    var candidates=[
+      {name:'hr_get_attendance_monitoring',params:{p_start_date:from,p_end_date:to}},
+      {name:'hr_attendance_monitoring',params:{p_start_date:from,p_end_date:to}},
+      {name:'hr_attendance_range',params:{p_start_date:from,p_end_date:to}}
+    ];
+    if(from===to)candidates.push({name:'hr_attendance_today',params:{p_date:from}});
+    function tryCandidate(i){
+      if(i>=candidates.length)return Promise.resolve(null);
+      var c=candidates[i];
+      return rpcOptional(c.name,c.params).then(function(r){
+        if(attMonHasPayload(r)){attMonitorState.source=c.name;return r;}
+        return tryCandidate(i+1);
+      }).catch(function(){return tryCandidate(i+1);});
+    }
+    tryCandidate(0).then(function(payload){
+      attMonitorState.payload=payload;
+      attMonitorState.rows=attMonRows(payload)||[];
+      attMonitorState.loaded=!!payload;
+      paintAttendanceMonitoringSummary(payload,attMonitorState.rows);
+      paintAttendanceMonitoringRows();
+      var st=document.getElementById('rkAttMonitorSub'),count=document.getElementById('rkAttMonitorCount');
+      if(st)st.textContent=payload ? ('Records for '+from+(from===to?'':' to '+to)+' · Source: '+attMonitorState.source) : 'Attendance monitoring data is not available. The backend needs hr_get_attendance_monitoring(start date, end date).';
+      if(count)count.textContent=attMonitorState.rows.length+' records';
+    }).catch(function(){
+      attMonitorState.payload=null;attMonitorState.rows=[];attMonitorState.loaded=false;paintAttendanceMonitoringSummary(null,[]);paintAttendanceMonitoringRows();
+      var st=document.getElementById('rkAttMonitorSub');if(st)st.textContent='Attendance data could not be loaded. Please check the connection or backend monitoring RPC.';
+    }).then(function(){if(btn){btn.disabled=false;btn.textContent='Fetch Attendance';}});
+  }
+  function paintAttendanceMonitoringSummary(payload,rows) {
+    var x=attMonSummary(payload,rows);
+    [['ontime',x.ontime],['late',x.late],['early',x.early],['noOut',x.noOut],['noIn',x.noIn]].forEach(function(it){var el=document.getElementById('rkAttMetric_'+it[0]);if(el)el.textContent=it[1]==null?'—':String(it[1]);});
+  }
+  function paintAttendanceMonitoringRows() {
+    var body=document.getElementById('rkAttMonitorBody');if(!body)return;
+    var query=String(attMonitorState.query||'').trim().toLowerCase();
+    var indexed=(attMonitorState.rows||[]).map(function(row,index){return {row:row,index:index};});
+    if(query) indexed=indexed.filter(function(item){return Object.keys(item.row||{}).some(function(k){var v=item.row[k];return v!=null&&String(v).toLowerCase().indexOf(query)>=0;});});
+    var count=document.getElementById('rkAttMonitorCount');if(count)count.textContent=indexed.length+' records';
+    if(!attMonitorState.loaded){body.innerHTML='<tr><td colspan="14"><div class="rk-empty">No attendance data loaded.</div></td></tr>';return;}
+    if(!indexed.length){var summaryOnly=attMonitorState.payload&&(attMonitorState.payload.summary||attMonitorState.payload.stats||attMonitorState.payload.counts||attMonitorState.payload.ringkasan||attMonitorState.payload.total!=null);body.innerHTML='<tr><td colspan="14"><div class="rk-empty">'+(summaryOnly?'The backend returned summary counts but no detailed attendance rows. Configure the monitoring RPC to return records for this date range.':'No attendance records found for this date range.')+'</div></td></tr>';return;}
+    body.innerHTML=indexed.map(function(item){
+      var x=item.row||{},i=item.index;
+      var name=attMonFirst(x,['employee_name','employeeName','nama','nama_karyawan','name'])||'—';
+      var nik=attMonFirst(x,['employee_id','employeeId','nik','karyawan_id','id_karyawan'])||'—';
+      var date=attMonDate(x),time=attMonTime(x),type=attMonType(x);
+      var timeWarning=String(attMonFirst(x,['attendance_warning','attendanceWarning','clock_in_warning'])||'').toUpperCase();
+      var timeCell='<span>'+escH(time)+'</span>'+(timeWarning==='OUTSIDE_EARLY_WINDOW'?'<small class="rk-att-time-warning" title="Clock In was accepted, but it was more than 30 minutes before the scheduled start.">⚠ Outside Early Window</small>':'');
+      var position=attMonFirst(x,['job_position','jobPosition','jabatan','posisi'])||'—';
+      var photo=attMonFirst(x,['photo_url','photoUrl','foto_url','fotoUrl','photo','foto','foto_base64','fotoBase64','evidence_url','evidence_path','foto_path','photo_path']);
+      var face=attMonFirst(x,['face_recognition','faceRecognition','face_match_status','face_status','faceMatchStatus','recognition_status'])||'—';
+      var live=attMonFirst(x,['liveness_validation','livenessValidation','liveness_status','livenessStatus','liveness_result'])||'—';
+      var location=attMonFirst(x,['employee_branch_snapshot','location_setting_name','locationSettingName','branch','location_gps_name','locationGpsName','location_name','locationName','lokasi'])||'—';
+      var note=attMonFirst(x,['note','catatan','description','keterangan','reason'])||'—';
+      var address=attMonFirst(x,['location_address','locationAddress','address','alamat','gps_address'])||'—';
+      var lat=attMonFirst(x,['latitude','lat','gps_latitude','gps_lat']),lon=attMonFirst(x,['longitude','lon','lng','gps_longitude','gps_lon']);
+      var photoCell=photo?'<button type="button" class="rk-att-photo-link" data-att-photo-index="'+i+'">View Photo</button>':'<span class="rk-att-muted">—</span>';
+      var locationCell='<span>'+escH(location)+'</span>'+(lat!==''&&lon!==''&&isFinite(Number(lat))&&isFinite(Number(lon))?' <button type="button" class="rk-att-map-link" data-att-map-index="'+i+'">View map</button>':'');
+      return '<tr><td>'+escH(name)+'</td><td>'+escH(nik)+'</td><td>'+escH(date)+'</td><td>'+timeCell+'</td><td>'+escH(type)+'</td><td>'+escH(position)+'</td><td>'+photoCell+'</td><td>'+escH(face)+'</td><td>'+escH(live)+'</td><td>'+locationCell+'</td><td><span class="rk-att-area-placeholder" title="Area Dinas Luar integration is not available yet">—</span></td><td>'+escH(note)+'</td><td>'+attMonApproval(x)+'</td><td class="rk-att-address">'+escH(address)+'</td></tr>';
+    }).join('');
+  }
+  function attMonFilteredRows() {
+    var query=String(attMonitorState.query||'').trim().toLowerCase();
+    return (attMonitorState.rows||[]).map(function(row,index){return {row:row,index:index};}).filter(function(item){
+      return !query || Object.keys(item.row||{}).some(function(k){var v=item.row[k];return v!=null&&String(v).toLowerCase().indexOf(query)>=0;});
+    });
+  }
+  function attMonExportHeaders() {
+    return ['Date','Check Time','Type','Employee ID','Full Name','Job Position','Photo','Face recognition','Liveness validation','Shift Name','Shift Code','Shift Label','Location Setting Name','Location GPS Name','Location Address','Location Coordinate','Description','Mobile Flag','Status'];
+  }
+  function attMonExportRow(x) {
+    var lat=attMonFirst(x,['latitude','lat','gps_latitude','gps_lat']), lon=attMonFirst(x,['longitude','lon','lng','gps_longitude','gps_lon']);
+    var st=String(attMonFirst(x,['status_approval','statusApproval','approval_status'])||'');
+    if(st==='VALID') st='Valid'; else if(st==='DISETUJUI'||st==='APPROVED') st='Approved'; else if(st==='PENDING_ATASAN') st='Pending Manager'; else if(st==='PENDING_HR') st='Pending HR'; else if(/^DITOLAK/.test(st)) st='Rejected';
+    var branch=attMonFirst(x,['employee_branch_snapshot','location_setting_name','branch'])||'';
+    var gpsName=attMonFirst(x,['location_gps_name','locationGpsName'])|| (branch ? 'Office '+branch : '');
+    var photo=attMonFirst(x,['photo_url','photoUrl','foto_url','fotoUrl','photo','foto','evidence_path','foto_path','photo_path']);
+    var face=attMonFirst(x,['face_recognition','faceRecognition','face_match_status','face_status','recognition_status']);
+    var description=String(attMonFirst(x,['note','catatan','description'])||'');
+    if(String(attMonFirst(x,['attendance_warning','attendanceWarning','clock_in_warning'])||'').toUpperCase()==='OUTSIDE_EARLY_WINDOW') description+=(description?' | ':'')+'WARNING: Outside Early Window';
+    return [attMonDate(x),attMonTime(x),attMonType(x),attMonFirst(x,['employee_id','employeeId','nik']),attMonFirst(x,['employee_name','employeeName','nama','name']),attMonFirst(x,['job_position','jobPosition','posisi']),photo,face,attMonFirst(x,['liveness_validation','livenessValidation','liveness_status']),attMonFirst(x,['shift_name','shiftName']),attMonFirst(x,['shift_code','shiftCode']),attMonFirst(x,['shift_label','shiftLabel']),branch,gpsName,attMonFirst(x,['location_address','address','alamat']),lat!==''&&lon!==''?String(lat)+','+String(lon):'',description,attMonFirst(x,['mobile_flag','mobileFlag','device_type'])||'Mobile App',st];
+  }
+  function exportAttendanceMonitoringCsv() {
+    var list=attMonFilteredRows(); if(!list.length){rkToast('There is no attendance data to export.');return;}
+    var rows=[attMonExportHeaders()]; list.forEach(function(it){rows.push(attMonExportRow(it.row||{}));});
+    csvDownload('Attendance_Monitoring_'+(attMonitorState.from||'')+'_to_'+(attMonitorState.to||'')+'.csv',rows);
+    rkToast('Attendance Monitoring CSV exported.');
+  }
+  function exportAttendanceMonitoringXlsx() {
+    var list=attMonFilteredRows(); if(!list.length){rkToast('There is no attendance data to export.');return;}
+    var rows=[attMonExportHeaders()]; list.forEach(function(it){rows.push(attMonExportRow(it.row||{}));});
+    downloadXlsx('Attendance_Monitoring_'+(attMonitorState.from||'')+'_to_'+(attMonitorState.to||'')+'.xlsx','Attendance Monitoring',rows);
+  }
+
+  function openAttendanceMonitorPhoto(index) {
+    var row=attMonitorState.rows[index];if(!row)return;
+    var src=attMonFirst(row,['photo_url','photoUrl','foto_url','fotoUrl','photo','foto','foto_base64','fotoBase64','evidence_url','evidence_path','foto_path','photo_path']);
+    if(!src){rkToast('No photo is attached to this attendance record.');return;}
+    var shade=document.getElementById('rkAttPhotoShade');
+    if(!shade){shade=document.createElement('div');shade.id='rkAttPhotoShade';shade.className='rk-att-photo-shade';shade.innerHTML='<section class="rk-att-photo-modal" role="dialog" aria-modal="true"><button type="button" data-att-photo-close class="rk-dash-modal-close" aria-label="Close">×</button><h3>Attendance Photo</h3><div data-att-photo-content></div></section>';document.body.appendChild(shade);shade.addEventListener('click',function(ev){if(ev.target===shade||(ev.target.closest&&ev.target.closest('[data-att-photo-close]')))shade.classList.remove('on');});shade.addEventListener('keydown',function(ev){if(ev.key==='Escape')shade.classList.remove('on');});}
+    var content=shade.querySelector('[data-att-photo-content]');
+    function show(url){if(!content)return;var s=String(url||'');if(s&&s.indexOf('data:')!==0&&!/^https?:\/\//i.test(s)&&s.charAt(0)!=='/')s='';content.innerHTML=s?'<img alt="Attendance evidence photo" src="'+escH(s)+'" onerror="this.style.display=\'none\';this.parentNode.insertAdjacentHTML(\'beforeend\',\'<p class=\\\'rk-empty\\\'>Photo could not be loaded.</p>\')">':'<div class="rk-empty">Photo could not be loaded.</div>';shade.classList.add('on');}
+    if(/^data:image\//i.test(String(src))||/^https?:\/\//i.test(String(src))||String(src).charAt(0)==='/'){show(src);return;}
+    content.innerHTML='<div class="rk-loading">Loading photo...</div>';shade.classList.add('on');
+    api('getEvidenceSignedUrl',[String(src)],20000).then(function(r){show((r&&(r.url||r.signedUrl||r.signed_url||r.data&&((r.data.url)||(r.data.signedUrl))))||'');}).catch(function(){show('');});
   }
 
   function paintAttToday() {
@@ -10658,27 +10887,179 @@ function showHrPlaceholder(title, group, description) {
     var rad=parseFloat((document.getElementById('rklRadius')||{}).value)||200;
     RK_DESK_LOC_CIRCLE.setRadius(Math.max(1,rad));
   }
+  var RK_DESK_LEAFLET_LOAD = null;
+  function ensureDeskLeaflet() {
+    if (window.L && typeof window.L.map === 'function') return Promise.resolve(window.L);
+    if (!RK_DESK_LEAFLET_LOAD) {
+      RK_DESK_LEAFLET_LOAD = new Promise(function(resolve, reject) {
+        var cssUrls = [
+          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css',
+          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'
+        ];
+        var jsUrls = [
+          'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+          'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
+        ];
+        function loadCss(i) {
+          if (i >= cssUrls.length) { loadJs(0); return; }
+          if (document.querySelector('link[data-rk-leaflet-css="1"]')) { loadJs(0); return; }
+          var link = document.createElement('link');
+          link.rel = 'stylesheet'; link.href = cssUrls[i]; link.setAttribute('data-rk-leaflet-css','1');
+          link.onload = function() { loadJs(0); };
+          link.onerror = function() { link.remove(); loadCss(i + 1); };
+          document.head.appendChild(link);
+        }
+        function loadJs(i) {
+          if (window.L && typeof window.L.map === 'function') { resolve(window.L); return; }
+          if (i >= jsUrls.length) { reject(new Error('Leaflet library could not be loaded from either CDN.')); return; }
+          var script = document.createElement('script');
+          script.src = jsUrls[i]; script.async = true;
+          script.onload = function() {
+            if (window.L && typeof window.L.map === 'function') resolve(window.L);
+            else { script.remove(); loadJs(i + 1); }
+          };
+          script.onerror = function() { script.remove(); loadJs(i + 1); };
+          document.head.appendChild(script);
+        }
+        loadCss(0);
+      }).catch(function(e) { RK_DESK_LEAFLET_LOAD = null; throw e; });
+    }
+    return RK_DESK_LEAFLET_LOAD;
+  }
   function initDeskLocMap(row) {
-    var mapEl=document.getElementById('rklMap'); if(!mapEl)return;
-    ensureLeaflet().then(function(){
-      if(!document.getElementById('rklMap') || !window.L)return;
-      if(RK_DESK_LOC_MAP){try{RK_DESK_LOC_MAP.remove();}catch(e){}}
-      var lat=row && isFinite(+row.latitude) ? +row.latitude : parseFloat((document.getElementById('rklLat')||{}).value);
-      var lon=row && isFinite(+row.longitude) ? +row.longitude : parseFloat((document.getElementById('rklLon')||{}).value);
-      var hasPoint=isFinite(lat)&&isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
-      var center=hasPoint?[lat,lon]:[-2.5,118];
-      RK_DESK_LOC_MAP=L.map(mapEl,{zoomControl:true,attributionControl:false}).setView(center,hasPoint?16:5);
-      if(typeof MAPS==='object')MAPS.rkLocDesk={map:RK_DESK_LOC_MAP};
-      attachTiles(RK_DESK_LOC_MAP,'rkLocDesk',mapEl,function(){});
-      RK_DESK_LOC_MARKER=L.marker(center,{draggable:true}).addTo(RK_DESK_LOC_MAP);
-      RK_DESK_LOC_CIRCLE=L.circle(center,{radius:parseFloat((document.getElementById('rklRadius')||{}).value)||200,color:'#007850',fillColor:'#007850',fillOpacity:.13,weight:1.5}).addTo(RK_DESK_LOC_MAP);
-      if(hasPoint)deskLocWritePoint(lat,lon,false);
-      RK_DESK_LOC_MAP.on('click',function(e){deskLocWritePoint(e.latlng.lat,e.latlng.lng,false);});
-      RK_DESK_LOC_MARKER.on('drag',function(e){var ll=e.target.getLatLng();deskLocWritePoint(ll.lat,ll.lng,false);});
-      setTimeout(function(){try{if(RK_DESK_LOC_MAP)RK_DESK_LOC_MAP.invalidateSize({pan:false});}catch(e){}},250);
-    }).catch(function(e){var n=document.getElementById('rklMapError');if(n){n.style.display='';n.textContent='Map could not be loaded: '+(e&&e.message||e)+'. You can still enter coordinates manually.';}});
+    var mapEl = document.getElementById('rklMap');
+    if (!mapEl) return;
+    mapEl.innerHTML = '<div class="rk-loading" style="padding:18px">Loading map…</div>';
+    ensureDeskLeaflet().then(function(Leaflet) {
+      mapEl = document.getElementById('rklMap');
+      if (!mapEl || !document.getElementById('rkLocShade')) return;
+      if (RK_DESK_LOC_MAP) { try { RK_DESK_LOC_MAP.off(); RK_DESK_LOC_MAP.remove(); } catch (e) {} }
+      mapEl.innerHTML = '';
+      var lat = row && isFinite(+row.latitude) ? +row.latitude : parseFloat((document.getElementById('rklLat') || {}).value);
+      var lon = row && isFinite(+row.longitude) ? +row.longitude : parseFloat((document.getElementById('rklLon') || {}).value);
+      var hasPoint = isFinite(lat) && isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+      var center = hasPoint ? [lat, lon] : [-2.5, 118];
+      RK_DESK_LOC_MAP = Leaflet.map(mapEl, { zoomControl: true, attributionControl: false }).setView(center, hasPoint ? 16 : 5);
+      var tileUrls = [
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
+      ];
+      var tileLayer = Leaflet.tileLayer(tileUrls[0], { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(RK_DESK_LOC_MAP);
+      var tileFallbackUsed = false;
+      tileLayer.on('tileerror', function() {
+        if (tileFallbackUsed || !RK_DESK_LOC_MAP) return;
+        tileFallbackUsed = true;
+        try { RK_DESK_LOC_MAP.removeLayer(tileLayer); } catch (e) {}
+        Leaflet.tileLayer(tileUrls[1], { maxZoom: 19, attribution: '© OpenStreetMap, © CARTO' }).addTo(RK_DESK_LOC_MAP);
+      });
+      RK_DESK_LOC_MARKER = Leaflet.marker(center, { draggable: true }).addTo(RK_DESK_LOC_MAP);
+      RK_DESK_LOC_CIRCLE = Leaflet.circle(center, {
+        radius: parseFloat((document.getElementById('rklRadius') || {}).value) || 200,
+        color: '#007850', fillColor: '#007850', fillOpacity: .13, weight: 1.5
+      }).addTo(RK_DESK_LOC_MAP);
+      if (hasPoint) deskLocWritePoint(lat, lon, false);
+      else deskLocWritePoint(center[0], center[1], false);
+      RK_DESK_LOC_MAP.on('click', function(e) { deskLocWritePoint(e.latlng.lat, e.latlng.lng, false); });
+      RK_DESK_LOC_MARKER.on('drag', function(e) { var ll = e.target.getLatLng(); deskLocWritePoint(ll.lat, ll.lng, false); });
+      setTimeout(function() { try { if (RK_DESK_LOC_MAP) RK_DESK_LOC_MAP.invalidateSize({ pan: false }); } catch (e) {} }, 450);
+    }).catch(function(e) {
+      var n = document.getElementById('rklMapError');
+      if (n) { n.style.display = ''; n.textContent = 'Map could not be loaded: ' + (e && e.message || e) + '. You can still enter coordinates manually.'; }
+      var map = document.getElementById('rklMap');
+      if (map) map.innerHTML = '<div class="rk-empty" style="padding:20px">Map unavailable. Enter latitude and longitude manually.</div>';
+    });
   }
 
+
+  /* ---------------- ATTENDANCE RULES & WORKING CALENDAR (DESKTOP ONLY) ---------------- */
+  var attendanceRulesUi = { records: [], loaded: false, branch: 'Pasuruan' };
+  var workingCalendarUi = { records: [], from: '', to: '', branch: '*', loaded: false };
+  var ISO_DAYS = [{v:1,t:'Monday'},{v:2,t:'Tuesday'},{v:3,t:'Wednesday'},{v:4,t:'Thursday'},{v:5,t:'Friday'},{v:6,t:'Saturday'},{v:7,t:'Sunday'}];
+  function profileBranchOptions(selected, includeGlobal) {
+    var set=Object.create(null), values=[];
+    ['Pasuruan','Surabaya','Pusat'].forEach(function(b){set[b.toLowerCase()]=b;});
+    try { (empCurrentList()||[]).forEach(function(x){var b=String(x.branch||x.cabang||'').trim();if(b&&!set[b.toLowerCase()])set[b.toLowerCase()]=b;}); } catch(e) {}
+    values=Object.keys(set).map(function(k){return set[k];}).sort();
+    if(selected&&selected!=='*'&&!set[String(selected).toLowerCase()])values.unshift(selected);
+    var h=includeGlobal?'<option value="*"'+(selected==='*'?' selected':'')+'>All branches (global)</option>':'';
+    values.forEach(function(b){h+='<option value="'+escH(b)+'"'+(String(selected).toLowerCase()===b.toLowerCase()?' selected':'')+'>'+escH(b)+'</option>';});
+    return h;
+  }
+  function isSuperAdminRole() { return !!(window.S&&S.user&&['ADMIN','SUPERADMIN'].indexOf(String(S.user.role||'').toUpperCase())>=0); }
+  function renderAttendanceRulesPage() {
+    var el=document.getElementById('rkp-attset');if(!el)return;
+    el.innerHTML=
+      '<div class="rk-card"><h3>Attendance Rules &amp; Shifts</h3><div class="rk-card-sub">Schedule applies according to the Branch saved on the employee profile. Each attendance record snapshots its effective branch and schedule.</div>'+
+      (!isSuperAdminRole()?'<div class="rk-note">Only Super Admin can change these rules. HR can view current settings.</div>':'')+
+      '<div class="rk-attset-form">'+
+      '<label>Branch<select class="rk-in" id="rkRuleBranch">'+profileBranchOptions(attendanceRulesUi.branch,false)+'</select></label>'+
+      '<label>Day of week<select class="rk-in" id="rkRuleDay">'+ISO_DAYS.map(function(d){return '<option value="'+d.v+'">'+d.t+'</option>';}).join('')+'</select></label>'+
+      '<label class="rk-rule-check"><input type="checkbox" id="rkRuleWorkday" checked> Working day</label>'+
+      '<label>Shift name<input class="rk-in" id="rkRuleName" value="Weekday"></label>'+
+      '<label>Shift code<input class="rk-in" id="rkRuleCode" value="SHIFT"></label>'+
+      '<label>Shift label<input class="rk-in" id="rkRuleLabel" value="Shift"></label>'+
+      '<label>Scheduled check-in<input class="rk-in" id="rkRuleIn" type="time" value="07:30"></label>'+
+      '<label>Scheduled check-out<input class="rk-in" id="rkRuleOut" type="time" value="17:00"></label>'+
+      '<label>Early window (minutes)<input class="rk-in" id="rkRuleEarly" type="number" min="0" max="360" value="30"></label>'+
+      '<label>Late tolerance (minutes)<input class="rk-in" id="rkRuleLate" type="number" min="0" max="240" value="5"></label>'+
+      '<label>Effective from<input class="rk-in" id="rkRuleFrom" type="date" value="'+attMonLocalISO(new Date())+'"></label>'+
+      '<div class="rk-attset-actions"><button class="rk-btn" id="rkRuleSave" type="button" '+(isSuperAdminRole()?'':'disabled')+'>Save Rule</button><button class="rk-btn ghost" id="rkRuleRefresh" type="button">Reload Rules</button></div>'+
+      '</div></div>'+
+      '<div class="rk-card"><h3>Configured Schedules</h3><div class="rk-table-wrap"><table class="rk-table rk-att-summary-table"><thead><tr><th>Branch</th><th>Day</th><th>Workday</th><th>Shift</th><th>Shift Code</th><th>Check In</th><th>Check Out</th><th>Early Window</th><th>Late Tolerance</th><th>Effective From</th><th>Effective To</th><th>Action</th></tr></thead><tbody id="rkRuleBody"><tr><td colspan="12"><div class="rk-loading">Loading schedules...</div></td></tr></tbody></table></div></div>';
+    var work=document.getElementById('rkRuleWorkday'), hin=document.getElementById('rkRuleIn'),hout=document.getElementById('rkRuleOut');
+    function syncWorkday(){var on=work.checked;hin.disabled=!on;hout.disabled=!on;document.getElementById('rkRuleName').disabled=!on;document.getElementById('rkRuleCode').disabled=!on;document.getElementById('rkRuleLabel').disabled=!on;}
+    work.addEventListener('change',syncWorkday);syncWorkday();
+    document.getElementById('rkRuleBranch').addEventListener('change',function(){attendanceRulesUi.branch=this.value;});
+    document.getElementById('rkRuleSave').addEventListener('click',saveAttendanceRuleV10);
+    document.getElementById('rkRuleRefresh').addEventListener('click',loadAttendanceRulesV10);
+    document.getElementById('rkRuleBody').addEventListener('click',function(ev){var b=ev.target.closest('[data-rule-edit]');if(!b)return;var x=attendanceRulesUi.records[Number(b.getAttribute('data-rule-edit'))];if(!x)return;document.getElementById('rkRuleBranch').value=x.branch;document.getElementById('rkRuleDay').value=x.day_of_week;document.getElementById('rkRuleWorkday').checked=!!x.is_workday;document.getElementById('rkRuleName').value=x.shift_name||'';document.getElementById('rkRuleCode').value=x.shift_code||'';document.getElementById('rkRuleLabel').value=x.shift_label||'';document.getElementById('rkRuleIn').value=String(x.scheduled_check_in||'').slice(0,5);document.getElementById('rkRuleOut').value=String(x.scheduled_check_out||'').slice(0,5);document.getElementById('rkRuleEarly').value=x.early_window_minutes==null?30:x.early_window_minutes;document.getElementById('rkRuleLate').value=x.late_tolerance_minutes==null?5:x.late_tolerance_minutes;var todayRule=attMonLocalISO(new Date());document.getElementById('rkRuleFrom').value=(x.effective_from&&x.effective_from>todayRule)?x.effective_from:todayRule;attendanceRulesUi.branch=x.branch;syncWorkday();window.scrollTo({top:0,behavior:'smooth'});});
+    loadAttendanceRulesV10();
+  }
+  function loadAttendanceRulesV10(){
+    var body=document.getElementById('rkRuleBody');if(body)body.innerHTML='<tr><td colspan="12"><div class="rk-loading">Loading schedules...</div></td></tr>';
+    rpcOptional('hr_get_attendance_schedule',{}).then(function(r){var rows=r&&(r.records||r.rows||r.list);if(!Array.isArray(rows)){attendanceRulesUi.loaded=false;attendanceRulesUi.records=[];if(body)body.innerHTML='<tr><td colspan="12">'+optNote('hr_get_attendance_schedule')+'</td></tr>';return;}attendanceRulesUi.loaded=true;attendanceRulesUi.records=rows;if(!body)return;if(!rows.length){body.innerHTML='<tr><td colspan="12"><div class="rk-empty">No schedule configured.</div></td></tr>';return;}body.innerHTML=rows.map(function(x,i){var day=ISO_DAYS.find(function(d){return d.v===Number(x.day_of_week);});return '<tr><td>'+escH(x.branch)+'</td><td>'+escH(day?day.t:x.day_of_week)+'</td><td>'+ (x.is_workday?'Yes':'Day Off')+'</td><td>'+escH(x.shift_name||'—')+'</td><td>'+escH(x.shift_code||'—')+'</td><td>'+escH(String(x.scheduled_check_in||'').slice(0,5)||'—')+'</td><td>'+escH(String(x.scheduled_check_out||'').slice(0,5)||'—')+'</td><td>'+escH(x.early_window_minutes==null?30:x.early_window_minutes)+' min</td><td>'+escH(x.late_tolerance_minutes==null?5:x.late_tolerance_minutes)+' min</td><td>'+escH(x.effective_from||'—')+'</td><td>'+escH(x.effective_to||'—')+'</td><td><button type="button" class="rk-mini" data-rule-edit="'+i+'">Edit</button></td></tr>';}).join('');});
+  }
+  function saveAttendanceRuleV10(){
+    if(!isSuperAdminRole()){rkToast('Only Super Admin can change schedules.');return;}
+    var branch=document.getElementById('rkRuleBranch').value,day=Number(document.getElementById('rkRuleDay').value),work=document.getElementById('rkRuleWorkday').checked,ef=document.getElementById('rkRuleFrom').value;
+    var params={p_branch:branch,p_day_of_week:day,p_is_workday:work,p_shift_name:document.getElementById('rkRuleName').value,p_shift_code:document.getElementById('rkRuleCode').value,p_shift_label:document.getElementById('rkRuleLabel').value,p_scheduled_check_in:work?(document.getElementById('rkRuleIn').value||null):null,p_scheduled_check_out:work?(document.getElementById('rkRuleOut').value||null):null,p_early_window_minutes:Number(document.getElementById('rkRuleEarly').value),p_late_tolerance_minutes:Number(document.getElementById('rkRuleLate').value),p_effective_from:ef};
+    if(!branch||!ef){rkToast('Branch and effective date are required.');return;}
+    rpcOptional('hr_save_attendance_schedule',params).then(function(r){if(r&&r.ok!==false){rkToast(r.message||'Schedule saved.');loadAttendanceRulesV10();}else rkToast('Schedule was not saved. Check role, SQL migration, and required fields.');});
+  }
+  function renderWorkingCalendarPage(){
+    var el=document.getElementById('rkp-calendar');if(!el)return;
+    var today=attMonLocalISO(new Date()), year=today.slice(0,4), start=year+'-01-01', end=year+'-12-31';
+    el.innerHTML='<div class="rk-card"><h3>Working Calendar</h3><div class="rk-card-sub">Open-source Indonesian holiday calendar is a starting point. Super Admin overrides take priority for the selected branch.</div>'+
+      '<div class="rk-attset-form"><label>From date<input class="rk-in" id="rkCalFrom" type="date" value="'+start+'"></label><label>To date<input class="rk-in" id="rkCalTo" type="date" value="'+end+'"></label><label>Branch scope<select class="rk-in" id="rkCalBranch">'+profileBranchOptions('*',true)+'</select></label><div class="rk-attset-actions"><button class="rk-btn" id="rkCalLoad" type="button">Load Calendar</button><button class="rk-btn ghost" id="rkCalImport" type="button" '+(isSuperAdminRole()?'':'disabled')+'>Import Public Holidays</button></div></div>'+
+      '<div id="rkCalSyncNote" class="rk-card-sub" style="margin-top:12px">Calendar not loaded yet.</div></div>'+
+      '<div class="rk-card"><h3>Day Override</h3><div class="rk-card-sub">Changes apply from now on and do not rewrite historical attendance snapshots. A reason is required.</div>'+
+      '<div class="rk-attset-form"><label>Date<input class="rk-in" id="rkCalOverrideDate" type="date" value="'+today+'"></label><label>Scope<select class="rk-in" id="rkCalOverrideBranch">'+profileBranchOptions('*',true)+'</select></label><label>Day type<select class="rk-in" id="rkCalOverrideType"><option value="WORKING_DAY">Working Day</option><option value="DAY_OFF">Day Off</option><option value="NATIONAL_HOLIDAY">National Holiday</option><option value="JOINT_LEAVE">Joint Leave</option></select></label><label>Label<input class="rk-in" id="rkCalOverrideLabel" placeholder="e.g. Company day off"></label><label class="rk-attset-wide">Reason<input class="rk-in" id="rkCalOverrideReason" placeholder="Reason / management decision"></label><div class="rk-attset-actions"><button class="rk-btn" id="rkCalSaveOverride" type="button" '+(isSuperAdminRole()?'':'disabled')+'>Save Override</button></div></div></div>'+
+      '<div class="rk-card"><h3>Effective Calendar</h3><div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Date</th><th>Day</th><th>Effective Type</th><th>Label</th><th>Scope</th><th>Manual Override</th><th>Reason</th></tr></thead><tbody id="rkCalBody"><tr><td colspan="7"><div class="rk-loading">Load calendar to begin.</div></td></tr></tbody></table></div></div>';
+    document.getElementById('rkCalBranch').addEventListener('change',function(){workingCalendarUi.branch=this.value;});
+    document.getElementById('rkCalLoad').addEventListener('click',loadWorkingCalendarV10);
+    document.getElementById('rkCalImport').addEventListener('click',importPublicHolidaysV10);
+    document.getElementById('rkCalSaveOverride').addEventListener('click',saveCalendarOverrideV10);
+    loadWorkingCalendarV10();
+  }
+  function loadWorkingCalendarV10(){
+    var from=document.getElementById('rkCalFrom'),to=document.getElementById('rkCalTo'),br=document.getElementById('rkCalBranch'),body=document.getElementById('rkCalBody');if(!from||!to||!br||!body)return;
+    if(!from.value||!to.value||from.value>to.value){rkToast('Choose a valid calendar date range.');return;}
+    if((new Date(to.value+'T00:00:00Z')-new Date(from.value+'T00:00:00Z'))/86400000>400){rkToast('Calendar range must be 401 days or fewer.');return;}
+    workingCalendarUi.from=from.value;workingCalendarUi.to=to.value;workingCalendarUi.branch=br.value;body.innerHTML='<tr><td colspan="7"><div class="rk-loading">Loading calendar...</div></td></tr>';
+    rpcOptional('hr_get_working_calendar',{p_start_date:from.value,p_end_date:to.value,p_branch:br.value}).then(function(r){var rows=r&&(r.records||r.rows);if(!Array.isArray(rows)){workingCalendarUi.loaded=false;workingCalendarUi.records=[];body.innerHTML='<tr><td colspan="7">'+optNote('hr_get_working_calendar')+'</td></tr>';return;}workingCalendarUi.loaded=true;workingCalendarUi.records=rows;body.innerHTML=rows.map(function(x){return '<tr><td>'+escH(x.calendar_date)+'</td><td>'+escH(x.day_name)+'</td><td>'+escH(x.effective_day_type)+'</td><td>'+escH(x.label||'—')+'</td><td>'+escH(x.scope_branch||'*')+'</td><td>'+(x.has_override?'Yes':'No')+'</td><td>'+escH(x.reason||'—')+'</td></tr>';}).join('')||'<tr><td colspan="7"><div class="rk-empty">No calendar rows returned.</div></td></tr>';var note=document.getElementById('rkCalSyncNote');if(note)note.textContent='Loaded '+rows.length+' dates for '+br.value+' ('+from.value+' to '+to.value+').';});
+  }
+  function saveCalendarOverrideV10(){
+    if(!isSuperAdminRole()){rkToast('Only Super Admin can change the calendar.');return;}
+    var date=document.getElementById('rkCalOverrideDate').value,branch=document.getElementById('rkCalOverrideBranch').value,type=document.getElementById('rkCalOverrideType').value,label=document.getElementById('rkCalOverrideLabel').value,reason=document.getElementById('rkCalOverrideReason').value;
+    if(!date||!reason.trim()){rkToast('Date and reason are required.');return;}
+    rpcOptional('hr_save_calendar_override',{p_calendar_date:date,p_scope_branch:branch,p_day_type:type,p_label:label,p_reason:reason}).then(function(r){if(r&&r.ok!==false){rkToast(r.message||'Calendar override saved.');loadWorkingCalendarV10();}else rkToast('Override was not saved. Check role and SQL migration.');});
+  }
+  function importPublicHolidaysV10(){
+    if(!isSuperAdminRole()){rkToast('Only Super Admin can import national holidays.');return;}
+    var year=Number((document.getElementById('rkCalFrom')||{}).value.slice(0,4));if(!year){rkToast('Choose a date range in the year to import.');return;}
+    var btn=document.getElementById('rkCalImport');if(btn){btn.disabled=true;btn.textContent='Importing…';}
+    fetch('https://indonesian-holidays.ahrulsyamil.com/holidays/'+year,{method:'GET',headers:{'Accept':'application/json'}}).then(function(resp){if(!resp.ok)throw new Error('Holiday API returned HTTP '+resp.status);return resp.json();}).then(function(payload){var raw=Array.isArray(payload)?payload:(payload.data||payload.holidays||[]);var rows=raw.map(function(x){return {date:x.date,name:x.name||x.title||'Holiday',type:x.type,description:x.description||x.name||''};}).filter(function(x){return x.date&&/^(national_holiday|joint_leave)$/i.test(x.type||'');});if(!rows.length)throw new Error('No supported holiday rows were returned.');return rpcOptional('hr_import_public_holidays',{p_year:year,p_rows:rows});}).then(function(r){if(r&&r.ok!==false){rkToast('Public holiday calendar imported: '+(r.processed||0)+' rows.');loadWorkingCalendarV10();}else rkToast('Import did not complete. Verify SQL migration and role permissions.');}).catch(function(e){rkToast('Holiday import failed: '+(e&&e.message||e));}).then(function(){if(btn){btn.disabled=!isSuperAdminRole();btn.textContent='Import Public Holidays';}});
+  }
 
   /* ==========================================================================
      HALAMAN BARU v15 — mengikuti struktur HRMSMBM, tema & data ReHolz.
@@ -10728,6 +11109,38 @@ function showHrPlaceholder(title, group, description) {
     a.download = filename;
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+  var RK_XLSX_LOAD = null;
+  function ensureXlsx() {
+    if (window.XLSX && window.XLSX.utils && window.XLSX.writeFile) return Promise.resolve(window.XLSX);
+    if (!RK_XLSX_LOAD) {
+      RK_XLSX_LOAD = new Promise(function(resolve, reject) {
+        var urls = [
+          'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js',
+          'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js'
+        ];
+        function load(i) {
+          if (window.XLSX && window.XLSX.utils && window.XLSX.writeFile) return resolve(window.XLSX);
+          if (i >= urls.length) return reject(new Error('XLSX library could not be loaded. Check the network connection.'));
+          var sc = document.createElement('script'); sc.src = urls[i]; sc.async = true;
+          sc.onload = function(){ if (window.XLSX && window.XLSX.utils && window.XLSX.writeFile) resolve(window.XLSX); else { sc.remove(); load(i+1); } };
+          sc.onerror = function(){ sc.remove(); load(i+1); };
+          document.head.appendChild(sc);
+        }
+        load(0);
+      }).catch(function(e){ RK_XLSX_LOAD = null; throw e; });
+    }
+    return RK_XLSX_LOAD;
+  }
+  function downloadXlsx(filename, sheetName, rows) {
+    ensureXlsx().then(function(XLSXLib){
+      var wb = XLSXLib.utils.book_new();
+      var ws = XLSXLib.utils.aoa_to_sheet(rows || []);
+      ws['!cols'] = (rows && rows[0] ? rows[0] : []).map(function(h){ return { wch: Math.min(Math.max(String(h || '').length + 3, 12), 34) }; });
+      XLSXLib.utils.book_append_sheet(wb, ws, String(sheetName || 'Report').slice(0,31));
+      XLSXLib.writeFile(wb, filename);
+      rkToast('XLSX exported.');
+    }).catch(function(e){ rkToast((e && e.message) || 'Unable to create XLSX.'); });
   }
   function yearOptions(selId, cur) {
     var y0 = new Date().getFullYear(), h = '';
@@ -10892,7 +11305,7 @@ function showHrPlaceholder(title, group, description) {
       var dateText = (empDateText(x.tanggalMulai) || '—') + (x.tanggalSelesai && x.tanggalSelesai !== x.tanggalMulai ? ' – ' + (empDateText(x.tanggalSelesai) || '—') : '');
       return '<tr>' +
         '<td><div class="rk-cuti-person">' + empAvatarMarkup(person,false) + '<span><b>' + escH(x.nama || person.nama || '—') + '</b><small>' + escH(nik || '—') + (subtitle ? ' | ' + escH(subtitle) : '') + '</small></span></div></td>' +
-        '<td><b>' + escH(x.id || '—') + '</b></td>' +
+        '<td class="rk-timeoff-request-id">' + escH(x.id || '—') + '</td>' +
         '<td>' + escH(requested || '—') + '</td>' +
         '<td><span>' + escH(policy) + '</span>' + (x.kode ? '<small class="rk-timeoff-subline">' + escH(x.kode) + '</small>' : '') + '</td>' +
         '<td><span>' + escH(dateText) + '</span><small class="rk-timeoff-subline">' + escH(x.totalHari != null ? (x.totalHari + (Number(x.totalHari) === 1 ? ' day' : ' days')) : '') + '</small>' + fileCell + '</td>' +
@@ -10982,121 +11395,74 @@ function showHrPlaceholder(title, group, description) {
     return isManager?'Pending Manager':'Pending Superadmin';
   }
 
-  /* ---------------- REKAP ABSENSI (tipe ReHolz: MASUK/PULANG) ---------------- */
-  var rekapUI = { y: new Date().getFullYear(), m: new Date().getMonth() + 1, org: '', data: null, key: '' };
+  /* ---------------- ATTENDANCE SUMMARY (daily employee grid) ---------------- */
+  var summaryV10 = { from: '', to: '', branch: '', query: '', rows: [], loaded: false };
+  function summaryV10Headers() {
+    return ['Employee ID','Full Name','Branch','Organization','Job Position','Date','Shift','Shift Code','Shift Label','Schedule Check In','Schedule Check Out','Attendance Code','Time Off Code','Hourly Time Off Breakdown','Check In','Check Out'];
+  }
+  function summaryV10Value(x, keys) { return attMonFirst(x, keys) || ''; }
   function renderRekapPage() {
-    var el = document.getElementById('rkp-rekap');
-    if (!el) return;
+    var el = document.getElementById('rkp-rekap'); if (!el) return;
+    var today=attMonLocalISO(new Date()), monthStart=today.slice(0,8)+'01';
+    var summaryFromDefault=summaryV10.from||monthStart, summaryToDefault=summaryV10.to||today;
     if (!el.dataset.built) {
-      el.dataset.built = '1';
-      var mh = '';
-      BULAN_ID.forEach(function (b, i) { mh += '<option value="' + (i + 1) + '"' + (i + 1 === rekapUI.m ? ' selected' : '') + '>' + b + '</option>'; });
+      el.dataset.built='1';
       el.innerHTML =
-        '<div class="rk-toolbar">' +
-          '<select class="rk-in" id="rkRekapYear"></select>' +
-          '<select class="rk-in" id="rkRekapMonth">' + mh + '</select>' +
-          '<select class="rk-in" id="rkRekapOrg"><option value="">All Organizations</option></select>' +
-          '<span style="flex:1"></span>' +
-          '<button class="rk-btn ghost" id="rkRekapReload">↻ Reload</button>' +
-          '<button class="rk-btn" id="rkRekapCsv">⬇ Export CSV</button>' +
-        '</div>' +
-        '<div class="rk-card" style="margin-bottom:16px"><h3>Attendance Breakdown</h3>' +
-        '<div class="rk-card-sub">Attendance status distribution for the selected period (ReHolz attendance types: Clock In / Clock Out)</div>' +
-        '<div class="rk-chipbar" id="rkRekapChips"></div></div>' +
-        '<div class="rk-card"><h3>Employee Summary</h3>' +
-        '<div class="rk-card-sub">Present = a day with Clock In · Complete = Clock In &amp; Clock Out · Absent = a workday without attendance or time off</div>' +
-        '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
-          '<th>Employee ID (NIK)</th><th>Name</th><th>Department</th><th>Working Days</th><th>Present</th><th>Complete</th><th>Time Off/Absence</th><th>Alpha</th><th>Attendance %</th>' +
-        '</tr></thead><tbody id="rkRekapBody"><tr><td colspan="9"><div class="rk-loading">Loading...</div></td></tr></tbody></table></div></div>';
-      yearOptions('rkRekapYear', rekapUI.y);
-      document.getElementById('rkRekapYear').addEventListener('change', function () { rekapUI.y = +this.value; loadRekap(true); });
-      document.getElementById('rkRekapMonth').addEventListener('change', function () { rekapUI.m = +this.value; loadRekap(true); });
-      document.getElementById('rkRekapOrg').addEventListener('change', function () { rekapUI.org = this.value; paintRekap(); });
-      document.getElementById('rkRekapReload').addEventListener('click', function () { loadRekap(true); });
-      document.getElementById('rkRekapCsv').addEventListener('click', exportRekapCsv);
+        '<div class="rk-card rk-att-monitor-toolbar"><div class="rk-att-monitor-dates">'+
+          '<label>From date<input class="rk-in" id="rkSummaryFrom" type="date" value="'+summaryFromDefault+'"></label>'+
+          '<label>To date<input class="rk-in" id="rkSummaryTo" type="date" value="'+summaryToDefault+'"></label>'+
+          '<label>Branch<select class="rk-in" id="rkSummaryBranch"><option value="">All Branches</option>'+profileBranchOptions('',false)+'</select></label>'+
+          '<button class="rk-btn" id="rkSummaryFetch" type="button">Fetch Summary</button>'+
+        '</div><div class="rk-att-monitor-search"><input class="rk-in" id="rkSummarySearch" type="search" placeholder="Search employee, ID, branch, code..." aria-label="Search summary rows"><button class="rk-btn ghost" id="rkSummaryReload" type="button">↻ Refresh</button><button class="rk-btn ghost" id="rkSummaryCsv" type="button">Export CSV</button><button class="rk-btn" id="rkSummaryXlsx" type="button">Export XLSX</button></div></div>'+
+        '<div class="rk-card rk-att-monitor-records"><div class="rk-att-monitor-title"><div><h3>Attendance Summary</h3><div class="rk-card-sub" id="rkSummarySub">Daily employee attendance codes for the selected date range.</div></div><span id="rkSummaryCount" class="rk-pill info">0 rows</span></div>'+
+        '<div class="rk-table-wrap"><table class="rk-table rk-att-summary-table"><thead><tr>'+summaryV10Headers().map(function(h){return '<th>'+escH(h)+'</th>';}).join('')+'</tr></thead><tbody id="rkSummaryBody"><tr><td colspan="16"><div class="rk-loading">Loading attendance summary...</div></td></tr></tbody></table></div></div>';
+      document.getElementById('rkSummaryFetch').addEventListener('click', fetchAttendanceSummaryV10);
+      document.getElementById('rkSummaryReload').addEventListener('click', fetchAttendanceSummaryV10);
+      document.getElementById('rkSummaryBranch').addEventListener('change', function(){summaryV10.branch=this.value;paintAttendanceSummaryV10();});
+      document.getElementById('rkSummarySearch').addEventListener('input',function(){summaryV10.query=this.value||'';paintAttendanceSummaryV10();});
+      document.getElementById('rkSummaryCsv').addEventListener('click', exportAttendanceSummaryCsvV10);
+      document.getElementById('rkSummaryXlsx').addEventListener('click', exportAttendanceSummaryXlsxV10);
+    } else {
+      var f=document.getElementById('rkSummaryFrom'),tEl=document.getElementById('rkSummaryTo');
+      if(f&&!f.value)f.value=summaryFromDefault;if(tEl&&!tEl.value)tEl.value=summaryToDefault;
     }
-    ensureKar(false).then(function () {
-      var sel = document.getElementById('rkRekapOrg');
-      if (sel && sel.options.length <= 1) {
-        var orgs = {}, h = '<option value="">All Organizations</option>';
-        (DATA.karList || []).forEach(function (x) { if (x.org && !orgs[x.org]) { orgs[x.org] = 1; h += '<option value="' + escH(x.org) + '">' + escH(x.org) + '</option>'; } });
-        sel.innerHTML = h;
-      }
-    });
-    loadRekap(false);
+    fetchAttendanceSummaryV10();
   }
-  function loadRekap(force) {
-    var key = rekapUI.y + '-' + rekapUI.m;
-    if (!force && rekapUI.data && rekapUI.key === key) { paintRekap(); return; }
-    var body = document.getElementById('rkRekapBody');
-    if (body) body.innerHTML = '<tr><td colspan="9"><div class="rk-loading">Loading summary...</div></td></tr>';
-    rpcOptional('hr_attendance_recap', { p_year: rekapUI.y, p_month: rekapUI.m }).then(function (r) {
-      var arr = normArr(r);
-      if (arr) {
-        rekapUI.data = arr; rekapUI.key = key;
-        paintRekap();
-      } else {
-        rekapUI.data = null; rekapUI.key = key;
-        if (body) body.innerHTML = '<tr><td colspan="9">' + optNote('hr_attendance_recap') + '</td></tr>';
-        var ch = document.getElementById('rkRekapChips'); if (ch) ch.innerHTML = '';
-      }
+  function fetchAttendanceSummaryV10() {
+    var f=document.getElementById('rkSummaryFrom'), tEl=document.getElementById('rkSummaryTo'), body=document.getElementById('rkSummaryBody'), btn=document.getElementById('rkSummaryFetch');
+    if(!f||!tEl||!body)return;
+    var from=f.value,to=tEl.value;
+    if(!from||!to){rkToast('Please select both dates.');return;}
+    if(from>to){rkToast('The From date cannot be after the To date.');return;}
+    if((new Date(to+'T00:00:00Z')-new Date(from+'T00:00:00Z'))/86400000>400){rkToast('Choose a period of 401 days or less.');return;}
+    summaryV10.from=from;summaryV10.to=to;summaryV10.loaded=false;body.innerHTML='<tr><td colspan="16"><div class="rk-loading">Loading daily summary...</div></td></tr>';
+    var sub=document.getElementById('rkSummarySub');if(sub)sub.textContent='Loading from '+from+' to '+to+'…';if(btn){btn.disabled=true;btn.textContent='Loading…';}
+    rpcOptional('hr_get_attendance_summary',{p_start_date:from,p_end_date:to}).then(function(r){
+      if(r && r.ok!==false && Array.isArray(r.records)){summaryV10.rows=r.records;summaryV10.loaded=true;paintAttendanceSummaryV10();if(sub)sub.textContent='Daily rows for '+from+' to '+to+' · Attendance codes: H / P / approved Time Off / blank.';}
+      else {summaryV10.rows=[];summaryV10.loaded=false;body.innerHTML='<tr><td colspan="16">'+optNote('hr_get_attendance_summary')+'</td></tr>';if(sub)sub.textContent='Summary backend is unavailable or returned an error.';var c=document.getElementById('rkSummaryCount');if(c)c.textContent='0 rows';}
+    }).catch(function(e){summaryV10.rows=[];summaryV10.loaded=false;body.innerHTML='<tr><td colspan="16"><div class="rk-empty">'+escH(e&&e.message||'Unable to load summary.')+'</div></td></tr>';}).then(function(){if(btn){btn.disabled=false;btn.textContent='Fetch Summary';}});
+  }
+  function summaryV10Filtered() {
+    var q=String(summaryV10.query||'').trim().toLowerCase(), b=String(summaryV10.branch||'').toLowerCase();
+    return (summaryV10.rows||[]).filter(function(x){
+      var branch=String(summaryV10Value(x,['branch'])||'').toLowerCase();
+      if(b&&branch!==b)return false;
+      if(!q)return true;
+      return summaryV10Headers().some(function(h){var key=h.toLowerCase().replace(/[^a-z0-9]/g,'_');var aliases={employee_id:['employee_id'],full_name:['full_name'],branch:['branch'],organization:['organization'],job_position:['job_position'],date:['date'],shift:['shift'],shift_code:['shift_code'],shift_label:['shift_label'],schedule_check_in:['schedule_check_in'],schedule_check_out:['schedule_check_out'],attendance_code:['attendance_code'],time_off_code:['time_off_code'],hourly_time_off_breakdown:['hourly_time_off_breakdown'],check_in:['check_in'],check_out:['check_out']};var v=summaryV10Value(x,aliases[key]||[key]);return String(v||'').toLowerCase().indexOf(q)>=0;});
     });
   }
-  function rekapRow(x) {
-    return {
-      nik: x.nik || x.employee_id || '-',
-      nama: x.nama || '-',
-      bagian: x.bagian || x.org || x.organization || '-',
-      hariKerja: +(x.hariKerja != null ? x.hariKerja : (x.hari_kerja != null ? x.hari_kerja : x.workdays)) || 0,
-      hadir: +x.hadir || 0,
-      lengkap: +(x.lengkap != null ? x.lengkap : x.full) || 0,
-      cuti: +(x.cuti != null ? x.cuti : x.cutiIzin) || 0,
-      alpha: +x.alpha || 0,
-      persen: +(x.persen != null ? x.persen : x.pct) || 0
-    };
+  function summaryV10Row(x) {
+    return [summaryV10Value(x,['employee_id']),summaryV10Value(x,['full_name']),summaryV10Value(x,['branch']),summaryV10Value(x,['organization']),summaryV10Value(x,['job_position']),summaryV10Value(x,['date']),summaryV10Value(x,['shift']),summaryV10Value(x,['shift_code']),summaryV10Value(x,['shift_label']),summaryV10Value(x,['schedule_check_in']),summaryV10Value(x,['schedule_check_out']),summaryV10Value(x,['attendance_code']),summaryV10Value(x,['time_off_code']),summaryV10Value(x,['hourly_time_off_breakdown']),summaryV10Value(x,['check_in']),summaryV10Value(x,['check_out'])];
   }
-  function rekapFiltered() {
-    return (rekapUI.data || []).map(rekapRow).filter(function (x) {
-      return !rekapUI.org || x.bagian === rekapUI.org;
-    });
+  function paintAttendanceSummaryV10() {
+    var body=document.getElementById('rkSummaryBody');if(!body)return;
+    var rows=summaryV10Filtered(), count=document.getElementById('rkSummaryCount');if(count)count.textContent=rows.length+' rows';
+    if(!summaryV10.loaded){return;}
+    if(!rows.length){body.innerHTML='<tr><td colspan="16"><div class="rk-empty">No daily attendance rows for the selected filters.</div></td></tr>';return;}
+    body.innerHTML=rows.map(function(x){var r=summaryV10Row(x);return '<tr>'+r.map(function(v,i){var text=v==null||v===''?'—':String(v);if(i===11&&v){var code=escH(v);return '<td><span class="rk-attendance-code rk-code-'+code.replace(/[^a-z0-9_-]/gi,'').toLowerCase()+'">'+code+'</span></td>';}return '<td>'+escH(text)+'</td>';}).join('')+'</tr>';}).join('');
   }
-  function paintRekap() {
-    var body = document.getElementById('rkRekapBody'), ch = document.getElementById('rkRekapChips');
-    if (!body) return;
-    var list = rekapFiltered();
-    if (ch) {
-      var th = list.reduce(function (a, x) { return a + x.hadir; }, 0);
-      var tl = list.reduce(function (a, x) { return a + x.lengkap; }, 0);
-      var tc = list.reduce(function (a, x) { return a + x.cuti; }, 0);
-      var ta = list.reduce(function (a, x) { return a + x.alpha; }, 0);
-      var tw = list.reduce(function (a, x) { return a + x.hariKerja; }, 0);
-      var pct = tw ? Math.round(th / tw * 100) : 0;
-      ch.innerHTML =
-        '<span class="rk-chip">Employees <b>' + list.length + '</b></span>' +
-        '<span class="rk-chip">Present <b>' + th + '</b> days</span>' +
-        '<span class="rk-chip">Complete In+Out <b>' + tl + '</b></span>' +
-        '<span class="rk-chip">Time Off/Absence <b>' + tc + '</b></span>' +
-        '<span class="rk-chip">Alpha <b>' + ta + '</b></span>' +
-        '<span class="rk-chip">Average Attendance <b>' + pct + '%</b></span>';
-    }
-    if (!list.length) {
-      body.innerHTML = '<tr><td colspan="9"><div class="rk-empty">No attendance data for this period yet.</div></td></tr>';
-      return;
-    }
-    body.innerHTML = list.map(function (x) {
-      return '<tr><td>' + escH(x.nik) + '</td><td><b>' + escH(x.nama) + '</b></td><td>' + escH(x.bagian) + '</td>' +
-        '<td>' + x.hariKerja + '</td><td>' + x.hadir + '</td><td>' + x.lengkap + '</td><td>' + x.cuti + '</td><td>' + x.alpha + '</td>' +
-        '<td><span class="rk-pct">' + x.persen + '%</span></td></tr>';
-    }).join('');
-  }
-  function exportRekapCsv() {
-    var list = rekapFiltered();
-    if (!list.length) { rkToast('There is no data to export.'); return; }
-    var rows = [['NIK', 'Name', 'Department', 'Working Days', 'Present', 'Complete (In+Out)', 'Time Off/Absence', 'Absent', 'Attendance %']];
-    list.forEach(function (x) { rows.push([x.nik, x.nama, x.bagian, x.hariKerja, x.hadir, x.lengkap, x.cuti, x.alpha, x.persen + '%']); });
-    csvDownload('Rekap_Absensi_' + rekapUI.y + '_' + String(rekapUI.m).padStart(2, '0') + '.csv', rows);
-    rkToast('Attendance summary CSV downloaded.');
-  }
+  function exportAttendanceSummaryCsvV10(){var rows=summaryV10Filtered();if(!summaryV10.loaded||!rows.length){rkToast('There is no attendance summary data to export.');return;}var out=[summaryV10Headers()];rows.forEach(function(x){out.push(summaryV10Row(x));});csvDownload('Attendance_Summary_'+summaryV10.from+'_to_'+summaryV10.to+'.csv',out);rkToast('Attendance Summary CSV exported.');}
+  function exportAttendanceSummaryXlsxV10(){var rows=summaryV10Filtered();if(!summaryV10.loaded||!rows.length){rkToast('There is no attendance summary data to export.');return;}var out=[summaryV10Headers()];rows.forEach(function(x){out.push(summaryV10Row(x));});downloadXlsx('Attendance_Summary_'+summaryV10.from+'_to_'+summaryV10.to+'.xlsx','Attendance Summary',out);}
 
   /* ---------------- EMPLOYEE RECORDS: PRINTABLE PERSONAL FILE ---------------- */
   var pfileUI = { nik: '', extraByNik: Object.create(null), loadedByNik: Object.create(null), loadingByNik: Object.create(null) };
@@ -11701,7 +12067,7 @@ function showHrPlaceholder(title, group, description) {
         return;
       }
       list.innerHTML = items.map(function (n) {
-        var page = ['dash','emp','pfile','att','rekap','cuti','apr','face','loc','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
+        var page = ['dash','emp','pfile','att','rekap','cuti','apr','face','loc','attset','calendar','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
         return '<button type="button" class="rk-notif-item" data-rk-notif-page="' + page + '"' + (n.id ? ' data-rk-notif-id="' + escH(n.id) + '"' : '') + (n.kind ? ' data-rk-notif-kind="' + escH(n.kind) + '"' : '') +
           (n.kind && n.id ? ' data-rk-notif-anchor="rkApproval_' + escH(String(n.kind + '_' + n.id).replace(/[^A-Za-z0-9_-]/g, '_')) + '"' : '') + '>' +
           '<span class="rk-notif-item-ic ' + escH(n.tone || '') + '">' + escH(n.icon || '•') + '</span>' +
@@ -12279,6 +12645,95 @@ function showHrPlaceholder(title, group, description) {
 }
 @keyframes rkBellNudge { 0%,84%,100% { transform:rotate(0); } 87% { transform:rotate(10deg); } 90% { transform:rotate(-9deg); } 93% { transform:rotate(5deg); } 96% { transform:rotate(-3deg); } }
 @media (prefers-reduced-motion:reduce) { body.rh-desk-on #rkNotifToggle.has-notifications > svg { animation:none!important; } }
+</style>
+
+
+<style id="rh-attendance-dashboard-v9-css">
+@media (min-width:1024px) {
+  body.rh-desk-on [data-rk-dash-action="inout"],
+  body.rh-desk-on [data-rk-dash-action="attention"] {
+    position:relative; cursor:pointer; padding-bottom:29px!important;
+    border:1px solid #A8CEB5!important;
+    background:linear-gradient(145deg,#FFFFFF 0%,#F0F8F2 100%)!important;
+    box-shadow:0 4px 14px rgba(0,76,51,.07);
+    transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,background .18s ease;
+  }
+  body.rh-desk-on [data-rk-dash-action="inout"]:after,
+  body.rh-desk-on [data-rk-dash-action="attention"]:after {
+    content:'View details  ↗'; position:absolute; left:16px; bottom:10px;
+    color:#007850; font-size:10px; line-height:1; font-weight:800; letter-spacing:.02em;
+  }
+  body.rh-desk-on [data-rk-dash-action="attention"] {
+    border-color:#E7C69A!important; background:linear-gradient(145deg,#FFFFFF 0%,#FFFAF2 100%)!important;
+  }
+  body.rh-desk-on [data-rk-dash-action="attention"]:after { color:#9A6328; }
+  body.rh-desk-on [data-rk-dash-action="inout"]:hover,
+  body.rh-desk-on [data-rk-dash-action="attention"]:hover,
+  body.rh-desk-on [data-rk-dash-action="inout"]:focus-visible,
+  body.rh-desk-on [data-rk-dash-action="attention"]:focus-visible {
+    transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,76,51,.15); outline:none;
+  }
+  body.rh-desk-on [data-rk-dash-action="attention"]:hover,
+  body.rh-desk-on [data-rk-dash-action="attention"]:focus-visible { box-shadow:0 10px 24px rgba(154,99,40,.14); }
+  body.rh-desk-on .rk-timeoff-table td.rk-timeoff-request-id { font-weight:400!important; }
+  body.rh-desk-on .rk-att-monitor-toolbar { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:14px; margin-bottom:14px; }
+  body.rh-desk-on .rk-att-monitor-dates { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px; }
+  body.rh-desk-on .rk-att-monitor-dates label { display:flex; flex-direction:column; gap:5px; color:#4B6255; font-size:11px; font-weight:800; }
+  body.rh-desk-on .rk-att-monitor-dates input { width:155px; min-height:38px; }
+  body.rh-desk-on .rk-att-monitor-dates .rk-btn { min-height:38px; white-space:nowrap; }
+  body.rh-desk-on .rk-att-monitor-search { display:flex; gap:8px; align-items:center; }
+  body.rh-desk-on .rk-att-monitor-search input { width:min(320px,28vw); min-height:38px; }
+  body.rh-desk-on .rk-att-monitor-summary { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:15px; }
+  body.rh-desk-on .rk-att-monitor-stat { display:flex; flex-direction:column; gap:7px; border-radius:13px; border:1px solid #DDE9E0; padding:15px 16px; min-height:94px; background:#FFFFFF; box-shadow:0 3px 12px rgba(0,64,42,.045); }
+  body.rh-desk-on .rk-att-monitor-stat span { color:#65796D; font-size:11px; font-weight:800; }
+  body.rh-desk-on .rk-att-monitor-stat strong { color:#1F4532; font-size:27px; line-height:1; font-weight:800; }
+  body.rh-desk-on .rk-att-monitor-stat.green { border-top:3px solid #007850; }
+  body.rh-desk-on .rk-att-monitor-stat.amber { border-top:3px solid #B77932; background:linear-gradient(150deg,#FFF,#FFFBF5); }
+  body.rh-desk-on .rk-att-monitor-stat.blue { border-top:3px solid #4B83B5; }
+  body.rh-desk-on .rk-att-monitor-stat.red { border-top:3px solid #B64D3C; background:linear-gradient(150deg,#FFF,#FFFAF8); }
+  body.rh-desk-on .rk-att-monitor-stat.gray { border-top:3px solid #89968D; }
+  body.rh-desk-on .rk-att-monitor-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:13px; }
+  body.rh-desk-on .rk-att-monitor-title h3 { margin:0 0 4px; }
+  body.rh-desk-on .rk-att-monitor-records .rk-table-wrap { overflow:auto; max-height:calc(100vh - 345px); }
+  body.rh-desk-on .rk-att-monitor-table { min-width:1900px; font-size:11px; }
+  body.rh-desk-on .rk-att-monitor-table th { position:sticky; top:0; z-index:2; background:#F5F8F6; white-space:nowrap; }
+  body.rh-desk-on .rk-att-monitor-table td { vertical-align:middle; max-width:270px; }
+  body.rh-desk-on .rk-att-monitor-table td:nth-child(1) { min-width:170px; font-weight:700; }
+  body.rh-desk-on .rk-att-monitor-table td:nth-child(2),body.rh-desk-on .rk-att-monitor-table td:nth-child(3),body.rh-desk-on .rk-att-monitor-table td:nth-child(4),body.rh-desk-on .rk-att-monitor-table td:nth-child(5) { white-space:nowrap; }
+  body.rh-desk-on .rk-att-address { min-width:300px; max-width:400px!important; white-space:normal; overflow-wrap:anywhere; color:#596D60; }
+  body.rh-desk-on .rk-att-photo-link,body.rh-desk-on .rk-att-map-link { border:0; background:transparent; padding:0; margin:0; color:#5268C6; font:inherit; cursor:pointer; text-decoration:underline; white-space:nowrap; }
+  body.rh-desk-on .rk-att-photo-link:hover,body.rh-desk-on .rk-att-map-link:hover { color:#007850; }
+  body.rh-desk-on .rk-att-area-placeholder { color:#8B978F; font-size:10px; font-style:italic; }
+  body.rh-desk-on .rk-att-muted { color:#A0AAA3; }
+  body.rh-desk-on .rk-att-photo-shade { position:fixed; inset:0; z-index:10070; display:none; align-items:center; justify-content:center; padding:22px; background:rgba(15,38,28,.48); backdrop-filter:blur(3px); }
+  body.rh-desk-on .rk-att-photo-shade.on { display:flex; }
+  body.rh-desk-on .rk-att-photo-modal { position:relative; width:min(640px,calc(100vw - 44px)); max-height:88vh; overflow:auto; padding:24px; border:1px solid #D9E7DE; border-radius:16px; background:#FFFFFF; box-shadow:0 22px 60px rgba(0,43,29,.22); }
+  body.rh-desk-on .rk-att-photo-modal h3 { margin:0 40px 14px 0; color:#007850; }
+  body.rh-desk-on .rk-att-photo-modal img { display:block; max-width:100%; max-height:72vh; margin:0 auto; object-fit:contain; border-radius:8px; }
+}
+@media (max-width:1023.98px) { #rkAttPhotoShade { display:none!important; } }
+</style>
+
+
+<style id="rh-attendance-v10-desktop-css">
+@media (min-width:1024px) {
+ body.rh-desk-on .rk-att-summary-table { min-width: 1450px; }
+ body.rh-desk-on .rk-att-summary-table td, body.rh-desk-on .rk-att-summary-table th { white-space: nowrap; }
+ body.rh-desk-on .rk-attendance-code { display:inline-flex; align-items:center; justify-content:center; min-width:30px; padding:3px 8px; border-radius:7px; background:#E8F4EC; color:#006442; font-size:11px; font-weight:850; }
+ body.rh-desk-on .rk-attendance-code.rk-code-p { background:#FFF1DB; color:#925B18; }
+ body.rh-desk-on .rk-attendance-code.rk-code-ct { background:#E7EEF8; color:#2C5C8F; }
+ body.rh-desk-on .rk-att-time-warning { display:block; margin-top:3px; color:#A65A12; font-size:10px; font-weight:800; white-space:nowrap; }
+ body.rh-desk-on .rk-attset-form { display:grid; grid-template-columns:repeat(4,minmax(140px,1fr)); gap:12px; align-items:end; margin-top:14px; }
+ body.rh-desk-on .rk-attset-form > label { display:flex; flex-direction:column; gap:6px; min-width:0; color:#4B6255; font-size:11px; font-weight:800; }
+ body.rh-desk-on .rk-attset-form .rk-in { min-width:0; width:100%; min-height:38px; }
+ body.rh-desk-on .rk-attset-form .rk-rule-check { flex-direction:row; align-items:center; min-height:38px; gap:8px; }
+ body.rh-desk-on .rk-attset-form .rk-rule-check input { width:16px; height:16px; accent-color:#007850; }
+ body.rh-desk-on .rk-attset-wide { grid-column:span 2; }
+ body.rh-desk-on .rk-attset-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:end; }
+ body.rh-desk-on #rkRuleBody td, body.rh-desk-on #rkCalBody td { vertical-align:middle; }
+ body.rh-desk-on #rkRuleBody button { white-space:nowrap; }
+}
+@media (min-width:1024px) and (max-width:1250px) { body.rh-desk-on .rk-attset-form { grid-template-columns:repeat(3,minmax(130px,1fr)); } }
 </style>
 
 </body></html>
