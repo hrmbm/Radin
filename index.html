@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" =""="" =""><head>
+<meta name="reholz-release" content="v10.1-attendance-rpc-facecache-sw16">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -4329,7 +4330,8 @@ window.__APP_PREPARING_ASSETS = true;
 <script type="module">
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
-var APP_VERSION = '6.5-SUPABASE-REHOLZ-HRMSMBM-DESKTOP';
+var APP_VERSION = '6.5-SUPABASE-REHOLZ-HRMSMBM-DESKTOP'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
+var RH_HTML_RELEASE = 'v10.1-attendance-rpc-facecache-sw16';
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
 var FACE_API_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js';
 var FACE_MATCH_THRESHOLD = 0.55;
@@ -4708,7 +4710,11 @@ function setPrepProgress(p, t) {
 
 function registerAppServiceWorker() {
   if (!('serviceWorker' in navigator)) return Promise.resolve(false);
-  return navigator.serviceWorker.register('./sw.js', { scope: './' }).then(function() {
+  return navigator.serviceWorker.register('./sw.js', { scope: './', updateViaCache: 'none' }).then(function(registration) {
+    // Ask the browser to revalidate sw.js instead of trusting an old HTTP-cache copy.
+    try { if (registration && typeof registration.update === 'function') registration.update().catch(function() {}); } catch (e) {}
+    // The new worker self-activates; this message also helps older compatible workers.
+    try { if (registration && registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch (e) {}
     return Promise.race([
       navigator.serviceWorker.ready,
       new Promise(function(resolve) { setTimeout(function() { resolve(null); }, 2500); })
@@ -5112,11 +5118,24 @@ function FaceCacheHas(nik, ver) { return faceCacheHas(nik, ver); }
 function FaceCachePut(nik, ver, photo) { return faceCachePut(nik, ver, photo); }
 function FaceCacheAll() { return faceCacheAll(); }
 try {
-  window.FaceCacheGet = FaceCacheGet;
-  window.FaceCacheHas = FaceCacheHas;
-  window.FaceCachePut = FaceCachePut;
-  window.FaceCacheAll = FaceCacheAll;
-} catch (faceAliasError) {}
+  // Core logic runs as type=module, while the desktop console is a classic script.
+  // Export both historical spellings explicitly; module declarations are not window globals.
+  Object.assign(window, {
+    RHMediaCache: RHMediaCache,
+    faceCacheAll: faceCacheAll,
+    faceCacheHas: faceCacheHas,
+    faceCacheGet: faceCacheGet,
+    faceCachePut: faceCachePut,
+    faceCacheGetDesc: faceCacheGetDesc,
+    faceCachePutDesc: faceCachePutDesc,
+    FaceCacheGet: FaceCacheGet,
+    FaceCacheHas: FaceCacheHas,
+    FaceCachePut: FaceCachePut,
+    FaceCacheAll: FaceCacheAll,
+    // Compatibility with older desktop builds that used this exact casing.
+    Facecacheget: faceCacheGet
+  });
+} catch (faceAliasError) { console.warn('Face cache compatibility bridge:', faceAliasError); }
 
 function avaInner(nik, nama, ver) {
   var ph = faceCacheGet(nik, ver);
@@ -9134,15 +9153,27 @@ function showHrPlaceholder(title, group, description) {
 </div>
 
 <script id="rh-facecache-startup-shim">
-/* Prevent a startup race while the face-cache module is still initializing. */
+/* Compatibility bridge: the core is an ES module; desktop is a classic script. */
 (function (w) {
-  if (typeof w.FaceCacheGet !== 'function') {
-    w.FaceCacheGet = function (nik, ver) {
-      try { if (typeof w.faceCacheGet === 'function') return w.faceCacheGet(nik, ver); } catch (e) {}
-      try { if (w.RHMediaCache && typeof w.RHMediaCache.get === 'function') return w.RHMediaCache.get(nik, ver); } catch (e) {}
-      return null;
-    };
+  function fallbackGet(nik, ver) {
+    try { if (w.RHMediaCache && typeof w.RHMediaCache.get === 'function') return w.RHMediaCache.get(nik, ver); } catch (e) {}
+    return null;
   }
+  function fallbackHas(nik, ver) {
+    try { if (w.RHMediaCache && typeof w.RHMediaCache.has === 'function') return w.RHMediaCache.has(nik, ver); } catch (e) {}
+    return false;
+  }
+  function fallbackPut(nik, ver, photo) {
+    try { if (w.RHMediaCache && typeof w.RHMediaCache.put === 'function') return w.RHMediaCache.put(nik, ver, photo); } catch (e) {}
+  }
+  if (typeof w.faceCacheGet !== 'function') w.faceCacheGet = fallbackGet;
+  if (typeof w.facecacheget !== 'function') w.facecacheget = fallbackGet;
+  if (typeof w.Facecacheget !== 'function') w.Facecacheget = fallbackGet;
+  if (typeof w.faceCacheHas !== 'function') w.faceCacheHas = fallbackHas;
+  if (typeof w.faceCachePut !== 'function') w.faceCachePut = fallbackPut;
+  if (typeof w.FaceCacheGet !== 'function') w.FaceCacheGet = fallbackGet;
+  if (typeof w.FaceCacheHas !== 'function') w.FaceCacheHas = fallbackHas;
+  if (typeof w.FaceCachePut !== 'function') w.FaceCachePut = fallbackPut;
 })(window);
 </script>
 
@@ -10535,32 +10566,54 @@ function showHrPlaceholder(title, group, description) {
     body.innerHTML='<tr><td colspan="14"><div class="rk-loading">Loading attendance records...</div></td></tr>';
     var sub=document.getElementById('rkAttMonitorSub');if(sub)sub.textContent='Loading records from '+from+' to '+to+'…';
     if(btn){btn.disabled=true;btn.textContent='Loading…';}
-    var candidates=[
-      {name:'hr_get_attendance_monitoring',params:{p_start_date:from,p_end_date:to}},
-      {name:'hr_attendance_monitoring',params:{p_start_date:from,p_end_date:to}},
-      {name:'hr_attendance_range',params:{p_start_date:from,p_end_date:to}}
-    ];
-    if(from===to)candidates.push({name:'hr_attendance_today',params:{p_date:from}});
-    function tryCandidate(i){
-      if(i>=candidates.length)return Promise.resolve(null);
-      var c=candidates[i];
-      return rpcOptional(c.name,c.params).then(function(r){
-        if(attMonHasPayload(r)){attMonitorState.source=c.name;return r;}
-        return tryCandidate(i+1);
-      }).catch(function(){return tryCandidate(i+1);});
+    // Use the exact v10 RPC and surface the server error. The old fallback list
+    // could silently hide a missing function, permission issue, or schema-cache mismatch.
+    function requestAttendanceMonitoring() {
+      if (typeof window.getSb !== 'function') {
+        return Promise.reject(new Error('Supabase client bridge is unavailable. Reload the latest HTML and service worker.'));
+      }
+      var token = typeof window.getToken === 'function' ? String(window.getToken() || '') : '';
+      if (!token) return Promise.reject(new Error('Session token is missing. Please log out and log in again.'));
+      return Promise.resolve(window.getSb()).then(function(client) {
+        if (!client || typeof client.rpc !== 'function') throw new Error('Supabase client could not be initialized.');
+        return client.rpc('hr_get_attendance_monitoring', {
+          p_token: token,
+          p_start_date: from,
+          p_end_date: to
+        });
+      }).then(function(result) {
+        if (!result) throw new Error('The backend returned no response.');
+        if (result.error) {
+          var e = result.error;
+          var detail = e.message || 'Unknown RPC error';
+          if (e.code) detail += ' [' + e.code + ']';
+          if (/PGRST202|could not find the function|function .* does not exist/i.test(detail)) {
+            detail += '. Jalankan reholz_attendance_setup_v10.sql di Supabase SQL Editor, lalu tunggu schema cache dimuat ulang.';
+          } else if (/Unauthorized|Access denied|42501/i.test(detail)) {
+            detail += '. Pastikan akun memiliki role HR, ADMIN, atau SUPERADMIN dan sesi masih aktif.';
+          }
+          throw new Error(detail);
+        }
+        if (!attMonHasPayload(result.data)) throw new Error('RPC hr_get_attendance_monitoring returned an unexpected response shape.');
+        return result.data;
+      });
     }
-    tryCandidate(0).then(function(payload){
+    requestAttendanceMonitoring().then(function(payload){
+      attMonitorState.source='hr_get_attendance_monitoring';
       attMonitorState.payload=payload;
       attMonitorState.rows=attMonRows(payload)||[];
-      attMonitorState.loaded=!!payload;
+      attMonitorState.loaded=true;
       paintAttendanceMonitoringSummary(payload,attMonitorState.rows);
       paintAttendanceMonitoringRows();
       var st=document.getElementById('rkAttMonitorSub'),count=document.getElementById('rkAttMonitorCount');
-      if(st)st.textContent=payload ? ('Records for '+from+(from===to?'':' to '+to)+' · Source: '+attMonitorState.source) : 'Attendance monitoring data is not available. The backend needs hr_get_attendance_monitoring(start date, end date).';
+      if(st)st.textContent='Records for '+from+(from===to?'':' to '+to)+' · Source: '+attMonitorState.source;
       if(count)count.textContent=attMonitorState.rows.length+' records';
-    }).catch(function(){
-      attMonitorState.payload=null;attMonitorState.rows=[];attMonitorState.loaded=false;paintAttendanceMonitoringSummary(null,[]);paintAttendanceMonitoringRows();
-      var st=document.getElementById('rkAttMonitorSub');if(st)st.textContent='Attendance data could not be loaded. Please check the connection or backend monitoring RPC.';
+    }).catch(function(error){
+      attMonitorState.payload=null;attMonitorState.rows=[];attMonitorState.loaded=false;
+      paintAttendanceMonitoringSummary(null,[]);paintAttendanceMonitoringRows();
+      var st=document.getElementById('rkAttMonitorSub');
+      if(st)st.textContent='Attendance Monitoring gagal dimuat: '+(error&&error.message||String(error));
+      console.error('[ReHolz Attendance Monitoring] RPC failed:', error);
     }).then(function(){if(btn){btn.disabled=false;btn.textContent='Fetch Attendance';}});
   }
   function paintAttendanceMonitoringSummary(payload,rows) {
