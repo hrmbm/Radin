@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.8.0-approval-flow-sync">
+<meta name="app-release" content="v13.8.2-attendance-approval-detail-outcome-notifications">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -4082,8 +4082,8 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v13.8.0-approval-flow-sync';
-var RH_DISPLAY_VERSION = 'v13.6.3';
+var RH_HTML_RELEASE = 'v13.8.2-attendance-approval-detail-outcome-notifications';
+var RH_DISPLAY_VERSION = 'v13.8.2';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -5251,6 +5251,7 @@ async function api(fn, args, timeoutMs) {
   if (fn === 'getMasterCuti') return (await rpc('get_master_cuti', { p_token: getToken() })) || [];
   if (fn === 'getSisaCuti') return rpc('get_sisa_cuti', { p_token: getToken(), p_kode: args[1] || 'CT' });
   if (fn === 'getMyPendingRequests') return (await rpc('get_my_pending_requests', { p_token: getToken() })) || { absensi: [], cuti: [] };
+  if (fn === 'getMyNotifications') return (await rpc('get_my_notifications', { p_token: getToken() })) || { list: [] };
   if (fn === 'changeMyPassword') return rpc('change_my_password', { p_token: getToken(), p_old_pin: args[1], p_new_pin: args[2] });
   if (fn === 'simpanAbsensi') {
     var p = args[0] || {};
@@ -5470,7 +5471,6 @@ function doLogin() {
 }
 
 function doLogout() {
-  if (!confirm('Sign out of your account?')) return;
   SESSION_GEN++;
   resetRuntimeState();
   clearAllSession();
@@ -6901,7 +6901,7 @@ function openCutiDetail(id, fromAppr) {
   var canApproveAsSuperadmin = !!fromAppr && actorRole === 'SUPERADMIN' && managerApproved && finalPending;
   var isAppr = canApproveAsManager || canApproveAsSuperadmin;
   var waitingForManager = !!fromAppr && managerPending && (actorRole === 'SUPERADMIN' || actorRole === 'ADMIN') && !canApproveAsManager;
-  var html = '<div class="det-hero"><img src="' + (x.dokumenUrl ? driveThumb(x.dokumenUrl) : '') + '" onerror="this.parentNode.style.display=\'none\'" alt=""><div class="det-pill">' + statusPill(x.statusHR === 'PENDING' && x.statusAtasan === 'DISETUJUI' ? 'PENDING_HR' : (x.statusAtasan === 'PENDING' ? 'PENDING_ATASAN' : (x.statusAtasan === 'DITOLAK' || x.statusHR === 'DITOLAK' ? 'DITOLAK' : 'DISETUJUI'))) + '</div></div><div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(x.nik, x.nama, faceVerOf(x.nik)) + '>' + avaInner(x.nik, x.nama, faceVerOf(x.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(x.nama) + '</b><div class="sub">' + esc(x.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Requested time off</small><div><b>' + esc(x.keterangan) + '</b></div><div style="color:#555">' + esc(tglID(x.tanggalMulai)) + ' to ' + esc(tglID(x.tanggalSelesai)) + ' (' + x.totalHari + ' hr)</div></div><div class="det-row"><small>Reason</small><div>' + esc(x.alasan) + '</div></div>' + (x.delegateTo ? '<div class="det-row"><small>Delegate to</small><div>' + esc(x.delegateToName || x.delegateTo) + '</div></div>' : '<div class="det-row"><small>Delegate to</small><div>No delegate</div></div>') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlItem('base', 'Submitted by ' + esc(x.nama), x.waktuPengajuan || '') + (x.statusAtasan === 'PENDING' ? tlItem('wait', 'Pending Manager Approval', '') : x.statusAtasan === 'DISETUJUI' ? tlItem('ok', 'Approved by manager', '') : tlItem('no', 'Rejected by manager', x.alasanAtasan || '')) + (x.statusAtasan === 'DISETUJUI' ? (x.statusHR === 'PENDING' ? tlItem('wait', 'Pending Superadmin Approval', '') : x.statusHR === 'DISETUJUI' ? tlItem('ok', 'Approved by Superadmin', '') : tlItem('no', 'Rejected by Superadmin', x.alasanHR || '')) : '') + '</div></div>' + (waitingForManager ? '<div class="warn-banner" style="margin:0 0 14px;border-radius:10px"><span>Waiting for direct manager approval. You can review this request, but Approve/Reject will become available only after the manager updates its status.</span></div>' : '') + '<div class="field" id="cdNoteWrap" style="' + (isAppr ? '' : 'display:none') + '"><label>Note</label><input id="cdNote" placeholder="Optional"></div>' + (isAppr ? '<div class="det-actions"><button class="btn btn-blue" onclick="actCuti(\'' + x.id + '\',true)">Approve</button><button class="btn btn-ghost" onclick="actCuti(\'' + x.id + '\',false)">Reject</button></div>' : '') + '</div>';
+  var html = '<div class="det-hero"><img src="' + (x.dokumenUrl ? driveThumb(x.dokumenUrl) : '') + '" onerror="this.parentNode.style.display=\'none\'" alt=""><div class="det-pill">' + statusPill(x.statusHR === 'PENDING' && x.statusAtasan === 'DISETUJUI' ? 'PENDING_HR' : (x.statusAtasan === 'PENDING' ? 'PENDING_ATASAN' : (x.statusAtasan === 'DITOLAK' || x.statusHR === 'DITOLAK' ? 'DITOLAK' : 'DISETUJUI'))) + '</div></div><div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(x.nik, x.nama, faceVerOf(x.nik)) + '>' + avaInner(x.nik, x.nama, faceVerOf(x.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(x.nama) + '</b><div class="sub">' + esc(x.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Requested time off</small><div><b>' + esc(x.keterangan) + '</b></div><div style="color:#555">' + esc(tglID(x.tanggalMulai)) + ' to ' + esc(tglID(x.tanggalSelesai)) + ' (' + x.totalHari + ' hr)</div></div><div class="det-row"><small>Reason</small><div>' + esc(x.alasan) + '</div></div>' + (x.delegateTo ? '<div class="det-row"><small>Delegate to</small><div>' + esc(x.delegateToName || x.delegateTo) + '</div></div>' : '<div class="det-row"><small>Delegate to</small><div>No delegate</div></div>') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlItem('base', 'Submitted by ' + esc(x.nama), x.waktuPengajuan || '') + (x.statusAtasan === 'PENDING' ? tlItem('wait', 'Pending Manager Approval', '') : x.statusAtasan === 'DISETUJUI' ? tlItem('ok', 'Approved by manager', '') : tlItem('no', 'Rejected by manager', x.alasanAtasan || '')) + (x.statusAtasan === 'DISETUJUI' ? (x.statusHR === 'PENDING' ? tlItem('wait', 'Pending Superadmin Approval', '') : x.statusHR === 'DISETUJUI' ? tlItem('ok', 'Approved by Superadmin', '') : tlItem('no', 'Rejected by Superadmin', x.alasanHR || '')) : '') + '</div></div>' + (waitingForManager ? '<div class="warn-banner" style="margin:0 0 14px;border-radius:10px"><span>Waiting for direct manager approval. You can review this request, but Approve/Reject will become available only after the manager updates its status.</span></div>' : '') + '<div class="field" id="cdNoteWrap" style="' + (isAppr ? '' : 'display:none') + '"><label>Catatan (opsional)</label><input id="cdNote" placeholder="Catatan keputusan"></div>' + (isAppr ? '<div class="det-actions"><button class="btn btn-blue" onclick="actCuti(\'' + x.id + '\',true)">Approve</button><button class="btn btn-ghost" onclick="actCuti(\'' + x.id + '\',false)">Reject</button></div>' : '') + '</div>';
   $('cdetBody').innerHTML = html;
   go('s-cdet');
   saveDetailScreen('s-cdet', id);
@@ -6923,16 +6923,19 @@ function actCuti(id, approve) {
   if (!managerStage && !finalStage) { toast('You are not authorized for this approval stage.'); return; }
   var note = ($('cdNote') ? $('cdNote').value.trim() : '');
   if (!approve && !note) {
-    note = prompt('Rejection reason:') || '';
-    if (!note) return;
+    toast('Isi catatan penolakan.');
+    if ($('cdNote')) $('cdNote').focus();
+    return;
   }
-  if (approve && !confirm('Approve this time-off request?')) return;
   api('processCutiApproval', [S.user.role, S.user.nik, id, approve ? 'APPROVE' : 'REJECT', note]).then(function(r) {
     toast(r.message);
     logNotif(approve ? '✅ You approved the time-off request' : '❌ You rejected the time-off request');
-    refreshPending().then(function() {
-      go('s-inbox');
-      switchInboxTab(1);
+    return refreshPending().then(function() {
+      renderNotifs();
+      var latest = ((DATA.appr && DATA.appr.cuti) || []).find(function(row) { return String(row.id) === String(id); });
+      var nextStage = latest && (canActAsDirectManager(String(S.user && S.user.role || '').toUpperCase(), latest, 'cuti') || (String(S.user && S.user.role || '').toUpperCase() === 'SUPERADMIN' && /^(DISETUJUI|APPROVED)$/i.test(String(latest.statusAtasan || '')) && /^PENDING$/i.test(String(latest.statusHR || 'PENDING'))));
+      if (nextStage) openCutiDetail(id, true);
+      else { go('s-inbox'); switchInboxTab(1); }
     });
   }).catch(function(e) {
     if (e && e.message === 'STALE') return;
@@ -7642,8 +7645,21 @@ function logNotif(txt) {
 }
 
 function renderNotifs() {
-  loadMyRequests().then(function(r) {
+  Promise.all([
+    loadMyRequests(),
+    api('getMyNotifications', [], 20000).catch(function() { return { list: [] }; })
+  ]).then(function(results) {
+    var r = results[0] || { absensi: [], cuti: [] };
+    var notifResult = results[1] || {};
+    var outcomes = Array.isArray(notifResult) ? notifResult : (notifResult.list || notifResult.notifications || []);
     var items = [];
+    outcomes.forEach(function(n) {
+      var title = String(n.title || 'Hasil persetujuan');
+      var detail = String(n.detail || '');
+      if (/ditolak|rejected/i.test(title) && n.reason) detail += (detail ? ' • ' : '') + 'Alasan: ' + String(n.reason);
+      if (n.createdAt) detail += (detail ? ' • ' : '') + String(n.createdAt);
+      items.push({ ic: /ditolak|rejected/i.test(title) ? 'bell' : 'check', t: title, s: detail, outcome: true });
+    });
     (r.absensi || []).forEach(function(a) {
       items.push({ ic: 'absensi', t: 'Attendance request ' + (a.tipe === 'MASUK' ? 'clock in' : 'clock out') + ' pending approval', s: tglID(a.tanggal) + ' • ' + (a.jam || '').slice(0, 5), id: a.id });
     });
@@ -7661,7 +7677,7 @@ function renderNotifs() {
       return;
     }
     $('paneNotif').innerHTML = items.map(function(n) {
-      var click = n.id ? (' style="cursor:pointer" onclick="openAbsenDetail(\'' + n.id + '\',false)"') : '';
+      var click = n.id && !n.outcome ? (' style="cursor:pointer" onclick="openAbsenDetail(\'' + n.id + '\',false)"') : '';
       return '<div class="notif-item"' + click + '><div class="notif-ic">' + nIcon(n.ic) + '</div><div style="flex:1"><b>' + esc(n.t) + '</b><span>' + esc(n.s) + '</span></div></div>';
     }).join('');
   }).catch(function() {
@@ -7788,16 +7804,24 @@ function renderAbsenDetail(a, fromAppr) {
     hero = '<div class="det-hero"><div class="empty" style="padding-top:80px">No photo</div><div class="det-pill">' + statusPill(a.statusApproval) + '</div></div>';
   }
   var tlHtml = '';
+  var managerName = a.managerName || a.approvedByManager || 'manager';
+  var superadminName = a.superadminName || a.approvedByHR || 'Superadmin';
+  var managerAt = a.managerAt || a.approvalManagerAt || '';
+  var superadminAt = a.superadminAt || a.approvalHrAt || '';
   if (a.statusApproval === 'PENDING_ATASAN') {
     tlHtml = tlItem('wait', 'Pending Manager Approval', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   } else if (a.statusApproval === 'PENDING_HR') {
-    tlHtml = tlItem('wait', 'Pending Superadmin Approval', '') + tlItem('ok', 'Approved by manager', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
+    tlHtml = tlItem('wait', 'Pending Superadmin Approval', '') + tlItem('ok', 'Approved by ' + managerName, managerAt) + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   } else if (a.statusApproval === 'DISETUJUI') {
-    tlHtml = tlItem('ok', 'Approved by Superadmin', '') + tlItem('ok', 'Approved by manager', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
+    tlHtml = tlItem('ok', 'Approved by ' + superadminName, superadminAt) + tlItem('ok', 'Approved by ' + managerName, managerAt) + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
+  } else if (a.statusApproval === 'DITOLAK_ATASAN') {
+    tlHtml = tlItem('no', 'Rejected by manager', a.alasanApprovalAtasan || a.alasanApproval || '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
+  } else if (a.statusApproval === 'DITOLAK_HR') {
+    tlHtml = tlItem('no', 'Rejected by Superadmin', a.alasanApprovalHR || a.alasanApproval || '') + tlItem('ok', 'Approved by ' + managerName, managerAt) + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   } else {
     tlHtml = tlItem('no', 'Rejected', a.alasanApproval || '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   }
-  $('adetBody').innerHTML = hero + '<div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(a.nik, a.nama, faceVerOf(a.nik)) + '>' + avaInner(a.nik, a.nama, faceVerOf(a.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(a.nama) + '</b><div class="sub">' + esc(a.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Submitted online attendance</small><div><b>' + esc(tglID(a.tanggal)) + '</b></div><div style="color:#555">' + esc(a.tipe === 'MASUK' ? 'Clock in' : 'Clock out') + ': ' + (a.jam || '').slice(0, 5) + '</div></div><div class="det-row"><small>Reason</small><div>' + esc(alasan) + '</div></div>' + (a.latitude ? '<div class="det-row"><small>Location</small><a href="https://www.google.com/maps?q=' + a.latitude + ',' + a.longitude + '" target="_blank">View details</a></div>' : '') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlHtml + '</div></div><div class="field" id="adNoteWrap" style="' + (canAct ? '' : 'display:none') + '"><label>Note</label><input id="adNote" placeholder="Optional"></div>' + (canAct ? '<div class="det-actions"><button class="btn btn-blue" onclick="actAbsen(\'' + a.id + '\',true)">Approve</button><button class="btn btn-ghost" onclick="actAbsen(\'' + a.id + '\',false)">Reject</button></div>' : '') + '</div>';
+  $('adetBody').innerHTML = hero + '<div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(a.nik, a.nama, faceVerOf(a.nik)) + '>' + avaInner(a.nik, a.nama, faceVerOf(a.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(a.nama) + '</b><div class="sub">' + esc(a.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Submitted online attendance</small><div><b>' + esc(tglID(a.tanggal)) + '</b></div><div style="color:#555">' + esc(a.tipe === 'MASUK' ? 'Clock in' : 'Clock out') + ': ' + (a.jam || '').slice(0, 5) + '</div></div><div class="det-row"><small>Reason</small><div>' + esc(alasan) + '</div></div>' + (a.latitude ? '<div class="det-row"><small>Location</small><a href="https://www.google.com/maps?q=' + a.latitude + ',' + a.longitude + '" target="_blank">View details</a></div>' : '') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlHtml + '</div></div><div class="field" id="adNoteWrap" style="' + (canAct ? '' : 'display:none') + '"><label>Catatan (opsional)</label><input id="adNote" placeholder="Catatan keputusan"></div>' + (canAct ? '<div class="det-actions"><button class="btn btn-att-approve" onclick="actAbsen(\'' + a.id + '\',true)">Approve</button><button class="btn btn-att-reject" onclick="actAbsen(\'' + a.id + '\',false)">Reject</button></div>' : '') + '</div>';
   go('s-adet');
   hydrateFaces();
   if (a.latitude) setTimeout(function() { buildDetMap(a); }, 80);
@@ -7813,15 +7837,20 @@ function actAbsen(id, approve) {
   var returnToApproval = _backTo === 's-appr';
   var note = ($('adNote') ? $('adNote').value.trim() : '');
   if (!approve && !note) {
-    note = prompt('Rejection reason:') || '';
-    if (!note) return;
+    toast('Isi catatan penolakan.');
+    if ($('adNote')) $('adNote').focus();
+    return;
   }
-  if (approve && !confirm('Approve this attendance request?')) return;
   api('processApproval', [S.user.role, S.user.nik, id, approve ? 'APPROVE' : 'REJECT', note]).then(function(r) {
     toast(r.message);
     logNotif(approve ? '✅ You approved the attendance request' : '❌ You rejected the attendance request');
-    refreshPending().then(function() {
-      if (returnToApproval) { go('s-inbox'); switchInboxTab(1); openApprList('absensi'); }
+    return refreshPending().then(function() {
+      renderNotifs();
+      var latest = ((DATA.appr && DATA.appr.absensi) || []).find(function(row) { return String(row.id) === String(id); });
+      var latestRole = String(S.user && S.user.role || '').toUpperCase();
+      var nextStage = latest && ((String(latest.statusApproval || '').toUpperCase() === 'PENDING_ATASAN' && canActAsDirectManager(latestRole, latest, 'absensi')) || (latestRole === 'SUPERADMIN' && String(latest.statusApproval || '').toUpperCase() === 'PENDING_HR'));
+      if (returnToApproval && nextStage) openAbsenDetail(id, true);
+      else if (returnToApproval) { go('s-inbox'); switchInboxTab(1); openApprList('absensi'); }
       else { go('s-home'); }
     });
   }).catch(function(e) {
@@ -8169,7 +8198,9 @@ Object.assign(window, {
   S: S, DATA: DATA, api: api, esc: esc, initials: initials, toast: toast,
   tglID: tglID, todayISO: todayISO, getToken: getToken, getSb: getSb,
   hydrateFaces: hydrateFaces, faceWrap: faceWrap, avaInner: avaInner,
-  loadMyRequests: loadMyRequests, RHMediaCache: RHMediaCache
+  loadMyRequests: loadMyRequests, RHMediaCache: RHMediaCache,
+  // Module-scoped helper is explicitly exported for the classic-script desktop approval console.
+  canActAsDirectManager: canActAsDirectManager
 });
 
 
@@ -9522,7 +9553,7 @@ function showHrPlaceholder(title, group, description) {
   var empUI = { q: '', org: '', st: '', fullList: [], directoryError: '', selected: null, detailTab: 'personal', personalTab: 'basic', relationTab: 'approval', detailExtraByNik: Object.create(null), detailExtraLoadedByNik: Object.create(null), detailExtraLoadingByNik: Object.create(null), cacheAt: 0, loading: false };
   var attUI = { nik: '', y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
   var dashCache = { at: 0, employeeList: null };
-  var aprCache = { at: 0 };
+  var aprCache = { at: 0, absensi: [], cuti: [] };
 
   function isHR() { return !!(window.S && S.user && ['HR','ADMIN','SUPERADMIN'].indexOf(String(S.user.role || '').toUpperCase()) >= 0); }
   function escH(s) { try { return esc(s); } catch (e) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); } }
@@ -11378,14 +11409,16 @@ function showHrPlaceholder(title, group, description) {
   /* ---------------- PERSETUJUAN ---------------- */
   function renderAprPage(force) {
     var el = document.getElementById('rkp-apr');
-    if (!el) return;
-    if (!force && aprCache.at && (Date.now() - aprCache.at) < 30000 && el.dataset.filled === '1') return;
+    if (!el) return Promise.resolve(null);
+    if (!force && aprCache.at && (Date.now() - aprCache.at) < 30000 && el.dataset.filled === '1') return Promise.resolve({ absensi: aprCache.absensi || [], cuti: aprCache.cuti || [] });
     el.innerHTML = '<div class="rk-loading">Loading approvals...</div>';
-    api('getPendingApprovalsFull', [], 25000).then(function (r) {
+    return api('getPendingApprovalsFull', [], 25000).then(function (r) {
       aprCache.at = Date.now();
       el.dataset.filled = '1';
       var abs = (r && r.absensi) || [];
       var cut = (r && r.cuti) || [];
+      aprCache.absensi = abs.slice();
+      aprCache.cuti = cut.slice();
       var h = '';
       h += '<div class="rk-card" style="margin-bottom:16px"><h3>Pending Attendance (' + abs.length + ')</h3><div class="rk-card-sub">Attendance requests pending approval</div>';
       h += abs.length ? abs.map(function (x) { return aprItem(x, 'absen'); }).join('') : '<div class="rk-empty">No pending attendance requests.</div>';
@@ -11395,9 +11428,38 @@ function showHrPlaceholder(title, group, description) {
       h += '</div>';
       el.innerHTML = h;
       try { hydrateFaces(); } catch (e) {}
+      return r;
     }).catch(function (e) {
       el.innerHTML = '<div class="rk-empty">Failed to load: ' + escH(e && e.message || e) + '</div>';
+      return null;
     });
+  }
+
+  function desktopCanActAsDirectManager(role, row, kind) {
+    role = String(role || '').toUpperCase();
+    row = row || {};
+    // Prefer the shared canonical rule, but retain a local fallback because this console is
+    // a classic script and the core application helper is declared inside a module script.
+    if (typeof window.canActAsDirectManager === 'function') {
+      return window.canActAsDirectManager(role, row, kind);
+    }
+    var user = window.S && window.S.user ? window.S.user : null;
+    var actor = String(user && (user.nik || user.employee_id || user.employeeId) || '').trim().toUpperCase();
+    var keys = kind === 'absensi'
+      ? ['atasanId', 'atasan_id', 'managerEmployeeId', 'manager_employee_id']
+      : ['approvalLineId', 'approval_line_id', 'approvalLineID', 'atasanId', 'manager_employee_id'];
+    var manager = '';
+    for (var i = 0; i < keys.length; i++) {
+      if (row[keys[i]] !== undefined && row[keys[i]] !== null && String(row[keys[i]]).trim()) {
+        manager = String(row[keys[i]]).trim().toUpperCase();
+        break;
+      }
+    }
+    if (!manager && kind === 'cuti' && row.nik && typeof empFind === 'function') {
+      var requester = empFind(row.nik);
+      manager = String(requester && (requester.atasanId || requester.atasan_id || requester.managerEmployeeId || requester.manager_employee_id) || '').trim().toUpperCase();
+    }
+    return (role === 'KARYAWAN' || role === 'SUPERADMIN') && !!actor && !!manager && actor === manager;
   }
 
   function desktopCanActApprovalRow(kind, row) {
@@ -11407,11 +11469,11 @@ function showHrPlaceholder(title, group, description) {
     if (kind === 'cuti') {
       var managerStatus = String(row.statusAtasan || row.status_atasan || 'PENDING').toUpperCase();
       var finalStatus = String(row.statusHR || row.status_hr || 'PENDING').toUpperCase();
-      if (managerStatus === 'PENDING' && canActAsDirectManager(role, row, 'cuti')) return true;
+      if (managerStatus === 'PENDING' && desktopCanActAsDirectManager(role, row, 'cuti')) return true;
       return role === 'SUPERADMIN' && /^(DISETUJUI|APPROVED)$/.test(managerStatus) && finalStatus === 'PENDING';
     }
     var attendanceStatus = String(row.statusApproval || row.status_approval || '').toUpperCase();
-    if (attendanceStatus === 'PENDING_ATASAN') return canActAsDirectManager(role, row, 'absensi');
+    if (attendanceStatus === 'PENDING_ATASAN') return desktopCanActAsDirectManager(role, row, 'absensi');
     return role === 'SUPERADMIN' && attendanceStatus === 'PENDING_HR';
   }
 
@@ -11423,18 +11485,132 @@ function showHrPlaceholder(title, group, description) {
     var sub1 = kind === 'absen'
       ? [x.tanggal, x.tipe, x.jam].filter(Boolean).join(' • ')
       : [(x.tanggalMulai || x.mulai), 'to', (x.tanggalSelesai || x.selesai), x.kode ? '(' + x.kode + ')' : ''].filter(Boolean).join(' ');
-    var alasan = x.alasan || x.catatan || '';
+    var rowStatus = String(kind === 'absen' ? (x.statusApproval || x.status_approval || '') : ((x.statusAtasan || x.status_atasan || 'PENDING') + '/' + (x.statusHR || x.status_hr || 'PENDING'))).toUpperCase();
+    var isRejected = /DITOLAK|REJECTED/.test(rowStatus);
+    var alasan = isRejected ? (kind === 'absen' ? (x.alasanApprovalHR || x.alasanApprovalAtasan || x.alasanApproval || '') : (x.alasanAtasan || x.alasanHR || '')) : '';
     var _av = x.faceVer || (DATA.faceVer || {})[nik] || 0;
     var ava = nik ? '<span class="rk-ava"' + faceWrap(nik, nama, _av) + '>' + avaHtml(nik, nama, _av) + '</span>' : '';
     var canAct = desktopCanActApprovalRow(kind, x);
-    var actionButtons = canAct
-      ? '<button class="rk-mini primary" onclick="RHDeskApi.approve(\'' + kind + '\',\'' + escH(id) + '\')">Approve</button>' +
-        '<button class="rk-mini danger" onclick="RHDeskApi.reject(\'' + kind + '\',\'' + escH(id) + '\')">Reject</button>'
-      : '<span class="rk-muted">' + (String(S.user && S.user.role || '').toUpperCase() === 'ADMIN' ? 'View only' : 'Not assigned to this approval stage') + '</span>';
+    var stageText = kind === 'absen'
+      ? (String(x.statusApproval || x.status_approval || '').toUpperCase() === 'PENDING_ATASAN' ? 'Pending manager approval' : 'Pending Superadmin approval')
+      : (/^PENDING\//.test(rowStatus) ? 'Pending manager approval' : (/^(DISETUJUI|APPROVED)\/PENDING$/.test(rowStatus) ? 'Pending Superadmin approval' : rowStatus));
+    var actionButtons = kind === 'absen'
+      ? '<button class="rk-mini primary" onclick="RHDeskApi.attendanceDetail(\'' + escH(id) + '\')">Details</button>'
+      : (canAct
+        ? '<button class="rk-mini primary" onclick="RHDeskApi.approve(\'' + kind + '\',\'' + escH(id) + '\')">Approve</button>' +
+          '<button class="rk-mini danger" onclick="RHDeskApi.reject(\'' + kind + '\',\'' + escH(id) + '\')">Reject</button>'
+        : '<span class="rk-muted">' + (String(S.user && S.user.role || '').toUpperCase() === 'ADMIN' ? 'View only' : 'Not assigned to this approval stage') + '</span>');
     return '<div class="rk-appr-item" id="' + anchorId + '">' + ava +
       '<div class="b"><b>' + escH(nama) + '</b> <span style="color:#5E6E63;font-size:12px">(' + escH(nik) + ')</span>' +
-      '<div class="s">' + escH(sub1) + (alasan ? ' — ' + escH(alasan) : '') + '</div></div>' + actionButtons +
+      '<div class="s">' + escH(sub1) + (alasan ? ' — ' + escH(alasan) : '') + '</div><small class="rk-appr-stage">' + escH(stageText) + '</small></div>' + actionButtons +
       '</div>';
+  }
+
+  function openDesktopAttendanceDetail(id) {
+    function findRow() { return (aprCache.absensi || []).find(function (row) { return String(row.id || row.absensiId || row.requestId || '') === String(id); }); }
+    function show(row) {
+      if (!row) { rkToast('Pengajuan absensi tidak ditemukan pada antrean terbaru.'); return; }
+      var shade = document.getElementById('rkAttApprovalShade');
+      if (!shade) {
+        shade = document.createElement('div');
+        shade.id = 'rkAttApprovalShade'; shade.className = 'rk-att-approval-shade';
+        shade.innerHTML = '<section class="rk-att-approval-panel" role="dialog" aria-modal="true" aria-labelledby="rkAttApprovalTitle"><header class="rk-att-approval-head"><h2 id="rkAttApprovalTitle">Online attendance request</h2><button type="button" data-att-close aria-label="Tutup">×</button></header><div id="rkAttApprovalContent"></div></section>';
+        document.body.appendChild(shade);
+        shade.addEventListener('click', function (ev) {
+          var close = ev.target.closest && ev.target.closest('[data-att-close]');
+          if (ev.target === shade || close) { shade.classList.remove('on'); return; }
+          var action = ev.target.closest && ev.target.closest('[data-att-detail-action]');
+          if (action) submitDesktopAttendanceAction(shade.dataset.requestId, action.getAttribute('data-att-detail-action'));
+        });
+        shade.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') shade.classList.remove('on'); });
+      }
+      shade.dataset.requestId = String(row.id || id);
+      var status = String(row.statusApproval || row.status_approval || 'PENDING_ATASAN').toUpperCase();
+      var canAct = desktopCanActApprovalRow('absen', row);
+      var requester = typeof empFind === 'function' ? empFind(row.nik || row.employeeId || '') : null;
+      var managerName = String(row.managerName || row.approvedByManager || (requester && (requester.atasanNama || (empManagerOf(requester) || {}).nama)) || 'Atasan langsung');
+      var finalName = String(row.superadminName || row.approvedByHR || 'Superadmin');
+      var whenManager = typeof desktopCutiStageTime === 'function' ? desktopCutiStageTime(row.managerAt || row.approval_manager_at || '') : String(row.managerAt || '');
+      var whenFinal = typeof desktopCutiStageTime === 'function' ? desktopCutiStageTime(row.superadminAt || row.approval_hr_at || '') : String(row.superadminAt || '');
+      var submitted = String(row.waktuPengajuan || '');
+      var rejectReason = status === 'DITOLAK_ATASAN' ? (row.alasanApprovalAtasan || row.alasanApproval || '') : (status === 'DITOLAK_HR' ? (row.alasanApprovalHR || row.alasanApproval || '') : '');
+      var timeline = '';
+      if (status === 'PENDING_ATASAN') timeline = '<div class="rk-att-tl-item pending"><i>⌛</i><span><b>Pending Manager Approval</b></span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Submitted by ' + escH(row.nama || row.nik || 'Employee') + '</b><small>' + escH(submitted) + '</small></span></div>';
+      else if (status === 'PENDING_HR') timeline = '<div class="rk-att-tl-item pending"><i>⌛</i><span><b>Pending Superadmin Approval</b></span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Approved by ' + escH(managerName) + '</b><small>' + escH(whenManager) + '</small></span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Submitted by ' + escH(row.nama || row.nik || 'Employee') + '</b><small>' + escH(submitted) + '</small></span></div>';
+      else if (status === 'DISETUJUI') timeline = '<div class="rk-att-tl-item done"><i>●</i><span><b>Approved by ' + escH(finalName) + '</b><small>' + escH(whenFinal) + '</small></span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Approved by ' + escH(managerName) + '</b><small>' + escH(whenManager) + '</small></span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Submitted by ' + escH(row.nama || row.nik || 'Employee') + '</b><small>' + escH(submitted) + '</small></span></div>';
+      else if (status === 'DITOLAK_ATASAN') timeline = '<div class="rk-att-tl-item rejected"><i>×</i><span><b>Rejected by manager</b>' + (rejectReason ? '<small>' + escH(rejectReason) + '</small>' : '') + '</span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Submitted by ' + escH(row.nama || row.nik || 'Employee') + '</b><small>' + escH(submitted) + '</small></span></div>';
+      else if (status === 'DITOLAK_HR') timeline = '<div class="rk-att-tl-item rejected"><i>×</i><span><b>Rejected by Superadmin</b>' + (rejectReason ? '<small>' + escH(rejectReason) + '</small>' : '') + '</span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Approved by ' + escH(managerName) + '</b><small>' + escH(whenManager) + '</small></span></div><div class="rk-att-tl-item done"><i>●</i><span><b>Submitted by ' + escH(row.nama || row.nik || 'Employee') + '</b><small>' + escH(submitted) + '</small></span></div>';
+      var lat = Number(row.latitude), lon = Number(row.longitude), haveCoords = Number.isFinite(lat) && Number.isFinite(lon) && (lat !== 0 || lon !== 0);
+      var bbox = haveCoords ? [lon - 0.008, lat - 0.006, lon + 0.008, lat + 0.006].join('%2C') : '';
+      var map = haveCoords ? '<iframe title="Attendance location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&amp;layer=mapnik&amp;marker=' + encodeURIComponent(lat) + '%2C' + encodeURIComponent(lon) + '"></iframe><a class="rk-att-map-link" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat=' + encodeURIComponent(lat) + '&amp;mlon=' + encodeURIComponent(lon) + '#map=17/' + encodeURIComponent(lat) + '/' + encodeURIComponent(lon) + '">View larger map ↗</a>' : '<div class="rk-att-map-empty">Location is not available for this request.</div>';
+      var avatar = requester && typeof empAvatarMarkup === 'function' ? empAvatarMarkup(requester, false) : '<div class="rk-att-avatar-fallback">' + escH(String(row.nama || 'E').slice(0,1)) + '</div>';
+      var reason = typeof alasanOf === 'function' ? alasanOf(row) : String(row.catatan || row.address || '—');
+      var locationText = String(row.address || row.branchTarget || '').trim();
+      if (/^📝/.test(locationText)) locationText = String(row.branchTarget || '').trim();
+      var html = '<div class="rk-att-approval-layout"><div class="rk-att-approval-visual"><div class="rk-att-approval-map">' + map + '</div><div class="rk-att-approval-photo" id="rkAttApprovalPhotoBox"><div class="rk-att-photo-empty">Evidence photo not available.</div></div></div><div class="rk-att-approval-body"><div class="rk-att-person">' + avatar + '<div><b>' + escH(row.nama || '—') + '</b><small>' + escH(row.nik || row.employeeId || '') + '</small></div><span class="rk-pill ' + (/DITOLAK/.test(status) ? 'no' : status === 'DISETUJUI' ? 'ok' : 'warn') + '">' + escH(status.replace(/_/g, ' ')) + '</span></div>' +
+        '<div class="rk-att-fields">' +
+        '<div><small>REQUEST ID</small><span>' + escH(row.id || id) + '</span></div>' +
+        '<div><small>REQUESTED DATE</small><span>' + escH(submitted || '—') + '</span></div>' +
+        '<div><small>ATTENDANCE</small><span>' + escH(row.tipe === 'MASUK' ? 'Clock in' : (row.tipe === 'PULANG' ? 'Clock out' : row.tipe || '—')) + '</span></div>' +
+        '<div><small>ATTENDANCE DATE / TIME</small><span>' + escH(row.tanggal || '—') + ' · ' + escH(String(row.jam || '').slice(0,5) || '—') + '</span></div>' +
+        '<div><small>LOCATION</small><span>' + escH(locationText || '—') + '</span></div>' +
+        '<div class="rk-att-reason"><small>REASON</small><span>' + escH(reason || '—') + '</span></div></div>' +
+        '<div class="rk-att-status-title">Request status</div><div class="rk-att-timeline">' + timeline + '</div>' +
+        (canAct ? '<div class="rk-att-note-wrap"><label for="rkAttApprovalNote">Catatan (opsional)</label><textarea id="rkAttApprovalNote" rows="3" placeholder="Catatan keputusan"></textarea></div><div class="rk-att-actions"><button type="button" class="approve" data-att-detail-action="APPROVE">Approve</button><button type="button" class="reject" data-att-detail-action="REJECT">Reject</button></div>' : '') +
+        '</div></div>';
+      document.getElementById('rkAttApprovalContent').innerHTML = html;
+      shade.classList.add('on');
+      try { hydrateFaces(); } catch (_) {}
+      var photoBox = document.getElementById('rkAttApprovalPhotoBox');
+      var photoSource = String(row.fotoUrl || row.foto_url || row.foto_path || row.storage_path || '').trim();
+      if (photoBox && photoSource) {
+        photoBox.innerHTML = '<div class="rk-att-photo-empty">Loading evidence photo…</div>';
+        resolveEvidenceDisplayUrl(photoSource).then(function (url) {
+          if (!photoBox.isConnected || String(shade.dataset.requestId) !== String(row.id || id)) return;
+          photoBox.innerHTML = '<img id="rkAttApprovalPhoto" alt="Attendance evidence photo">';
+          var img = photoBox.querySelector('img'); img.src = driveThumb(url);
+          img.onerror = function () { photoBox.innerHTML = '<div class="rk-att-photo-empty">Evidence photo could not be loaded.</div>'; };
+        }).catch(function () { if (photoBox.isConnected && String(shade.dataset.requestId) === String(row.id || id)) photoBox.innerHTML = '<div class="rk-att-photo-empty">Evidence photo could not be loaded.</div>'; });
+      }
+    }
+    var row = findRow();
+    if (row) { show(row); return; }
+    api('getPendingApprovalsFull', [], 25000).then(function (r) {
+      aprCache.absensi = (r && r.absensi) || []; aprCache.cuti = (r && r.cuti) || []; aprCache.at = Date.now();
+      show(findRow());
+    }).catch(function (e) { rkToast('Unable to load attendance request: ' + (e && e.message || e)); });
+  }
+
+  function submitDesktopAttendanceAction(id, action) {
+    if (window.isAdminReadOnly && window.isAdminReadOnly()) { rkToast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
+    if (action !== 'APPROVE' && action !== 'REJECT') { rkToast('Invalid approval action.'); return; }
+    var noteEl = document.getElementById('rkAttApprovalNote');
+    var note = noteEl ? String(noteEl.value || '').trim() : '';
+    if (action === 'REJECT' && !note) { rkToast('Isi catatan penolakan.'); if (noteEl) noteEl.focus(); return; }
+    var shade = document.getElementById('rkAttApprovalShade');
+    if (shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-att-detail-action]'), function (btn) { btn.disabled = true; });
+    api('getPendingApprovalsFull', [], 25000).then(function (queue) {
+      queue = queue || {};
+      aprCache.absensi = queue.absensi || []; aprCache.cuti = queue.cuti || [];
+      var target = aprCache.absensi.find(function (row) { return String(row.id || row.absensiId || row.requestId || '') === String(id); });
+      if (!target || !desktopCanActApprovalRow('absen', target)) throw new Error('Tahap persetujuan sudah berubah atau Anda bukan approver yang ditugaskan.');
+      return api('processApproval', [null, null, id, action, note], 25000);
+    }).then(function (result) {
+      rkToast((result && result.message) || (action === 'APPROVE' ? 'Attendance request approved.' : 'Attendance request rejected.'));
+      aprCache.at = 0;
+      return Promise.all([
+        renderAprPage(true).catch(function () { return null; }),
+        renderDeskNotifications().catch(function () { return null; }),
+        Promise.resolve(refreshBadge()).catch(function () { return null; })
+      ]).then(function () {
+        var latest = (aprCache.absensi || []).find(function (row) { return String(row.id || row.absensiId || row.requestId || '') === String(id); });
+        if (latest && desktopCanActApprovalRow('absen', latest)) openDesktopAttendanceDetail(id);
+        else if (shade) shade.classList.remove('on');
+      });
+    }).catch(function (e) {
+      if (shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-att-detail-action]'), function (btn) { btn.disabled = false; });
+      rkToast('Unable to update attendance request: ' + (e && e.message || e));
+    });
   }
 
   function aprAct(kind, id, action) {
@@ -11450,7 +11626,7 @@ function showHrPlaceholder(title, group, description) {
       }
       var alasan = '';
       if (action === 'REJECT') {
-        alasan = prompt('Rejection reason (required):') || '';
+        alasan = prompt('Catatan penolakan (wajib):') || '';
         if (!alasan.trim()) return { cancelled: true };
       }
       var fn = kind === 'cuti' ? 'processCutiApproval' : 'processApproval';
@@ -11460,14 +11636,9 @@ function showHrPlaceholder(title, group, description) {
       var r = out.result;
       rkToast((r && r.message) || (action === 'APPROVE' ? 'Approved.' : 'Rejected.'));
       aprCache.at = 0;
-      renderAprPage(true);
-      refreshBadge();
-      if (kind === 'cuti') {
-        cutiUI.data = null;
-        loadCutiData(true).then(function () { renderDeskNotifications(); }).catch(function () { renderDeskNotifications(); });
-      } else {
-        renderDeskNotifications();
-      }
+      var jobs = [renderAprPage(true).catch(function () { return null; }), Promise.resolve(refreshBadge()).catch(function () { return null; }), renderDeskNotifications().catch(function () { return null; })];
+      if (kind === 'cuti') { cutiUI.data = null; jobs.push(loadCutiData(true).catch(function () { return null; })); }
+      return Promise.all(jobs);
     }).catch(function (e) { rkToast('❌ ' + (e && e.message || e)); });
   }
 
@@ -12283,9 +12454,9 @@ function showHrPlaceholder(title, group, description) {
     var superadminClass=hrApproved?'done':hrRejected?'rejected':(managerApproved?'pending':'waiting');
     var managerClass=managerApproved?'done':managerRejected?'rejected':'pending';
     var timeline = '<div class="rk-cuti-status-timeline rk-cuti-timeline-up">' +
-      stage(superadminClass,superadminLabel,superadminAt,hrApproved||hrRejected ? x.alasanHR : '') +
+      stage(superadminClass,superadminLabel,superadminAt,hrRejected ? x.alasanHR : '') +
       upArrow() +
-      stage(managerClass,managerLabel,managerAt,managerApproved||managerRejected ? x.alasanAtasan : '') +
+      stage(managerClass,managerLabel,managerAt,managerRejected ? x.alasanAtasan : '') +
       upArrow() +
       stage('done','Requested by ' + (x.nama||person.nama||nik||'Employee'),requestedAt,'') +
       '</div>';
@@ -12308,7 +12479,7 @@ function showHrPlaceholder(title, group, description) {
           '</div>' +
           '<div class="rk-cuti-detail-block rk-cuti-reason"><label>Reason</label><p>'+escH(x.alasan||'—')+'</p></div>' +
           '<div class="rk-cuti-detail-block rk-cuti-status-block"><label>Request status</label>'+timeline+'</div>' +
-          (canAct ? '<div class="rk-cuti-approval-box rk-cuti-approval-inline"><div class="rk-cuti-approval-input"><label for="rkCutiSuperadminNote">Catatan keputusan (opsional saat menyetujui)</label><textarea id="rkCutiSuperadminNote" class="rk-in rk-cuti-note" rows="2" placeholder="Tulis catatan keputusan…"></textarea></div><div class="rk-cuti-detail-actions"><button type="button" class="rk-btn" data-cuti-detail-action="APPROVE">Approve</button><button type="button" class="rk-btn danger" data-cuti-detail-action="REJECT">Reject</button></div></div>' : '<div class="rk-cuti-detail-wait">'+(managerRejected ? 'Pengajuan ditolak oleh atasan langsung.' : (!managerApproved ? 'Menunggu keputusan atasan langsung. Hanya atasan yang ditetapkan pada data karyawan dapat menyetujui tahap ini.' : (hrApproved||hrRejected ? 'Pengajuan telah diproses oleh Superadmin.' : 'Menunggu keputusan Superadmin.')))+'</div>') +
+          (canAct ? '<div class="rk-cuti-approval-box rk-cuti-approval-inline"><div class="rk-cuti-approval-input"><label for="rkCutiSuperadminNote">Catatan (opsional)</label><textarea id="rkCutiSuperadminNote" class="rk-in rk-cuti-note" rows="2" placeholder="Tulis catatan keputusan…"></textarea></div><div class="rk-cuti-detail-actions"><button type="button" class="rk-btn" data-cuti-detail-action="APPROVE">Approve</button><button type="button" class="rk-btn danger" data-cuti-detail-action="REJECT">Reject</button></div></div>' : '<div class="rk-cuti-detail-wait">'+(managerRejected ? 'Pengajuan ditolak oleh atasan langsung.' : (!managerApproved ? 'Menunggu keputusan atasan langsung. Hanya atasan yang ditetapkan pada data karyawan dapat menyetujui tahap ini.' : (hrApproved||hrRejected ? 'Pengajuan telah diproses oleh Superadmin.' : 'Menunggu keputusan Superadmin.')))+'</div>') +
         '</section>' +
       '</div>';
     document.getElementById('rkCutiDetailContent').innerHTML=html;
@@ -12372,18 +12543,22 @@ function showHrPlaceholder(title, group, description) {
     var stage=x ? desktopCutiActionStage(x) : '';
     if(!x || !stage){rkToast('You are not authorized for the current approval stage. Refresh the request and try again.');return;}
     var note=(document.getElementById('rkCutiSuperadminNote')||{}).value||'';
-    if(action==='REJECT'&&!note.trim()){rkToast('Please enter a rejection reason before rejecting this request.');return;}
+    if(action==='REJECT'&&!note.trim()){rkToast('Isi catatan penolakan.');var rejectNote=document.getElementById('rkCutiSuperadminNote');if(rejectNote)rejectNote.focus();return;}
     if(action!=='APPROVE' && action!=='REJECT'){rkToast('Invalid approval action.');return;}
-    if(!confirm((action==='APPROVE'?'Approve':'Reject')+' this time-off request?'))return;
     var shade=document.getElementById('rkCutiDetailShade');
     if(shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-cuti-detail-action]'),function(btn){btn.disabled=true;});
     api('processCutiApproval',[S.user.role,S.user.nik,id,action,note.trim()],25000).then(function(r){
       rkToast((r&&r.message)||(action==='APPROVE'?'Time-off request approved.':'Time-off request rejected.'));
       aprCache.at=0;refreshBadge();cutiUI.data=null;
-      return loadCutiData(true).then(function(){
-        renderDeskNotifications();
+      return Promise.all([
+        loadCutiData(true).catch(function(){return null;}),
+        renderAprPage(true).catch(function(){return null;}),
+        Promise.resolve(refreshBadge()).catch(function(){return null;}),
+        Promise.resolve(renderDeskNotifications()).catch(function(){return null;})
+      ]).then(function(){
         var latest=(cutiUI.data||[]).find(function(row){return String(row.id)===String(id);});
-        if(latest) openDesktopCutiDetail(id);
+        var queued=(aprCache.cuti||[]).find(function(row){return String(row.id)===String(id);});
+        if(latest && queued && desktopCutiActionStage(latest)) openDesktopCutiDetail(id);
         else if(shade) shade.classList.remove('on');
       });
     }).catch(function(e){
@@ -13124,7 +13299,7 @@ function showHrPlaceholder(title, group, description) {
     var list = document.getElementById('rkNotifList');
     var badge = document.getElementById('rkNotifBadge');
     var summary = document.getElementById('rkNotifSummary');
-    if (!list) return;
+    if (!list) return Promise.resolve(null);
     deskNotifTimeOffRows = Object.create(null);
     list.innerHTML = '<div class="rk-notif-empty">Memuat notifikasi...</div>';
     var requestPromise = (typeof window.loadMyRequests === 'function')
@@ -13133,10 +13308,20 @@ function showHrPlaceholder(title, group, description) {
     var approvalPromise = isHR()
       ? api('getPendingApprovalsFull', [], 20000).catch(function () { return null; })
       : Promise.resolve(null);
-    Promise.all([requestPromise, approvalPromise]).then(function (results) {
+    var outcomePromise = api('getMyNotifications', [], 20000).catch(function () { return { list: [] }; });
+    return Promise.all([requestPromise, approvalPromise, outcomePromise]).then(function (results) {
       var requests = results[0] || DATA.myReq || {};
       var approvals = results[1] || {};
-      var items = [];
+      var outcomeResult = results[2] || {};
+      var outcomes = Array.isArray(outcomeResult) ? outcomeResult : (outcomeResult.list || outcomeResult.notifications || []);
+      var items = [], outcomeItems = [];
+      outcomes.forEach(function (n) {
+        var title = String(n.title || 'Hasil persetujuan');
+        var detail = String(n.detail || '');
+        if (/ditolak|rejected/i.test(title) && n.reason) detail += (detail ? ' · ' : '') + 'Alasan: ' + String(n.reason);
+        if (n.createdAt) detail += (detail ? ' · ' : '') + String(n.createdAt);
+        outcomeItems.push({ icon: /ditolak|rejected/i.test(title) ? '×' : '✓', tone: /ditolak|rejected/i.test(title) ? 'amber' : '', title: title, detail: detail, page: n.kind === 'absen' ? 'att' : 'cuti' });
+      });
       (requests.absensi || []).forEach(function (a) {
         items.push({
           icon: '◷', tone: 'blue', title: 'Pengajuan absensi menunggu persetujuan',
@@ -13181,6 +13366,7 @@ function showHrPlaceholder(title, group, description) {
       }
       // Most recent local messages first, with active/pending requests and approvals still included.
       items.reverse();
+      items = outcomeItems.concat(items);
       if (badge) {
         badge.textContent = items.length > 99 ? '99+' : String(items.length);
         badge.style.display = items.length ? 'inline-flex' : 'none';
@@ -13193,7 +13379,7 @@ function showHrPlaceholder(title, group, description) {
       if (summary) summary.textContent = items.length ? items.length + ' pembaruan dan item menunggu' : 'Tidak ada pembaruan baru';
       if (!items.length) {
         list.innerHTML = '<div class="rk-notif-empty">Tidak ada notifikasi saat ini.</div>';
-        return;
+        return null;
       }
       list.innerHTML = items.map(function (n) {
         var page = ['dash','emp','pfile','att','rekap','cuti','timeoffRequest','timeoff-detail','apr','loc','attset','calendar','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
@@ -13360,8 +13546,9 @@ function showHrPlaceholder(title, group, description) {
     empDeactivate: function (nik) { try { karDeactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
     empReactivate: function (nik) { try { karReactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
     empResetPin: function (nik) { try { karResetPin(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
-    approve: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
-    reject: function (kind, id) { aprAct(kind, id, 'REJECT'); },
+    approve: function (kind, id) { if (kind === 'absen') openDesktopAttendanceDetail(id); else aprAct(kind, id, 'APPROVE'); },
+    reject: function (kind, id) { if (kind === 'absen') openDesktopAttendanceDetail(id); else aprAct(kind, id, 'REJECT'); },
+    attendanceDetail: function (id) { openDesktopAttendanceDetail(id); },
     rkToggleGroup: function (btn) { var g = btn && btn.parentNode; if (g && g.classList) g.classList.toggle('closed'); },
     changePin: function () { submitDesktopPinChange(); },
     userSetRole: function (nik) { userSetRole(nik); },
@@ -14513,6 +14700,62 @@ body.rh-desk-on .rk-cuti-detail-actions button:disabled {
   .det-actions { display:flex; gap:10px; flex-wrap:wrap; }
   .det-actions button { min-width:104px; min-height:40px; border-radius:6px; font-weight:600; }
 }
+</style>
+
+
+<style id="rh-v13-8-2-desktop-attendance-approval">
+@media (min-width:1024px) {
+  body.rh-desk-on .rk-att-approval-shade { position:fixed; inset:0; z-index:1500; display:none; align-items:center; justify-content:center; padding:22px; background:rgba(19,35,27,.48); backdrop-filter:blur(3px); }
+  body.rh-desk-on .rk-att-approval-shade.on { display:flex; animation:rkModalShadeIn .16s ease-out; }
+  body.rh-desk-on .rk-att-approval-panel { width:min(1220px,calc(100vw - 44px)); max-height:calc(100vh - 44px); overflow:hidden; background:#fff; border:1px solid #D8E3DB; border-radius:14px; box-shadow:0 22px 70px rgba(10,40,25,.24); }
+  body.rh-desk-on .rk-att-approval-head { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; border-bottom:1px solid #DDE6DF; }
+  body.rh-desk-on .rk-att-approval-head h2 { margin:0; font-size:18px; line-height:1.3; color:#2B3A31; font-weight:650; }
+  body.rh-desk-on .rk-att-approval-head button { width:34px; height:34px; border:0; border-radius:50%; background:#E6F2EA; color:#087A4B; font-size:24px; line-height:1; cursor:pointer; }
+  body.rh-desk-on .rk-att-approval-layout { display:grid; grid-template-columns:minmax(0,1.08fr) minmax(410px,.92fr); min-height:0; max-height:calc(100vh - 100px); }
+  body.rh-desk-on .rk-att-approval-visual { padding:0 0 16px 16px; display:grid; grid-template-rows:minmax(240px,1fr) minmax(190px,.78fr); gap:12px; min-height:0; background:#F4F8F6; }
+  body.rh-desk-on .rk-att-approval-map, body.rh-desk-on .rk-att-approval-photo { min-height:0; min-width:0; position:relative; overflow:hidden; background:#EAF0ED; border:1px solid #D6E1D9; }
+  body.rh-desk-on .rk-att-approval-map iframe { width:100%; height:100%; min-height:240px; border:0; display:block; }
+  body.rh-desk-on .rk-att-map-link { position:absolute; left:10px; bottom:10px; padding:6px 9px; border-radius:6px; background:#fff; color:#087A4B; box-shadow:0 1px 5px #0002; font-size:11px; text-decoration:none; }
+  body.rh-desk-on .rk-att-map-empty, body.rh-desk-on .rk-att-photo-empty { height:100%; min-height:190px; display:flex; justify-content:center; align-items:center; padding:20px; color:#78877E; font-size:12px; text-align:center; }
+  body.rh-desk-on .rk-att-approval-photo img { display:block; width:100%; height:100%; min-height:190px; object-fit:contain; background:#EEF2F0; }
+  body.rh-desk-on .rk-att-approval-body { overflow:auto; padding:16px 18px 20px; max-height:calc(100vh - 100px); }
+  body.rh-desk-on .rk-att-person { display:flex; align-items:center; gap:12px; padding-bottom:13px; margin-bottom:12px; border-bottom:1px solid #DDE6DF; }
+  body.rh-desk-on .rk-att-person > div:not(.rk-emp-related-avatar):not(.rk-att-avatar-fallback) { display:flex; flex:1; min-width:0; flex-direction:column; gap:4px; }
+  body.rh-desk-on .rk-att-person b { font-size:13px; color:#2F3E36; }
+  body.rh-desk-on .rk-att-person small { font-size:11px; color:#7B8981; }
+  body.rh-desk-on .rk-att-person .rk-pill { white-space:nowrap; }
+  body.rh-desk-on .rk-att-avatar-fallback { flex:0 0 42px; width:42px; height:42px; border-radius:50%; display:grid; place-items:center; background:#DCECE1; color:#087A4B; font-weight:800; }
+  body.rh-desk-on .rk-att-fields { display:grid; grid-template-columns:1fr 1fr; gap:13px 14px; }
+  body.rh-desk-on .rk-att-fields > div { display:flex; flex-direction:column; gap:4px; min-width:0; }
+  body.rh-desk-on .rk-att-fields small { color:#74827A; font-size:10px; letter-spacing:.025em; }
+  body.rh-desk-on .rk-att-fields span { color:#344139; font-size:12px; overflow-wrap:anywhere; }
+  body.rh-desk-on .rk-att-fields .rk-att-reason { grid-column:1/-1; }
+  body.rh-desk-on .rk-att-status-title { margin-top:17px; margin-bottom:9px; color:#74827A; font-size:12px; }
+  body.rh-desk-on .rk-att-timeline { display:flex; flex-direction:column; gap:12px; }
+  body.rh-desk-on .rk-att-tl-item { display:grid; grid-template-columns:18px minmax(0,1fr); gap:8px; align-items:start; color:#405047; font-size:12px; }
+  body.rh-desk-on .rk-att-tl-item > i { width:16px; height:16px; display:grid; place-items:center; border-radius:50%; background:#DDECE2; color:#087A4B; font-style:normal; font-size:10px; font-weight:800; }
+  body.rh-desk-on .rk-att-tl-item.pending > i { background:#F4E4CF; color:#A46B2B; }
+  body.rh-desk-on .rk-att-tl-item.rejected > i { background:#F8E2DE; color:#B43C35; }
+  body.rh-desk-on .rk-att-tl-item span { display:flex; flex-direction:column; gap:3px; }
+  body.rh-desk-on .rk-att-tl-item small { color:#88958E; font-size:10px; line-height:1.45; }
+  body.rh-desk-on .rk-att-note-wrap { margin-top:16px; }
+  body.rh-desk-on .rk-att-note-wrap label { display:block; margin-bottom:6px; font-size:11px; color:#4B6255; }
+  body.rh-desk-on #rkAttApprovalNote { width:100%; min-height:68px; padding:9px 10px; resize:vertical; border:1px solid #B9D3C1; border-radius:6px; background:#fff; color:#344139; font:inherit; font-size:12px; }
+  body.rh-desk-on .rk-att-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+  body.rh-desk-on .rk-att-actions button { min-height:36px; padding:8px 18px; border-radius:5px; font-size:12px; border:1px solid transparent; cursor:pointer; }
+  body.rh-desk-on .rk-att-actions button.approve { background:#087A4B; border-color:#087A4B; color:#fff; }
+  body.rh-desk-on .rk-att-actions button.reject { background:#B43C35; border-color:#B43C35; color:#fff; }
+  body.rh-desk-on .rk-att-actions button:disabled { opacity:.6; cursor:not-allowed; }
+  body.rh-desk-on .rk-appr-stage { display:inline-block; margin-top:4px; color:#7B8A81; font-size:10px; }
+}
+@media (max-width:1023px) { #rkAttApprovalShade { display:none!important; } }
+</style>
+
+
+<style id="rh-v13-8-2-mobile-attendance-approval-buttons">
+.det-actions .btn-att-approve{background:#16804A!important;border-color:#16804A!important;color:#fff!important}
+.det-actions .btn-att-reject{background:#C93636!important;border-color:#C93636!important;color:#fff!important}
+.det-actions .btn-att-approve:disabled,.det-actions .btn-att-reject:disabled{opacity:.62;cursor:wait}
 </style>
 
 </body></html>
