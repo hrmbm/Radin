@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.8.3.3-global-read-and-complete-notifications">
+<meta name="app-release" content="v13.8.3.5-remaining-flow-fixes">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -2472,6 +2472,9 @@ input, select, textarea {
   .rh-placeholder-card { border-radius: 8px !important; border-color: #DFEAE2 !important; box-shadow: 0 8px 26px rgba(0,50,33,.12) !important; }
 }
 
+.ad-evidence-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; width:100%; min-height:120px; padding:16px; text-align:center; color:#587164; font-size:12px; box-sizing:border-box; }
+#adEvidenceBox { min-width:0; min-height:120px; }
+#adEvidenceBox img { display:block; width:100%; height:100%; max-height:260px; object-fit:contain; border-radius:10px; background:#F4F7F5; }
 </style>
 <base target="_blank">
 <style id="vvvebjs-styles">
@@ -3461,7 +3464,7 @@ window.__APP_PREPARING_ASSETS = true;
       <svg class="warn-ic" viewBox="0 0 24 24" fill="none" stroke="#B77932" stroke-width="2">
         <path d="M12 9v4M12 17h.01"></path><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"></path>
       </svg>
-      <span>GPS accuracy is low. Please reload the page.</span>
+      <span>Lokasi GPS belum cukup akurat. Tunggu pembaruan lokasi sebelum melanjutkan.</span>
       <a href="#" onclick="refreshGps();return false">Lihat</a>
     </div>
 
@@ -3553,7 +3556,7 @@ window.__APP_PREPARING_ASSETS = true;
       <div class="field"><label>End Date *</label><input type="date" id="ctSelesai"></div>
       <div class="field"><label>Reason *</label><textarea id="ctAlasan" rows="3"></textarea></div>
       <div class="field"><label>Delegate to (optional)</label><select id="ctDelegate"><option value="">No delegate</option></select><div style="font-size:12px;color:var(--txt-muted);margin-top:5px">Choose another active ReHolz employee to delegate your work to. Leave blank when not needed.</div></div>
-      <div class="field" id="ctDocWrap" style="display:none"><label>Supporting Document (Required) *</label><input type="file" id="ctDoc" accept="image/*"></div>
+      <div class="field" id="ctDocWrap"><label>Lampiran (opsional)</label><input type="file" id="ctDoc" accept="image/*,.pdf,application/pdf"><div style="font-size:12px;color:var(--txt-muted);margin-top:5px">Opsional untuk semua jenis Time Off. Format yang disarankan: foto atau PDF.</div></div>
       <button class="btn btn-blue" id="ctBtn" onclick="submitCuti()">Submit Request</button>
     </div>
   </div>
@@ -4082,7 +4085,7 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v13.8.3.3-global-read-and-complete-notifications';
+var RH_HTML_RELEASE = 'v13.8.3.4-face-cache-refresh';
 var RH_DISPLAY_VERSION = 'v13.8.3.3';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
@@ -4273,7 +4276,7 @@ async function rpc(fn, params, timeoutMs) {
 var S = {
   user: null, office: null, status: null, sisaCT: null,
   face: { registered: false, canRegister: false },
-  pendingTotal: 0, unreadNotificationTotal: 0, approver: false, myDescriptor: null, freshLogin: false, booting: false
+  pendingTotal: 0, unreadNotificationTotal: 0, approver: false, myDescriptor: null, myDescriptorVer: null, freshLogin: false, booting: false
 };
 var RH_NOTIF_STATE = window.RH_NOTIF_STATE || {
   unreadCount: 0, unreadCountAuthoritative: false, pendingCount: 0, myRequestsAt: 0, mobileAt: 0, mobileUser: '', mobileHtml: '', mobileItems: [],
@@ -4282,7 +4285,9 @@ var RH_NOTIF_STATE = window.RH_NOTIF_STATE || {
 window.RH_NOTIF_STATE = RH_NOTIF_STATE;
 
 var GPS = { pos: null, at: 0, watchId: null, cached: false };
-var CAM = { stream: null, run: false, desc: null, descAt: 0, state: 'detecting', win: [], present: false, presentAt: 0, override: false, refLoading: false };
+var CAM = { stream: null, run: false, desc: null, descAt: 0, state: 'detecting', win: [], present: false, presentAt: 0, override: false, refLoading: false, refLastAttemptAt: 0 };
+var FACE_REFERENCE_UPDATING = false;
+var FACE_PROFILE_PREPARING = false;
 var NETS = { ready: false, promise: null };
 var ATT = { type: 'MASUK', submitting: false, outside: false, outsideOk: false, area: '', lastOutsideAt: 0, recheckingOutside: false, outsideDialogShown: false, outsideAwaitContinue: false };
 var LOGM = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
@@ -4362,6 +4367,7 @@ function driveThumb(url) {
   var m = s.match(/id=([^&]+)/);
   return m ? ('https://drive.google.com/thumbnail?id=' + m[1] + '&sz=w800') : s;
 }
+window.driveThumb = driveThumb;
 
 function statusPill(st) {
   if (st === 'PENDING_ATASAN' || st === 'PENDING_HR') return '<span class="pill warn">Pending Approval</span>';
@@ -4370,7 +4376,11 @@ function statusPill(st) {
   return '<span class="pill ok">Present</span>';
 }
 
-function faceVerOf(nik) { return DATA.faceVer[nik] || 0; }
+function faceVerOf(nik) {
+  var id = String(nik || '');
+  if (S.user && id === String(S.user.nik) && S.myDescriptorVer != null && Number.isFinite(Number(S.myDescriptorVer))) return Number(S.myDescriptorVer);
+  return Number(DATA.faceVer[id] || 0);
+}
 
 function applyUiConfig() {
   var e = FACE_UI_CONFIG.ellipse;
@@ -4395,7 +4405,7 @@ function applyUiConfig() {
 function resetRuntimeState() {
   S.office = null; S.status = null; S.sisaCT = null;
   S.face = { registered: false, canRegister: false };
-  S.pendingTotal = 0; S.approver = false; S.myDescriptor = null;
+  S.pendingTotal = 0; S.approver = false; S.myDescriptor = null; S.myDescriptorVer = null;
   GPS.pos = null; GPS.at = 0;
   if (GPS.watchId != null) {
     try { navigator.geolocation.clearWatch(GPS.watchId); } catch (e) {}
@@ -4403,7 +4413,7 @@ function resetRuntimeState() {
   }
   CAM.stream = null; CAM.run = false; CAM.desc = null; CAM.descAt = 0;
   CAM.state = 'detecting'; CAM.win = []; CAM.present = false; CAM.presentAt = 0;
-  CAM.override = false; CAM.refLoading = false;
+  CAM.override = false; CAM.refLoading = false; CAM.refLastAttemptAt = 0; FACE_REFERENCE_UPDATING = false; FACE_PROFILE_PREPARING = false;
   ATT.type = 'MASUK'; ATT.submitting = false; ATT.outside = false; ATT.outsideOk = false; ATT.area = ''; ATT.lastOutsideAt = 0; ATT.recheckingOutside = false; ATT.outsideDialogShown = false; ATT.outsideAwaitContinue = false;
   destroyAttMap();
   DATA.cutiList = []; DATA.empList = []; DATA.appr = null; DATA.myReq = null;
@@ -4415,6 +4425,7 @@ function resetRuntimeState() {
   ORG.list = []; ORG.byNik = {}; ORG.children = {}; ORG.expanded = {};
   FACESELF.stream = null; FACESELF.run = false; FACESELF.desc = null;
   FACESELF.descAt = 0; FACESELF.present = false; FACESELF.presentAt = 0;
+  S.myDescriptor = null; S.myDescriptorVer = null; FACE_REFERENCE_UPDATING = false; CAM.refLastAttemptAt = 0;
   FACECACHE = null;
   Object.keys(MAPS).forEach(function(k) {
     try { if (MAPS[k] && MAPS[k].map) { MAPS[k].map.remove(); } } catch (e) {}
@@ -4693,6 +4704,8 @@ var RHMediaCache = (function () {
   var mem = {};            // nik -> {ver, ph, desc}
   var db = null, dbReady = false, readyCbs = [];
   var flushing = {};
+  var flushPromises = {};
+  var descWrites = {};
 
   function notifyReady() {
     dbReady = true;
@@ -4786,11 +4799,17 @@ var RHMediaCache = (function () {
 
   function persist(nik) {
     var rec = mem[nik];
-    if (!rec) return;
-    if (flushing[nik]) return;
+    if (!rec) return Promise.resolve(false);
+    if (flushing[nik]) return flushPromises[nik] || Promise.resolve(false);
     flushing[nik] = true;
-    idbPut('photos', { nik: nik, ver: rec.ver || 0, ph: rec.ph || '', ts: Date.now() })
-      .then(function () { delete flushing[nik]; });
+    var snapshot = { nik: nik, ver: rec.ver || 0, ph: rec.ph || '', ts: Date.now() };
+    var p = idbPut('photos', snapshot).then(function (ok) {
+      delete flushing[nik];
+      delete flushPromises[nik];
+      return ok;
+    });
+    flushPromises[nik] = p;
+    return p;
   }
 
   function kvSet(k, v) { return idbPut('kv', { k: k, v: v, ts: Date.now() }); }
@@ -4811,12 +4830,13 @@ var RHMediaCache = (function () {
     db = d;
     return idbAll('photos');
   }).then(function (rows) {
-    rows.forEach(function (r) { if (r && r.nik) mem[r.nik] = { ver: r.ver || 0, ph: r.ph || '', ts: r.ts || 0 }; });
+    rows.forEach(function (r) { if (r && r.nik) mem[r.nik] = { ver: r.ver || 0, ph: r.ph || '', desc: null, descVer: null, ts: r.ts || 0 }; });
     // Muat descriptor wajah dari kv (dipisah agar tidak tertimpa put foto).
     return idbAll('kv').then(function (kvs) {
       kvs.forEach(function (row) {
         if (row && row.k && row.k.indexOf('desc:') === 0 && row.v && mem[row.k.slice(5)]) {
           mem[row.k.slice(5)].desc = row.v.desc;
+          mem[row.k.slice(5)].descVer = Number(row.v.ver);
         }
       });
     });
@@ -4841,8 +4861,9 @@ var RHMediaCache = (function () {
           });
         }
         if (c.desc) {
-          if (!mem[nik]) mem[nik] = { ver: c.ver || 0, ph: '' };
+          if (!mem[nik]) mem[nik] = { ver: c.ver || 0, ph: '', desc: null, descVer: null };
           mem[nik].desc = c.desc;
+          mem[nik].descVer = Number(c.ver || 0);
           kvSet('desc:' + nik, { desc: c.desc, ver: c.ver || 0 });
         }
       });
@@ -4873,7 +4894,8 @@ var RHMediaCache = (function () {
     // Dipanggil hydrateFaces dengan foto asli dari server: perkecil lalu simpan.
     put: function (nik, ver, ph) {
       var prev = mem[nik] || {};
-      mem[nik] = { ver: ver, ph: ph, desc: prev.desc, ts: Date.now() };
+      var sameDescriptorVersion = Number(prev.descVer) === Number(ver);
+      mem[nik] = { ver: Number(ver), ph: ph, desc: sameDescriptorVersion ? prev.desc : null, descVer: sameDescriptorVersion ? prev.descVer : null, ts: Date.now() };
       if (typeof ph === 'string' && ph.length > 60000) {
         shrink(ph).then(function (small) {
           var cur = mem[nik];
@@ -4896,18 +4918,50 @@ var RHMediaCache = (function () {
     },
     getDesc: function (nik, ver) {
       var c = mem[nik];
-      return (c && c.ver === ver && c.desc) ? c.desc : null;
+      return (c && Number(c.descVer) === Number(ver) && Array.isArray(c.desc) && c.desc.length === 128) ? c.desc : null;
     },
     putDesc: function (nik, ver, desc) {
-      var c = mem[nik] || { ver: ver, ph: '' };
+      var c = mem[nik] || { ver: Number(ver), ph: '', desc: null, descVer: null };
       c.desc = desc;
+      c.descVer = Number(ver);
       mem[nik] = c;
-      kvSet('desc:' + nik, { desc: desc, ver: ver });
+      var p = kvSet('desc:' + nik, { desc: desc, ver: Number(ver) });
+      descWrites[nik] = p;
+      p.then(function () { if (descWrites[nik] === p) delete descWrites[nik]; });
+      return p;
     },
     invalidate: function (nik) {
-      delete mem[nik];
-      idbDel('photos', nik);
-      idbDel('kv', 'desc:' + nik);
+      nik = String(nik || '');
+      if (!nik) return Promise.resolve(false);
+      // Tunggu migrasi IndexedDB selesai dahulu agar startup tidak menghidupkan kembali entry lama.
+      return Promise.resolve(bootPromise).catch(function () {}).then(function () {
+        var pending = [];
+        if (flushPromises[nik]) pending.push(flushPromises[nik]);
+        if (descWrites[nik]) pending.push(descWrites[nik]);
+        delete mem[nik];
+        // Bersihkan juga entry dari migrasi localStorage lama bila masih ada.
+        try {
+          var legacy = JSON.parse(localStorage.getItem('tk_faces_v1') || 'null');
+          if (legacy && Object.prototype.hasOwnProperty.call(legacy, nik)) {
+            delete legacy[nik];
+            if (Object.keys(legacy).length) localStorage.setItem('tk_faces_v1', JSON.stringify(legacy));
+            else localStorage.removeItem('tk_faces_v1');
+          }
+        } catch (e) {}
+        return Promise.all(pending.map(function (p) { return Promise.resolve(p).catch(function () { return false; }); }))
+          .then(function () {
+            delete mem[nik];
+            return Promise.all([idbDel('photos', nik), idbDel('kv', 'desc:' + nik)]);
+          }).then(function (results) {
+            // Hapus gambar lama dari node aktif; hydrateFaces akan mengambil versi baru.
+            try {
+              document.querySelectorAll('[data-facenik]').forEach(function (el) {
+                if (String(el.getAttribute('data-facenik') || '') === nik) el.innerHTML = '';
+              });
+            } catch (e) {}
+            return results.every(Boolean);
+          });
+      });
     },
     clearAll: function () {
       mem = {};
@@ -5194,33 +5248,119 @@ async function prewarmSemiStaticData() {
 }
 function loadMyDescriptor() {
   var gen = SESSION_GEN;
-  return api('getMyFaceData', []).then(function(r) {
+  var nik = String(S.user && S.user.nik || '');
+  if (!nik) return Promise.resolve(null);
+  // Setiap kali absensi dimulai, konfirmasi referensi terbaru ke server dahulu.
+  // Descriptor lama dari state/cache tidak boleh dipakai selama permintaan ini berjalan.
+  CAM.refLoading = true;
+  CAM.refLastAttemptAt = Date.now();
+  S.myDescriptor = null;
+  S.myDescriptorVer = null;
+  return api('getMyFaceData', [], 20000).then(function(r) {
     if (stale(gen)) return null;
-    if (r && r.descriptor) {
-      var desc = r.descriptor;
-      if (typeof desc === 'string') {
-        try {
-          if (desc.trim().startsWith('{')) {
-            desc = JSON.parse('[' + desc.slice(1, -1) + ']');
-          } else {
-            desc = JSON.parse(desc);
-          }
-        } catch (e) { desc = null; }
-      }
-      S.myDescriptor = desc;
-      faceCachePutDesc(S.user.nik, r.photoVer || 0, desc);
+    var desc = r && r.descriptor;
+    if (typeof desc === 'string') {
+      try {
+        if (desc.trim().startsWith('{')) desc = JSON.parse('[' + desc.slice(1, -1) + ']');
+        else desc = JSON.parse(desc);
+      } catch (e) { desc = null; }
     }
-    return r;
-  }).catch(function() { return null; });
+    if (desc && !Array.isArray(desc) && typeof desc.length === 'number') desc = Array.from(desc);
+    if (!Array.isArray(desc) || desc.length !== 128 || !desc.every(function(v) { return Number.isFinite(Number(v)); })) {
+      throw new Error('The current Face ID reference is missing or invalid. Please update the profile photo again.');
+    }
+    desc = desc.map(Number);
+    var ver = Number(r && (r.photoVer != null ? r.photoVer : r.face_photo_ver));
+    if (!Number.isFinite(ver) || ver < 0) throw new Error('The Face ID reference version could not be confirmed.');
+    DATA.faceVer[nik] = ver;
+    if (S.user && S.user.employee) S.user.employee.facePhotoVer = ver;
+    S.myDescriptor = desc;
+    S.myDescriptorVer = ver;
+    faceCachePutDesc(nik, ver, desc);
+    CAM.win = [];
+    return Object.assign({}, r, { descriptor: desc, photoVer: ver });
+  }).catch(function(e) {
+    if (!stale(gen)) {
+      // Jangan fallback ke descriptor lama ketika server belum mengonfirmasi referensi aktif.
+      S.myDescriptor = null;
+      S.myDescriptorVer = null;
+      console.warn('[ReHolz] Current Face ID reference could not be refreshed:', e && e.message || e);
+    }
+    return null;
+  }).finally(function() {
+    if (!stale(gen)) {
+      CAM.refLoading = false;
+      if (currentScr() === 's-att') updateFaceState();
+    }
+  });
 }
 
 function getRefDescriptor() {
-  var d = faceCacheGetDesc(S.user.nik, faceVerOf(S.user.nik)) || S.myDescriptor;
-  if (!d && !CAM.refLoading) {
-    CAM.refLoading = true;
-    loadMyDescriptor().then(function() { CAM.refLoading = false; }).catch(function() { CAM.refLoading = false; });
+  if (FACE_REFERENCE_UPDATING || CAM.refLoading || !S.user || !S.user.nik) return null;
+  var nik = String(S.user.nik), ver = Number(faceVerOf(nik));
+  // Only a reference fetched from the server in this session is considered current.
+  if (Array.isArray(S.myDescriptor) && S.myDescriptor.length === 128 && Number(S.myDescriptorVer) === ver) return S.myDescriptor;
+  if (!CAM.refLoading && Date.now() - Number(CAM.refLastAttemptAt || 0) > 8000) loadMyDescriptor();
+  return null;
+}
+
+function faceDescriptorDistance(a, b) {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== 128 || b.length !== 128) return Infinity;
+  var sum = 0;
+  for (var i = 0; i < 128; i++) {
+    var d = Number(a[i]) - Number(b[i]);
+    if (!Number.isFinite(d)) return Infinity;
+    sum += d * d;
   }
-  return d;
+  return Math.sqrt(sum);
+}
+
+async function saveFaceReferenceAndRefresh(descriptor, photo) {
+  if (!S.user || !S.user.nik) throw new Error('Sign in before updating Face ID.');
+  if (FACE_REFERENCE_UPDATING) throw new Error('Face ID is already being updated.');
+  var nik = String(S.user.nik);
+  var inputDesc = normalizeFaceDescriptor(descriptor);
+  if (inputDesc.length !== 128 || !inputDesc.every(function(v) { return Number.isFinite(v); })) throw new Error('The new face descriptor is invalid.');
+  FACE_REFERENCE_UPDATING = true;
+  var serverSaved = false;
+  try {
+    var saved = await api('saveMyFaceDescriptor', [nik, inputDesc, photo], 30000);
+    if (!saved || saved.success === false) throw new Error((saved && saved.message) || 'The server did not confirm the Face ID update.');
+    serverSaved = true;
+    // Invalidate only this employee's avatar + descriptor cache, and wait for IndexedDB deletion.
+    await RHMediaCache.invalidate(nik);
+    S.myDescriptor = null;
+    S.myDescriptorVer = null;
+    delete DATA.faceVer[nik];
+    CAM.desc = null; CAM.descAt = 0; CAM.win = []; CAM.state = 'detecting'; CAM.override = false;
+    CAM.present = false; CAM.presentAt = 0; CAM.refLastAttemptAt = 0;
+    if (S.user.employee) delete S.user.employee.facePhotoVer;
+
+    // Re-read profile version, then fetch the reference descriptor directly from Supabase.
+    await loadBootstrap();
+    var fresh = await loadMyDescriptor();
+    if (!fresh || !Array.isArray(S.myDescriptor) || S.myDescriptor.length !== 128 || Number(S.myDescriptorVer) !== Number(fresh.photoVer)) {
+      throw new Error('The photo was saved, but the new Face ID reference could not be reloaded. Please retry before Clock In.');
+    }
+    if (faceDescriptorDistance(inputDesc, S.myDescriptor) > 0.02) {
+      throw new Error('The server reference does not match the new photo. Clock In is paused until Face ID is refreshed.');
+    }
+    S.face = S.face || {};
+    S.face.registered = true; S.face.canRegister = true;
+    await renderAkun();
+    renderFaceBanner();
+    return saved;
+  } catch (e) {
+    if (serverSaved) {
+      // Server may have accepted the new photo, so never restore the prior local descriptor.
+      S.myDescriptor = null; S.myDescriptorVer = null;
+      CAM.desc = null; CAM.descAt = 0; CAM.win = []; CAM.state = 'detecting'; CAM.override = false;
+    }
+    throw e;
+  } finally {
+    FACE_REFERENCE_UPDATING = false;
+    if (currentScr() === 's-att') updateFaceState();
+  }
 }
 
 function localDistance(desc) {
@@ -5619,14 +5759,17 @@ function renderFaceBanner() {
 }
 
 function renderAkun() {
-  if (!S.user) return;
+  if (!S.user) return Promise.resolve(false);
   var e = S.user.employee || {};
-  $('akunAva').innerHTML = avaInner(S.user.nik, S.user.nama, e.facePhotoVer || 0);
+  var accountAvatar = $('akunAva');
+  accountAvatar.setAttribute('data-facenik', String(S.user.nik));
+  accountAvatar.setAttribute('data-facever', String(e.facePhotoVer || DATA.faceVer[S.user.nik] || 0));
+  accountAvatar.innerHTML = avaInner(S.user.nik, S.user.nama, e.facePhotoVer || DATA.faceVer[S.user.nik] || 0);
   $('akunName').textContent = S.user.nama;
   $('akunPos').textContent = e.position || e.role || '-';
   $('akunOrg').textContent = (e.organization || '-') + (e.branch ? ' • ' + e.branch : '');
   renderFaceBanner();
-  hydrateFaces();
+  return hydrateFaces();
 }
 
 function openProfilePhotoActions() {
@@ -6170,6 +6313,7 @@ function startAttMapEarly() {
 }
 
 async function startAttendance(type) {
+  if (FACE_REFERENCE_UPDATING || FACE_PROFILE_PREPARING) { toast('Face ID is being updated. Please wait until the update is complete.'); return; }
   if (ATT.submitting) return;
   // Pulihkan pratinjau lokal tepat sebelum layar absensi dibuka; tidak menunggu API atau GPS baru.
   restoreGpsCache();
@@ -6252,8 +6396,8 @@ function renderGpsUi() {
   }
   var gpsFresh = gpsFixIsFresh();
   $('gpsInfo').textContent = gpsFresh
-    ? '✅ GPS terbaru • Akurasi ±' + Math.round(p.accuracy) + ' m' + (chk.office ? ' • Office radius ' + chk.office.radius + ' m' : '')
-    : '📍 Showing the last known position (±' + Math.round(p.accuracy) + ' m); sedang memperbarui GPS…';
+    ? '✅ Lokasi GPS terbaru.'
+    : '📍 Memperbarui lokasi GPS…';
   var low = p.accuracy > (S.office ? S.office.maxAccuracy : 50);
   $('gpsWarn').style.display = gpsFresh && low ? 'flex' : 'none';
   $('btnNext1').disabled = !gpsFresh;
@@ -6390,6 +6534,15 @@ function updateFaceState() {
   if ($('attStep2').style.display === 'none') return;
   var st = $('camStatus'), ov = $('camOverride'), now = Date.now();
   var faceInfo = $('faceRecognitionInfo');
+  if (FACE_REFERENCE_UPDATING || FACE_PROFILE_PREPARING || CAM.refLoading) {
+    CAM.state = 'detecting';
+    st.textContent = FACE_REFERENCE_UPDATING ? 'Updating Face ID…' : (FACE_PROFILE_PREPARING ? 'Preparing the new face photo…' : 'Loading the latest Face ID reference…');
+    st.style.color = FACE_UI_CONFIG.colors.detecting;
+    $('btnKirim').disabled = true;
+    ov.style.display = 'none';
+    if (faceInfo) faceInfo.textContent = FACE_REFERENCE_UPDATING ? 'Face ID is being updated. Attendance is temporarily disabled.' : (FACE_PROFILE_PREPARING ? 'The new face photo is being prepared. Attendance is temporarily disabled.' : 'Refreshing the saved Face ID reference from the server…');
+    return;
+  }
   function updateFaceInfo() {
     if (!faceInfo) return;
     faceInfo.textContent = (CAM.state === 'match'
@@ -6413,11 +6566,11 @@ function updateFaceState() {
   var ref = getRefDescriptor();
   if (!ref) {
     CAM.state = 'neutral';
-    st.textContent = FACE_UI_CONFIG.status.neutral;
+    st.textContent = 'Current Face ID reference is not ready';
     st.style.color = FACE_UI_CONFIG.colors.neutral;
-    $('btnKirim').disabled = !(CAM.desc && now - CAM.descAt <= FACE_UI_CONFIG.freshSubmitMs);
+    $('btnKirim').disabled = true;
     ov.style.display = 'none';
-    updateFaceInfo();
+    if (faceInfo) faceInfo.textContent = 'Clock In/Out is paused until the current saved Face ID reference can be confirmed.';
     return;
   }
   var best = CAM.win.length ? Math.min.apply(null, CAM.win) : null;
@@ -6440,6 +6593,7 @@ function updateFaceState() {
 }
 
 function enableOverride() {
+  if (FACE_REFERENCE_UPDATING || FACE_PROFILE_PREPARING || CAM.refLoading || !getRefDescriptor()) { toast('The latest Face ID reference is not ready. Manual continuation is unavailable.'); return; }
   CAM.override = true;
   $('camOverride').style.display = 'none';
   $('btnKirim').disabled = false;
@@ -6470,7 +6624,10 @@ function finishAttendance() {
 
 async function submitAttendance() {
   if (isAdminReadOnly()) { toast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
+  if (FACE_REFERENCE_UPDATING || FACE_PROFILE_PREPARING || CAM.refLoading) { toast('Face ID is still being refreshed. Please wait before Clock In/Out.'); return; }
   if (ATT.submitting) return;
+  var currentRef = getRefDescriptor();
+  if (!currentRef) { toast('The latest Face ID reference is not ready. Please wait for it to load before Clock In/Out.'); return; }
   var desc = (CAM.desc && Date.now() - CAM.descAt < FACE_UI_CONFIG.freshSubmitMs) ? CAM.desc : null;
   if (!desc) { toast('Face not detected yet. Please wait a moment...'); return; }
   var p = GPS.pos;
@@ -6506,15 +6663,23 @@ async function submitAttendance() {
     };
     var res = await api('simpanAbsensi', [payload], 40000);
     var attendanceId = res && (res.id || res.absensiId || res.absensi_id || res.attendance_id);
+    var evidenceSaved = !fotoBase64;
+    var evidenceFailureReason = '';
     if (fotoBase64 && attendanceId) {
       try {
-        await uploadEvidenceAsync(attendanceId, fotoBase64);
+        var evidenceResult = await uploadEvidenceAsync(attendanceId, fotoBase64);
+        if (evidenceResult && (evidenceResult.success === false || evidenceResult.ok === false)) throw new Error(evidenceResult.message || 'Server did not confirm evidence storage.');
+        evidenceSaved = true;
       } catch (uploadErr) {
+        evidenceSaved = false;
+        evidenceFailureReason = (uploadErr && uploadErr.message) || 'Evidence upload failed.';
         console.warn('Failed to save the evidence photo:', uploadErr);
       }
+    } else if (fotoBase64 && !attendanceId) {
+      evidenceSaved = false;
+      evidenceFailureReason = 'The server response did not include an attendance ID.';
+      console.warn('Evidence photo was captured but no attendance ID was returned.');
     }
-    faceCachePutDesc(S.user.nik, faceVerOf(S.user.nik), desc);
-    S.myDescriptor = desc;
     if (S.approver) { refreshPending(); }
     S.status = {
       masuk: ATT.type === 'MASUK' ? true : (S.status || {}).masuk,
@@ -6529,7 +6694,10 @@ async function submitAttendance() {
     $('doneTitle').textContent = res.statusApproval === 'VALID'
       ? (ATT.type === 'MASUK' ? 'Clock In successful' : 'Clock Out successful')
       : 'Request submitted';
-    $('doneMsg').textContent = res.message;
+    var completionMessage = String(res && res.message || 'Attendance request submitted.');
+    if (!fotoBase64) completionMessage += ' Foto evidence tidak berhasil diambil; absensi dikirim tanpa foto.';
+    else if (!evidenceSaved) completionMessage += ' PERHATIAN: absensi tercatat, tetapi foto evidence belum tersimpan (' + evidenceFailureReason + '). Hubungi HR untuk tindak lanjut evidence yang belum tersimpan.';
+    $('doneMsg').textContent = completionMessage;
   } catch (e) {
     if (e && e.message !== 'STALE') {
       var msg = (e && e.message) ? e.message : String(e || 'An unknown error occurred.');
@@ -6577,6 +6745,16 @@ async function uploadEvidenceAsync(absensiId, dataUrl) {
   throw lastErr || new Error('Evidence upload failed.');
 }
 
+function attendanceEvidenceSource(a) {
+  a = a || {};
+  var keys = ['fotoUrl','foto_url','fotoBase64','foto_base64','photo_url','photoUrl','foto_path','fotoPath','storage_path','storagePath','evidence_url','evidenceUrl','evidence_path','evidencePath','foto','evidence'];
+  for (var i = 0; i < keys.length; i++) {
+    var value = a[keys[i]];
+    if (value !== null && value !== undefined && String(value).trim()) return String(value).trim();
+  }
+  return '';
+}
+
 function evidenceStoragePath(value) {
   var s = String(value || '').trim();
   if (!s || s.indexOf('data:') === 0) return '';
@@ -6588,35 +6766,127 @@ function evidenceStoragePath(value) {
   return s.replace(/^\/+/, '').replace(/^evidence\//i, '');
 }
 
-async function resolveEvidenceDisplayUrl(value) {
+var RH_EVIDENCE_URL_CACHE = new Map();
+async function resolveEvidenceDisplayUrl(value, forceRefresh) {
   var s = String(value || '').trim();
   if (!s) return '';
-  // Embedded legacy attachments should be rendered locally and must not call Storage RPC.
-  if (/^data:/i.test(s)) return s;
-  if (/^https?:\/\//i.test(s)) return s;
+  // Embedded legacy attachments stay local; no Storage RPC is needed.
+  if (/^data:/i.test(s) || /^blob:/i.test(s)) return s;
   var path = evidenceStoragePath(s);
-  if (!path) return s;
-  var result = await api('getEvidenceSignedUrl', [path], 20000);
-  // Existing integrations have returned several response shapes over time.
-  var signed = result && (result.signedUrl || result.signed_url || result.url ||
-    (result.data && (result.data.signedUrl || result.data.signed_url || result.data.url)));
-  if (typeof signed !== 'string' || !/^https?:\/\//i.test(signed)) {
-    throw new Error((result && (result.message || result.error)) || 'Private attachment URL is not available.');
+  // Storage URLs can already be signed but expired. Resolve their object path first and request a fresh URL.
+  if (path) {
+    var cached = RH_EVIDENCE_URL_CACHE.get(path);
+    if (!forceRefresh && cached && Date.now() - cached.at < 20000) return cached.url;
+    var result = await api('getEvidenceSignedUrl', [path], 20000);
+    var signed = result && (result.signedUrl || result.signed_url || result.url ||
+      (result.data && (result.data.signedUrl || result.data.signed_url || result.data.url)));
+    if (typeof signed !== 'string' || !/^https?:\/\//i.test(signed)) {
+      // Public storage URLs can still be used when an older backend cannot issue a signed URL.
+      if (/^https?:\/\//i.test(s) && /\/storage\/v1\/object\/public\/evidence\//i.test(s)) return s;
+      throw new Error((result && (result.message || result.error)) || 'Private attachment URL is not available.');
+    }
+    RH_EVIDENCE_URL_CACHE.set(path, { url: signed, at: Date.now() });
+    return signed;
   }
-  return signed;
+  if (/^https?:\/\//i.test(s)) return s;
+  return s;
 }
 
-async function prepareEvidenceForDisplay(a) {
+async function prepareEvidenceForDisplay(a, forceRefresh) {
   if (!a) return;
-  var source = a.fotoUrl || a.foto_url || a.fotoBase64 || a.foto_base64 || a.photo_url || '';
+  var source = attendanceEvidenceSource(a);
   a._fotoDisplayUrl = '';
   if (!source) return;
   try {
-    a._fotoDisplayUrl = await resolveEvidenceDisplayUrl(source);
+    a._fotoDisplayUrl = await resolveEvidenceDisplayUrl(source, !!forceRefresh);
   } catch (e) {
     console.warn('Unable to open private photo:', e);
     a._fotoDisplayUrl = '';
   }
+}
+
+function attendanceAreaCodeOf(a) {
+  a = a || {};
+  var keys = ['catatan','alasan','reason','notes','address','alamat','location_note','locationNote'];
+  for (var i = 0; i < keys.length; i++) {
+    var value = String(a[keys[i]] || '');
+    var m = value.match(/\[\[RHAREA=(A[1-4]|AX)\]\]/i);
+    if (m) return m[1].toUpperCase();
+  }
+  return '';
+}
+
+function attendanceLocationStatusLabel(a) {
+  a = a || {};
+  var areaCode = attendanceAreaCodeOf(a);
+  if (areaCode) return 'Di luar area kantor' + (areaCode === 'AX' ? '' : ' · Area ' + areaCode.slice(1));
+  var flags = [
+    ['outside','outside_area','outsideArea','is_outside','isOutside','di_luar_area','diLuarArea'],
+    ['inOffice','in_office','withinOffice','within_office','insideOffice','inside_office','within_geofence']
+  ];
+  for (var i = 0; i < flags[0].length; i++) {
+    var v = a[flags[0][i]];
+    if (v === true || String(v).toLowerCase() === 'true' || String(v) === '1') return 'Di luar area kantor';
+  }
+  for (var j = 0; j < flags[1].length; j++) {
+    var w = a[flags[1][j]];
+    if (w === true || String(w).toLowerCase() === 'true' || String(w) === '1') return 'Dalam area kantor';
+  }
+  var status = String(a.locationStatus || a.location_status || a.statusLokasi || a.status_lokasi || a.geofenceStatus || a.geofence_status || a.areaStatus || a.area_status || '').toLowerCase();
+  if (/(di luar|luar area|outside|out of area|outside geofence)/.test(status)) return 'Di luar area kantor';
+  if (/(dalam area|within|inside|in office|dalam kantor)/.test(status)) return 'Dalam area kantor';
+  if (/(belum dapat|belum bisa|unknown|unverified|tidak diketahui|belum diverifikasi)/.test(status)) return 'Lokasi belum dapat diverifikasi';
+  return '';
+}
+
+function attendanceAddressText(a) {
+  a = a || {};
+  var value = String(a.address || a.alamat || a.geocodedAddress || a.geocoded_address || a.branchTarget || a.branch_target || '').trim();
+  if (/^📝/.test(value)) return '';
+  return value.replace(/\s*\[\[RHAREA=(?:A[1-4]|AX)\]\]/ig, '').trim();
+}
+
+// The desktop console runs in a separate classic-script scope; expose only shared attendance display helpers.
+window.attendanceEvidenceSource = attendanceEvidenceSource;
+window.resolveEvidenceDisplayUrl = resolveEvidenceDisplayUrl;
+window.attendanceLocationStatusLabel = attendanceLocationStatusLabel;
+window.attendanceAddressText = attendanceAddressText;
+
+function mobileEvidenceBoxHtml(a) {
+  var source = attendanceEvidenceSource(a);
+  var url = String(a && a._fotoDisplayUrl || '');
+  var content = url
+    ? '<img id="adEvidenceImg" alt="Foto evidence absensi" decoding="async">'
+    : (source ? '<div class="ad-evidence-state">Memuat foto evidence…</div>' : '<div class="ad-evidence-state">Foto evidence tidak tersedia.</div>');
+  return '<div class="ph-half" id="adEvidenceBox">' + content + '</div>';
+}
+
+function paintMobileAttendanceEvidence(a, url, attemptRefresh) {
+  var body = $('adetBody');
+  if (!body || String(body.dataset.attendanceId || '') !== String(a && a.id || '') || !$('s-adet').classList.contains('on')) return;
+  var box = $('adEvidenceBox');
+  if (!box) return;
+  if (!url) {
+    box.innerHTML = '<div class="ad-evidence-state">Foto evidence tidak dapat dimuat.<button type="button" id="adEvidenceRetry" class="btn btn-ghost" style="margin-top:8px">Coba lagi</button></div>';
+    var retry = $('adEvidenceRetry');
+    if (retry) retry.addEventListener('click', function () {
+      retry.disabled = true; retry.textContent = 'Memuat…';
+      prepareEvidenceForDisplay(a, true).then(function () { paintMobileAttendanceEvidence(a, a._fotoDisplayUrl, true); });
+    });
+    return;
+  }
+  box.innerHTML = '<img id="adEvidenceImg" alt="Foto evidence absensi" decoding="async">';
+  var img = $('adEvidenceImg');
+  if (!img) return;
+  img.onerror = function () {
+    if (!attemptRefresh) {
+      resolveEvidenceDisplayUrl(attendanceEvidenceSource(a), true).then(function (freshUrl) {
+        a._fotoDisplayUrl = freshUrl;
+        paintMobileAttendanceEvidence(a, freshUrl, true);
+      }).catch(function () { paintMobileAttendanceEvidence(a, '', true); });
+    } else paintMobileAttendanceEvidence(a, '', true);
+  };
+  img.src = driveThumb(url);
 }
 
 function snapPhoto() {
@@ -6799,9 +7069,8 @@ function renderCutiOptions() {
 function onCutiKode() {
   var sel = $('ctKode');
   var h7 = $('ctH7Notice'); if (h7) h7.style.display = isH7Timeoff(sel.value) ? 'block' : 'none';
-  var o = sel.options[sel.selectedIndex];
-  var w = o && o.getAttribute('data-wajib') === '1';
-  $('ctDocWrap').style.display = w ? 'block' : 'none';
+  // Lampiran selalu tersedia dan opsional untuk semua kategori Time Off.
+  $('ctDocWrap').style.display = 'block';
   if (sel.value === 'CT') {
     $('ctSisa').style.display = 'block';
     $('ctSisa').innerHTML = '📊 Your remaining annual time off: <b>' + (S.sisaCT != null ? S.sisaCT : '-') + ' days</b>';
@@ -6820,8 +7089,6 @@ function submitCuti() {
     toast('This time-off request must be submitted at least 7 days in advance.');
     return;
   }
-  var o = $('ctKode').options[$('ctKode').selectedIndex];
-  var w = o && o.getAttribute('data-wajib') === '1';
   var fi = $('ctDoc');
   function proceed(dok) {
     var b = $('ctBtn');
@@ -6841,12 +7108,11 @@ function submitCuti() {
       b.textContent = 'Submit Request';
     });
   }
-  if (w && fi.files.length > 0) {
+  if (fi && fi.files && fi.files.length > 0) {
     var r = new FileReader();
     r.onload = function(e) { proceed(e.target.result); };
+    r.onerror = function() { toast('Lampiran gagal dibaca. Silakan pilih ulang file atau lanjut tanpa lampiran.'); };
     r.readAsDataURL(fi.files[0]);
-  } else if (w) {
-    toast('A supporting document is required.');
   } else {
     proceed(null);
   }
@@ -7949,30 +8215,52 @@ async function handleMobileNotificationClick(el) {
   var wasRead = el.getAttribute('data-notif-read') === '1';
   var kind = String(el.getAttribute('data-notif-kind') || '').toLowerCase();
   var requestId = el.getAttribute('data-notif-request-id') || '';
-  if (outcome && notificationId && !wasRead) await markMyNotificationReadUi(notificationId, false);
+  // Mark as read without holding navigation on a network round trip; opening "Untuk Anda" already bulk-marks it.
+  if (outcome && notificationId && !wasRead) markMyNotificationReadUi(notificationId, false).catch(function () {});
   if (!requestId || !kind) return;
   if (kind === 'absen' || kind === 'attendance') {
-    await Promise.all([loadMyRequests(), S.approver ? refreshPending() : Promise.resolve()]);
-    var isApproval = !!(((DATA.appr && DATA.appr.absensi) || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(requestId); }));
-    var own = ((DATA.myReq && DATA.myReq.absensi) || []).find(function(x) { return String(x.id || '') === String(requestId); });
-    if (!isApproval && !own && outcome) {
-      try { own = await api('getMyAttendanceRequest', [requestId], 15000); } catch (_) {}
-      if (own && own.id) { DATA.myReq = DATA.myReq || { absensi: [], cuti: [] }; DATA.myReq.absensi = DATA.myReq.absensi || []; DATA.myReq.absensi.push(own); }
+    var approval = ((DATA.appr && DATA.appr.absensi) || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(requestId); });
+    var own = ((DATA.myReq && DATA.myReq.absensi) || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(requestId); });
+    if (approval || own) {
+      openAbsenDetail(requestId, !!approval);
+      loadMyRequests().catch(function () {});
+      if (S.approver) refreshPending().catch(function () {});
+      return;
     }
-    openAbsenDetail(requestId, isApproval);
+    if (outcome) {
+      try { own = await api('getMyAttendanceRequest', [requestId], 12000); } catch (_) {}
+      if (own && own.id) {
+        DATA.myReq = DATA.myReq || { absensi: [], cuti: [] }; DATA.myReq.absensi = DATA.myReq.absensi || [];
+        DATA.myReq.absensi = DATA.myReq.absensi.filter(function (x) { return String(x.id || '') !== String(requestId); }); DATA.myReq.absensi.push(own);
+        openAbsenDetail(requestId, false);
+      } else toast('Detail pengajuan absensi tidak tersedia. Muat ulang data dan coba lagi.');
+      loadMyRequests().catch(function () {});
+      return;
+    }
+    Promise.all([loadMyRequests(), S.approver ? refreshPending() : Promise.resolve()]).then(function () { openAbsenDetail(requestId, !!(((DATA.appr && DATA.appr.absensi) || []).find(function(x) { return String(x.id || '') === String(requestId); }))); });
     return;
   }
   if (kind === 'cuti' || kind === 'timeoff') {
-    await Promise.all([loadCutiListSilent(), S.approver ? refreshPending() : Promise.resolve()]);
-    var own = DATA.cutiList.find(function(x) { return String(x.id || x.cutiId || '') === String(requestId); });
-    var pending = ((DATA.appr && DATA.appr.cuti) || []).find(function(x) { return String(x.id || x.cutiId || '') === String(requestId); });
-    if (!own && pending) { DATA.cutiList.push(pending); own = pending; }
-    if (!own && outcome) {
-      try { own = await api('getMyTimeOffRequest', [requestId], 15000); } catch (_) {}
-      if (own && own.id) DATA.cutiList.push(own);
+    var ownTimeoff = (DATA.cutiList || []).find(function(x) { return String(x.id || x.cutiId || x.request_id || x.cuti_id || '') === String(requestId); });
+    var pendingTimeoff = ((DATA.appr && DATA.appr.cuti) || []).find(function(x) { return String(x.id || x.cutiId || x.request_id || x.cuti_id || '') === String(requestId); });
+    if (!ownTimeoff && pendingTimeoff) { DATA.cutiList = DATA.cutiList || []; DATA.cutiList.push(pendingTimeoff); ownTimeoff = pendingTimeoff; }
+    if (ownTimeoff) {
+      openCutiDetail(requestId, !!pendingTimeoff);
+      loadCutiListSilent().catch(function () {});
+      if (S.approver) refreshPending().catch(function () {});
+      return;
     }
-    if (!own) { toast('Detail pengajuan Time Off belum tersedia. Silakan muat ulang data.'); return; }
-    openCutiDetail(requestId, !!pending);
+    if (outcome) {
+      try { ownTimeoff = await api('getMyTimeOffRequest', [requestId], 12000); } catch (_) {}
+      if (ownTimeoff && ownTimeoff.id) { DATA.cutiList = DATA.cutiList || []; DATA.cutiList.push(ownTimeoff); openCutiDetail(requestId, false); }
+      else toast('Detail pengajuan Time Off belum tersedia. Silakan muat ulang data.');
+      loadCutiListSilent().catch(function () {});
+      return;
+    }
+    Promise.all([loadCutiListSilent(), S.approver ? refreshPending() : Promise.resolve()]).then(function () {
+      var found = (DATA.cutiList || []).some(function(x) { return String(x.id || x.cutiId || '') === String(requestId); });
+      openCutiDetail(requestId, !found && !!(((DATA.appr && DATA.appr.cuti) || []).find(function(x) { return String(x.id || x.cutiId || '') === String(requestId); })));
+    });
   }
 }
 
@@ -7982,7 +8270,8 @@ window.handleMobileNotificationClick = handleMobileNotificationClick;
 
 function normalizeAbsensiEvidence(a) {
   if (!a || typeof a !== 'object') return a;
-  if (!a.fotoUrl) a.fotoUrl = a.foto_url || a.fotoBase64 || a.foto_base64 || a.photo_url || '';
+  if (!a.id) a.id = a.absensiId || a.absensi_id || a.attendance_id || a.requestId || a.request_id || '';
+  if (!a.fotoUrl) a.fotoUrl = attendanceEvidenceSource(a);
   if (a.latitude == null && a.lat != null) a.latitude = a.lat;
   if (a.longitude == null && a.lon != null) a.longitude = a.lon;
   if (!a.statusApproval && a.status_approval) a.statusApproval = a.status_approval;
@@ -7990,11 +8279,8 @@ function normalizeAbsensiEvidence(a) {
 }
 
 function approvalEvidenceReady(a) {
-  if (!a) return false;
-  normalizeAbsensiEvidence(a);
-  var st = String(a.statusApproval || '');
-  if (st.indexOf('PENDING') !== 0) return true;
-  return !!String(a.fotoUrl || '').trim();
+  // Missing evidence must be visible to approvers, not silently remove a pending request from the queue.
+  return !!a;
 }
 
 function refreshPending() {
@@ -8055,11 +8341,13 @@ function openApprList(kind) {
 }
 
 function alasanOf(a) {
-  var addr = String(a.address || '');
-  if (addr.indexOf('📝') === 0) return addr.slice(2).trim();
-  if (addr) return addr;
-  if (a.catatan) return a.catatan;
-  return 'Outside-office location';
+  a = a || {};
+  var note = String(a.catatan || a.alasan || a.reason || a.notes || '').replace(/\s*\[\[RHAREA=(?:A[1-4]|AX)\]\]/ig, '').trim();
+  if (note) return note;
+  var addr = String(a.address || a.alamat || '');
+  if (addr.indexOf('📝') === 0) return addr.slice(2).replace(/\s*\[\[RHAREA=(?:A[1-4]|AX)\]\]/ig, '').trim();
+  if (attendanceAreaCodeOf(a)) return 'Absensi di luar area kantor';
+  return addr || '—';
 }
 
 function absenItemHtml(a, fromAppr) {
@@ -8074,16 +8362,16 @@ function absenItemHtml(a, fromAppr) {
 async function openAbsenDetail(id, fromAppr) {
   _backTo = fromAppr ? 's-appr' : 's-home';
   var a = null;
-  if (fromAppr && DATA.appr) a = (DATA.appr.absensi || []).find(function(x) { return x.id === id; });
-  if (!a && DATA.myReq) a = (DATA.myReq.absensi || []).find(function(x) { return x.id === id; });
-  if (!a) { toast('Data not found.'); return; }
+  if (fromAppr && DATA.appr) a = (DATA.appr.absensi || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(id); });
+  if (!a && DATA.myReq) a = (DATA.myReq.absensi || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(id); });
+  if (!a) { toast('Data pengajuan tidak tersedia di cache. Muat ulang daftar dan coba lagi.'); return; }
   normalizeAbsensiEvidence(a);
-  if (a.fotoUrl) {
-    toast('Loading evidence photo...');
-    await prepareEvidenceForDisplay(a);
-  }
   renderAbsenDetail(a, fromAppr);
   saveDetailScreen('s-adet', id);
+  // Keep the request sheet responsive: evidence URL resolution must never block the approval details.
+  if (attendanceEvidenceSource(a)) {
+    prepareEvidenceForDisplay(a).then(function () { paintMobileAttendanceEvidence(a, a._fotoDisplayUrl || '', false); });
+  }
 }
 
 function renderAbsenDetail(a, fromAppr) {
@@ -8092,12 +8380,13 @@ function renderAbsenDetail(a, fromAppr) {
   var canAct = !!fromAppr && ((a.statusApproval === 'PENDING_ATASAN' && canActAsDirectManager(approvalRole, a, 'absensi')) || (approvalRole === 'SUPERADMIN' && a.statusApproval === 'PENDING_HR'));
   var alasan = alasanOf(a);
   var hero;
-  if ((a._fotoDisplayUrl || a.fotoUrl) && a.latitude) {
-    hero = '<div class="det-hero"><div class="map-half"><div id="detMap" style="width:100%;height:100%"></div></div><div class="ph-half"><img src="' + driveThumb(a._fotoDisplayUrl || a.fotoUrl) + '" onerror="this.parentNode.style.display=\'none\'" alt=""></div><div class="det-pill">' + statusPill(a.statusApproval) + '</div></div>';
-  } else if (a.latitude) {
-    hero = '<div class="det-hero"><div id="detMap" style="width:100%;height:100%"></div>' + (a.fotoUrl ? '<div style="position:absolute;bottom:8px;left:8px;background:#fff;padding:6px 8px;border-radius:6px;font-size:11px">Private photo could not be loaded</div>' : '') + '<div class="det-pill">' + statusPill(a.statusApproval) + '</div></div>';
+  var evidenceMarkup = mobileEvidenceBoxHtml(a);
+  if (a.latitude != null && a.longitude != null) {
+    hero = '<div class="det-hero"><div class="map-half"><div id="detMap" style="width:100%;height:100%"></div></div>' + evidenceMarkup + '<div class="det-pill">' + statusPill(a.statusApproval) + '</div></div>';
+  } else if (attendanceEvidenceSource(a)) {
+    hero = '<div class="det-hero" style="grid-template-columns:minmax(0,1fr);min-height:180px">' + evidenceMarkup + '<div class="det-pill">' + statusPill(a.statusApproval) + '</div></div>';
   } else {
-    hero = '<div class="det-hero"><div class="empty" style="padding-top:80px">No photo</div><div class="det-pill">' + statusPill(a.statusApproval) + '</div></div>';
+    hero = '<div class="det-hero"><div class="empty" style="padding-top:80px">Foto evidence tidak tersedia.</div><div class="det-pill">' + statusPill(a.statusApproval) + '</div></div>';
   }
   var tlHtml = '';
   var managerName = a.managerName || a.approvedByManager || 'manager';
@@ -8117,10 +8406,17 @@ function renderAbsenDetail(a, fromAppr) {
   } else {
     tlHtml = tlItem('no', 'Rejected', a.alasanApproval || '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   }
-  $('adetBody').innerHTML = hero + '<div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(a.nik, a.nama, faceVerOf(a.nik)) + '>' + avaInner(a.nik, a.nama, faceVerOf(a.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(a.nama) + '</b><div class="sub">' + esc(a.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Submitted online attendance</small><div><b>' + esc(tglID(a.tanggal)) + '</b></div><div style="color:#555">' + esc(a.tipe === 'MASUK' ? 'Clock in' : 'Clock out') + ': ' + (a.jam || '').slice(0, 5) + '</div></div><div class="det-row"><small>Reason</small><div>' + esc(alasan) + '</div></div>' + (a.latitude ? '<div class="det-row"><small>Location</small><a href="https://www.google.com/maps?q=' + a.latitude + ',' + a.longitude + '" target="_blank">View details</a></div>' : '') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlHtml + '</div></div><div class="field" id="adNoteWrap" style="' + (canAct ? '' : 'display:none') + '"><label>Catatan (opsional)</label><input id="adNote" placeholder="Catatan keputusan"></div>' + (canAct ? '<div class="det-actions"><button class="btn btn-att-approve" onclick="actAbsen(\'' + a.id + '\',true)">Approve</button><button class="btn btn-att-reject" onclick="actAbsen(\'' + a.id + '\',false)">Reject</button></div>' : '') + '</div>';
+  var locationStatus = attendanceLocationStatusLabel(a);
+  var locationAddress = attendanceAddressText(a);
+  var locationHtml = (a.latitude != null && a.longitude != null)
+    ? '<div class="det-row"><small>Lokasi</small><div><b>' + esc(locationStatus || 'Lokasi belum dapat diverifikasi') + '</b></div>' + (locationAddress ? '<div class="sub">Alamat GPS: ' + esc(locationAddress) + '</div>' : '') + '<a href="https://www.google.com/maps?q=' + encodeURIComponent(a.latitude) + ',' + encodeURIComponent(a.longitude) + '" target="_blank" rel="noopener noreferrer">Lihat peta</a></div>'
+    : '';
+  $('adetBody').innerHTML = hero + '<div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(a.nik, a.nama, faceVerOf(a.nik)) + '>' + avaInner(a.nik, a.nama, faceVerOf(a.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(a.nama) + '</b><div class="sub">' + esc(a.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Submitted online attendance</small><div><b>' + esc(tglID(a.tanggal)) + '</b></div><div style="color:#555">' + esc(a.tipe === 'MASUK' ? 'Clock in' : 'Clock out') + ': ' + (a.jam || '').slice(0, 5) + '</div></div><div class="det-row"><small>Reason</small><div>' + esc(alasan) + '</div></div>' + locationHtml + '<div class="det-row"><small>Request status</small><div class="tl">' + tlHtml + '</div></div><div class="field" id="adNoteWrap" style="' + (canAct ? '' : 'display:none') + '"><label>Catatan (opsional)</label><input id="adNote" placeholder="Catatan keputusan"></div>' + (canAct ? '<div class="det-actions"><button class="btn btn-att-approve" onclick="actAbsen(\'' + a.id + '\',true)">Approve</button><button class="btn btn-att-reject" onclick="actAbsen(\'' + a.id + '\',false)">Reject</button></div>' : '') + '</div>';
+  $('adetBody').dataset.attendanceId = String(a.id || '');
   go('s-adet');
   hydrateFaces();
-  if (a.latitude) setTimeout(function() { buildDetMap(a); }, 80);
+  if (a.latitude != null && a.longitude != null) setTimeout(function() { buildDetMap(a); }, 80);
+  if (a._fotoDisplayUrl) setTimeout(function () { paintMobileAttendanceEvidence(a, a._fotoDisplayUrl, false); }, 0);
 }
 
 function actAbsen(id, approve) {
@@ -8214,28 +8510,23 @@ function stopFaceSelf() {
   if (v) v.srcObject = null;
 }
 
-function saveSelfFace() {
+async function saveSelfFace() {
   if (!FACESELF.desc) return;
   if (Date.now() - FACESELF.descAt > FACE_UI_CONFIG.freshSaveMs) { toast('Position your face in front of the camera first.'); return; }
   var b = $('faceSaveBtn');
   b.disabled = true;
-  b.innerHTML = '<span class="spin"></span> Saving photo...';
+  b.innerHTML = '<span class="spin"></span> Updating Face ID…';
   var photo = snapFacePhoto($('faceVideo'), 160, 0.65);
-  api('saveMyFaceDescriptor', [S.user.nik, FACESELF.desc, photo]).then(function(r) {
-    try { RHMediaCache.invalidate(S.user.nik); } catch (e) {}
-    toast(r.message);
-    S.face.registered = true;
-    S.face.canRegister = true;
-    renderFaceBanner();
+  try {
+    var r = await saveFaceReferenceAndRefresh(Array.from(FACESELF.desc), photo);
+    toast((r && r.message) || 'Face ID and photo updated.');
     closeSheet();
-    loadBootstrap();
-    loadMyDescriptor();
-  }).catch(function(e) {
+  } catch (e) {
     if (e && e.message === 'STALE') return;
-    toast(e.message);
+    toast((e && e.message) || 'Unable to update Face ID.');
     b.disabled = false;
     b.textContent = 'Save Profile Photo';
-  });
+  }
 }
 
 function loadMyRequests() {
@@ -8412,6 +8703,8 @@ async function changeProfileFaceByUpload(input) {
   if (!file) return;
   if (!/^image\/(jpeg|png|webp)$/i.test(file.type || '')) { toast('Choose a JPG, PNG, or WebP image.'); return; }
   if (file.size > 8 * 1024 * 1024) { toast('The image must be 8 MB or smaller.'); return; }
+  if (FACE_REFERENCE_UPDATING || FACE_PROFILE_PREPARING) { toast('A Face ID update is already in progress.'); return; }
+  FACE_PROFILE_PREPARING = true;
   var submitButton = document.querySelector('#shPhotoActions button[data-profile-photo-upload]');
   try {
     if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Checking photo...'; }
@@ -8438,24 +8731,19 @@ async function changeProfileFaceByUpload(input) {
     if (!detection || !detection.descriptor || detection.descriptor.length !== 128) {
       throw new Error('No clear face was found. Use a front-facing photo or take a selfie.');
     }
-    if (submitButton) submitButton.textContent = 'Saving photo...';
-    await api('saveMyFaceDescriptor', [S.user.nik, Array.from(detection.descriptor), photo], 30000);
-    try { RHMediaCache.invalidate(S.user.nik); } catch (e) {}
+    if (submitButton) submitButton.textContent = 'Updating Face ID…';
+    var saved = await saveFaceReferenceAndRefresh(Array.from(detection.descriptor), photo);
     S.face = S.face || {};
     S.face.registered = true;
     S.face.canRegister = true;
-    S.myDescriptor = Array.from(detection.descriptor);
-    await loadBootstrap();
-    await loadMyDescriptor();
-    renderAkun();
-    renderFaceBanner();
-    hydrateFaces();
     closeSheet();
-    toast('Profile photo and Face ID updated.');
+    toast((saved && saved.message) || 'Profile photo and Face ID updated.');
   } catch (e) {
     toast((e && e.message) || 'Unable to update the profile photo.');
   } finally {
+    FACE_PROFILE_PREPARING = false;
     if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Upload Photo'; }
+    if (currentScr() === 's-att') updateFaceState();
   }
 }
 
@@ -11846,15 +12134,16 @@ function showHrPlaceholder(title, group, description) {
       var map = haveCoords ? '<iframe title="Attendance location map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.openstreetmap.org/export/embed.html?bbox=' + bbox + '&amp;layer=mapnik&amp;marker=' + encodeURIComponent(lat) + '%2C' + encodeURIComponent(lon) + '"></iframe><a class="rk-att-map-link" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat=' + encodeURIComponent(lat) + '&amp;mlon=' + encodeURIComponent(lon) + '#map=17/' + encodeURIComponent(lat) + '/' + encodeURIComponent(lon) + '">View larger map ↗</a>' : '<div class="rk-att-map-empty">Location is not available for this request.</div>';
       var avatar = requester && typeof empAvatarMarkup === 'function' ? empAvatarMarkup(requester, false) : '<div class="rk-att-avatar-fallback">' + escH(String(row.nama || 'E').slice(0,1)) + '</div>';
       var reason = typeof alasanOf === 'function' ? alasanOf(row) : String(row.catatan || row.address || '—');
-      var locationText = String(row.address || row.branchTarget || '').trim();
-      if (/^📝/.test(locationText)) locationText = String(row.branchTarget || '').trim();
+      var locationText = window.attendanceAddressText(row);
+      var areaStatusText = window.attendanceLocationStatusLabel(row);
+      var locationDisplayText = areaStatusText || 'Lokasi belum dapat diverifikasi';
       var html = '<div class="rk-att-approval-layout"><div class="rk-att-approval-visual"><div class="rk-att-approval-map">' + map + '</div><div class="rk-att-approval-photo" id="rkAttApprovalPhotoBox"><div class="rk-att-photo-empty">Evidence photo not available.</div></div></div><div class="rk-att-approval-body"><div class="rk-att-person">' + avatar + '<div><b>' + escH(row.nama || '—') + '</b><small>' + escH(row.nik || row.employeeId || '') + '</small></div><span class="rk-pill ' + (/DITOLAK/.test(status) ? 'no' : status === 'DISETUJUI' ? 'ok' : 'warn') + '">' + escH(status.replace(/_/g, ' ')) + '</span></div>' +
         '<div class="rk-att-fields">' +
         '<div><small>REQUEST ID</small><span>' + escH(row.id || id) + '</span></div>' +
         '<div><small>REQUESTED DATE</small><span>' + escH(submitted || '—') + '</span></div>' +
         '<div><small>ATTENDANCE</small><span>' + escH(row.tipe === 'MASUK' ? 'Clock in' : (row.tipe === 'PULANG' ? 'Clock out' : row.tipe || '—')) + '</span></div>' +
         '<div><small>ATTENDANCE DATE / TIME</small><span>' + escH(row.tanggal || '—') + ' · ' + escH(String(row.jam || '').slice(0,5) || '—') + '</span></div>' +
-        '<div><small>LOCATION</small><span>' + escH(locationText || '—') + '</span></div>' +
+        '<div><small>LOKASI</small><span>' + escH(locationDisplayText) + '</span>' + (locationText ? '<small>Alamat GPS: ' + escH(locationText) + '</small>' : '') + '</div>' +
         '<div class="rk-att-reason"><small>REASON</small><span>' + escH(reason || '—') + '</span></div></div>' +
         '<div class="rk-att-status-title">Request status</div><div class="rk-att-timeline">' + timeline + '</div>' +
         (canAct ? '<div class="rk-att-note-wrap"><label for="rkAttApprovalNote">Catatan (opsional)</label><textarea id="rkAttApprovalNote" rows="3" placeholder="Catatan keputusan"></textarea></div><div class="rk-att-actions"><button type="button" class="approve" data-att-detail-action="APPROVE">Approve</button><button type="button" class="reject" data-att-detail-action="REJECT">Reject</button></div>' : '') +
@@ -11863,14 +12152,24 @@ function showHrPlaceholder(title, group, description) {
       shade.classList.add('on');
       try { hydrateFaces(); } catch (_) {}
       var photoBox = document.getElementById('rkAttApprovalPhotoBox');
-      var photoSource = String(row.fotoUrl || row.foto_url || row.foto_path || row.storage_path || '').trim();
+      var photoSource = window.attendanceEvidenceSource(row);
       if (photoBox && photoSource) {
         photoBox.innerHTML = '<div class="rk-att-photo-empty">Loading evidence photo…</div>';
-        resolveEvidenceDisplayUrl(photoSource).then(function (url) {
+        window.resolveEvidenceDisplayUrl(photoSource).then(function (url) {
           if (!photoBox.isConnected || String(shade.dataset.requestId) !== String(row.id || id)) return;
           photoBox.innerHTML = '<img id="rkAttApprovalPhoto" alt="Attendance evidence photo">';
           var img = photoBox.querySelector('img'); img.src = driveThumb(url);
-          img.onerror = function () { photoBox.innerHTML = '<div class="rk-att-photo-empty">Evidence photo could not be loaded.</div>'; };
+          img.onerror = function () {
+            if (!img.dataset.didRefresh) {
+              img.dataset.didRefresh = '1';
+              window.resolveEvidenceDisplayUrl(photoSource, true).then(function (freshUrl) {
+                if (!photoBox.isConnected || String(shade.dataset.requestId) !== String(row.id || id)) return;
+                var retryImg = document.createElement('img'); retryImg.id = 'rkAttApprovalPhoto'; retryImg.alt = 'Attendance evidence photo';
+                retryImg.onerror = function () { photoBox.innerHTML = '<div class="rk-att-photo-empty">Evidence photo could not be loaded. Please retry or inspect the stored evidence path.</div>'; };
+                retryImg.src = driveThumb(freshUrl); photoBox.innerHTML = ''; photoBox.appendChild(retryImg);
+              }).catch(function () { photoBox.innerHTML = '<div class="rk-att-photo-empty">Evidence photo could not be loaded.</div>'; });
+            } else photoBox.innerHTML = '<div class="rk-att-photo-empty">Evidence photo could not be loaded.</div>';
+          };
         }).catch(function () { if (photoBox.isConnected && String(shade.dataset.requestId) === String(row.id || id)) photoBox.innerHTML = '<div class="rk-att-photo-empty">Evidence photo could not be loaded.</div>'; });
       }
     }
@@ -12587,7 +12886,7 @@ function showHrPlaceholder(title, group, description) {
     path = String(path || '').trim(); if(!path){ rkToast('No attached file was recorded.'); return; }
     var tab = window.open('about:blank', '_blank');
     if (tab) { try { tab.opener = null; } catch(e) {} }
-    resolveEvidenceDisplayUrl(path).then(function(url){
+    window.resolveEvidenceDisplayUrl(path).then(function(url){
       if(!url) throw new Error('The attachment URL is unavailable.');
       if(tab && !tab.closed) tab.location.href = url;
       else { var a=document.createElement('a'); a.href=url; a.target='_blank'; a.rel='noopener noreferrer'; a.click(); }
@@ -12789,7 +13088,7 @@ function showHrPlaceholder(title, group, description) {
     var rawFile=String(file||'').trim();
     // Embedded base64 stays in the browser. Convert large data URLs to blob URLs to reduce repeated base64 decoding.
     var localUrl=/^data:/i.test(rawFile) ? (rawFile.length>65536 ? cutiDataUrlToObjectUrl(rawFile) : rawFile) : '';
-    var resolved=localUrl ? Promise.resolve(localUrl) : resolveEvidenceDisplayUrl(rawFile);
+    var resolved=localUrl ? Promise.resolve(localUrl) : window.resolveEvidenceDisplayUrl(rawFile);
     var timedOut=false;
     var timer=setTimeout(function(){
       timedOut=true;
@@ -13572,25 +13871,29 @@ function showHrPlaceholder(title, group, description) {
     if (existing) { openDesktopCutiDetail(wanted); return; }
     var ownRow = (DATA.cutiList || []).concat((DATA.myReq && DATA.myReq.cuti) || []).find(function (row) { return String(row.id || row.request_id || row.cuti_id || '') === wanted; });
     var fallbackRow = rawRow ? normalizeCutiRow(rawRow) : (ownRow ? normalizeCutiRow(ownRow) : null);
-    var year = fallbackRow ? cutiYearOf(fallbackRow) : 0;
-    if (!year && wanted) {
-      var m = wanted.match(/^CT-(20\d{2})/i);
-      if (m) year = Number(m[1]);
+    // Notification and approval queues already carry most of the detail; display it immediately instead of reloading an entire year.
+    if (fallbackRow && fallbackRow.id) {
+      cutiUI.data = cutiUI.data || [];
+      var cachedIndex = cutiUI.data.findIndex(function (row) { return String(row.id) === wanted; });
+      if (cachedIndex >= 0) cutiUI.data[cachedIndex] = Object.assign({}, cutiUI.data[cachedIndex], fallbackRow);
+      else cutiUI.data.push(fallbackRow);
+      openDesktopCutiDetail(wanted);
+      return;
     }
-    if (year && year !== cutiUI.y) { cutiUI.y = year; cutiUI.data = null; cutiUI.dataYear = 0; }
-    loadCutiData(true).then(function () {
-      var found = (cutiUI.data || []).some(function (row) { return String(row.id) === wanted; });
-      if (!found && fallbackRow && fallbackRow.id) {
-        cutiUI.data = cutiUI.data || [];
-        cutiUI.data.push(fallbackRow);
-        found = true;
+    // For a result notification absent from local cache, request only this record first.
+    api('getMyTimeOffRequest', [wanted], 12000).then(function (detailRow) {
+      if (detailRow && (detailRow.id || detailRow.request_id || detailRow.cuti_id)) {
+        cutiUI.data = cutiUI.data || []; cutiUI.data.push(normalizeCutiRow(detailRow));
+        openDesktopCutiDetail(wanted); return;
       }
-      if (found) { openDesktopCutiDetail(wanted); return; }
-      return api('getMyTimeOffRequest', [wanted], 15000).then(function (ownRow) {
-        if (ownRow && ownRow.id) {
-          cutiUI.data = cutiUI.data || []; cutiUI.data.push(normalizeCutiRow(ownRow));
-          openDesktopCutiDetail(wanted);
-        } else rkToast('Detail pengajuan tidak dapat dimuat. Muat ulang notifikasi atau daftar Time Off.');
+      loadCutiData(true).then(function () {
+        if ((cutiUI.data || []).some(function (row) { return String(row.id) === wanted; })) openDesktopCutiDetail(wanted);
+        else rkToast('Detail pengajuan tidak dapat dimuat. Muat ulang notifikasi atau daftar Time Off.');
+      });
+    }).catch(function () {
+      loadCutiData(true).then(function () {
+        if ((cutiUI.data || []).some(function (row) { return String(row.id) === wanted; })) openDesktopCutiDetail(wanted);
+        else rkToast('Detail pengajuan tidak dapat dimuat. Muat ulang notifikasi atau daftar Time Off.');
       }).catch(function () { rkToast('Detail pengajuan tidak dapat dimuat. Muat ulang notifikasi atau daftar Time Off.'); });
     });
   }
@@ -13833,15 +14136,9 @@ function showHrPlaceholder(title, group, description) {
       var isOutcome = item.getAttribute('data-rk-notif-outcome') === '1';
       var isRead = item.getAttribute('data-rk-notif-read') === '1';
       setDeskNotifPanel(false);
-      if (isOutcome && notifId && !isRead && typeof window.markMyNotificationReadUI === 'function') await window.markMyNotificationReadUI(notifId, false);
+      if (isOutcome && notifId && !isRead && typeof window.markMyNotificationReadUI === 'function') window.markMyNotificationReadUI(notifId, false).catch(function () {});
       if (requestId && (notifKind === 'absen' || notifKind === 'attendance')) {
-        if (dest === 'apr') {
-          aprCache.at = 0;
-          try {
-            var fresh = await api('getPendingApprovalsFull', [], 20000);
-            aprCache.absensi = (fresh && fresh.absensi) || []; aprCache.cuti = (fresh && fresh.cuti) || []; aprCache.at = Date.now();
-          } catch (_) {}
-        }
+        // The queue was loaded when the notification panel rendered. Open immediately; action handler re-fetches and revalidates before saving.
         openDesktopAttendanceDetail(requestId);
       } else if (requestId && (notifKind === 'cuti' || notifKind === 'timeoff')) {
         openTimeOffDetailFromNotification(requestId, deskNotifTimeOffRows[String(requestId)] || null);
