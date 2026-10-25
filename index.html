@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta name="reholz-release" content="v13.1.0-sequenced-approval-tap-photo">
+<meta name="reholz-release" content="v13.2.0-office-location-flex-branch-casefold">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.1.0-reholz-hris">
+<meta name="app-release" content="v13.2.0-reholz-office-location">
 <title>ReHolz HRIS</title>
 <meta name="description" content="ReHolz HRIS for employee attendance, profile photo verification, GPS geofencing, and time-off management.">
 <meta property="og:title" content="ReHolz Attendance">
@@ -3552,8 +3552,8 @@ window.__APP_PREPARING_ASSETS = true;
         <div id="locMap" style="height:280px;border-radius:14px;border:1px solid var(--line);margin-top:6px;position:relative"></div>
       </div>
       <div style="display:flex;gap:10px">
-        <div class="field" style="flex:1"><label>Latitude</label><input id="locLat" readonly=""></div>
-        <div style="flex:1" class="field"><label>Longitude</label><input id="locLon" readonly=""></div>
+        <div class="field" style="flex:1"><label>Latitude</label><input id="locLat" type="number" inputmode="decimal" min="-90" max="90" step="any" placeholder="-90 to 90"></div>
+        <div style="flex:1" class="field"><label>Longitude</label><input id="locLon" type="number" inputmode="decimal" min="-180" max="180" step="any" placeholder="-180 to 180"></div>
       </div>
       <div style="display:flex;gap:10px">
         <div class="field" style="flex:1"><label>Radius (meters)</label><input id="locRadius" type="number" value="100" oninput="locUpdateCircle()"></div>
@@ -3977,8 +3977,8 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v13.1.0-sequenced-approval-tap-photo';
-var RH_DISPLAY_VERSION = 'v13.1.0';
+var RH_HTML_RELEASE = 'v13.2.0-office-location-flex-branch-casefold';
+var RH_DISPLAY_VERSION = 'v13.2.0';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -4386,7 +4386,7 @@ function setPrepProgress(p, t) {
 
 function registerAppServiceWorker() {
   if (!('serviceWorker' in navigator)) return Promise.resolve(false);
-  return navigator.serviceWorker.register('./sw.js?v=20', { scope: './', updateViaCache: 'none' }).then(function(registration) {
+  return navigator.serviceWorker.register('./sw.js?v=21', { scope: './', updateViaCache: 'none' }).then(function(registration) {
     // Ask the browser to revalidate sw.js instead of trusting an old HTTP-cache copy.
     try { if (registration && typeof registration.update === 'function') registration.update().catch(function() {}); } catch (e) {}
     // The new worker self-activates; this message also helps older compatible workers.
@@ -5214,7 +5214,7 @@ async function api(fn, args, timeoutMs) {
   if (fn === 'saveLokasiKantor') {
     var d = args[0] || {};
     return rpc('save_lokasi_kantor', {
-      p_token: getToken(), p_branch: d.branch, p_alamat: d.alamat, p_lat: d.latitude,
+      p_token: getToken(), p_old_branch: d.oldBranch || null, p_branch: d.branch, p_alamat: d.alamat, p_lat: d.latitude,
       p_lon: d.longitude, p_radius: d.radius, p_max_accuracy: d.maxAccuracy, p_status: d.status || 'AKTIF'
     });
   }
@@ -7072,6 +7072,7 @@ function locAddNew() {
   $('locSearchQ').value = ''; $('locSearchRes').textContent = '';
   $('locEditor').style.display = 'block';
   $('locEditor').scrollIntoView({ behavior: 'smooth' });
+  locBindCoordinateInputs();
   setTimeout(function() { locInitMap(NaN, NaN); }, 100);
 }
 
@@ -7080,13 +7081,14 @@ function locEdit(branch) {
   if (!l) return;
   LOC_EDIT = branch;
   $('locEdTitle').textContent = 'Edit Branch: ' + branch;
-  $('locBranch').value = l.branch; $('locBranch').disabled = true;
+  $('locBranch').value = l.branch; $('locBranch').disabled = false;
   $('locAlamat').value = l.alamat || '';
   $('locLat').value = l.latitude; $('locLon').value = l.longitude;
   $('locRadius').value = l.radius; $('locMaxAcc').value = l.maxAccuracy;
   $('locSearchQ').value = ''; $('locSearchRes').textContent = '';
   $('locEditor').style.display = 'block';
   $('locEditor').scrollIntoView({ behavior: 'smooth' });
+  locBindCoordinateInputs();
   setTimeout(function() { locInitMap(+l.latitude, +l.longitude); }, 100);
 }
 
@@ -7134,13 +7136,35 @@ function locInitMapInner(lat, lon) {
   setTimeout(function() { try { LOC_MAP.invalidateSize({pan:false}); } catch (e) {} }, 300);
 }
 
+function locBindCoordinateInputs() {
+  ['locLat', 'locLon'].forEach(function(id) {
+    var el = $(id);
+    if (!el || el.dataset.pointBinding === '1') return;
+    el.dataset.pointBinding = '1';
+    el.addEventListener('change', function() { locSetPointFromInputs(true); });
+    el.addEventListener('blur', function() { locSetPointFromInputs(false); });
+  });
+}
+
+function locSetPointFromInputs(recenter) {
+  var lat = parseFloat($('locLat').value), lon = parseFloat($('locLon').value);
+  if (!isFinite(lat) || Math.abs(lat) > 90 || !isFinite(lon) || Math.abs(lon) > 180) return false;
+  if (LOC_MARKER) LOC_MARKER.setLatLng([lat, lon]);
+  if (LOC_CIRCLE) LOC_CIRCLE.setLatLng([lat, lon]);
+  if (recenter && LOC_MAP) LOC_MAP.setView([lat, lon], Math.max(LOC_MAP.getZoom(), MAP_CONFIG.zoom.editorEdit));
+  return true;
+}
+
 function locUpdateCircle() {
   if (!LOC_CIRCLE) return;
   var r = +($('locRadius').value) || 100;
-  var lat = parseFloat($('locLat').value) || 0;
-  var lon = parseFloat($('locLon').value) || 0;
+  var lat = parseFloat($('locLat').value);
+  var lon = parseFloat($('locLon').value);
   LOC_CIRCLE.setRadius(r);
-  LOC_CIRCLE.setLatLng([lat, lon]);
+  if (isFinite(lat) && Math.abs(lat) <= 90 && isFinite(lon) && Math.abs(lon) <= 180) {
+    LOC_CIRCLE.setLatLng([lat, lon]);
+    if (LOC_MARKER) LOC_MARKER.setLatLng([lat, lon]);
+  }
 }
 
 function locSearch() {
@@ -7170,8 +7194,9 @@ function locSave() {
   var r = +($('locRadius').value) || 100;
   var ma = +($('locMaxAcc').value) || 50;
   if (!branch) { toast('Branch name is required.'); return; }
-  if (!isFinite(lat) || !isFinite(lon)) { toast('Select a point on the map.'); return; }
-  api('saveLokasiKantor', [{ branch: branch, alamat: alamat, latitude: lat, longitude: lon, radius: r, maxAccuracy: ma }]).then(function(r) {
+  if (!isFinite(lat) || Math.abs(lat) > 90 || !isFinite(lon) || Math.abs(lon) > 180) { toast('Enter valid latitude (-90 to 90) and longitude (-180 to 180), or choose a point on the map.'); return; }
+  if (!isFinite(r) || r < 1 || !isFinite(ma) || ma < 1) { toast('Radius and maximum GPS accuracy must be at least 1 meter.'); return; }
+  api('saveLokasiKantor', [{ oldBranch: LOC_EDIT, branch: branch, alamat: alamat, latitude: lat, longitude: lon, radius: r, maxAccuracy: ma }]).then(function(r) {
     toast(r.message);
     locCancelEdit();
     loadLokasiKantor();
@@ -10986,8 +11011,9 @@ function showHrPlaceholder(title, group, description) {
     shade.className = 'rk-modal-shade'; shade.id = 'rkLocShade';
     shade.innerHTML =
       '<div class="rk-modal rk-location-modal"><h3>' + (x ? 'Edit Branch: ' + escH(x.branch) : 'Add New Branch') + '</h3>' +
-      '<div class="f"><label>Branch Name *</label><input id="rklBranch" value="' + escH(x ? x.branch : '') + '" ' + (x ? 'readonly' : '') + '></div>' +
+      '<div class="f"><label>Branch Name *</label><input id="rklBranch" value="' + escH(x ? x.branch : '') + '" autocomplete="off"></div>' +
       '<div class="f"><label>Address</label><input id="rklAlamat" value="' + escH(x ? x.alamat || '' : '') + '"></div>' +
+      '<div class="f"><label>Search address / place</label><div style="display:flex;gap:8px"><input id="rklSearchQ" placeholder="Type an address or place name" style="flex:1;min-width:0"><button type="button" class="rk-btn" id="rklSearchBtn">🔍 Search</button></div><div id="rklSearchRes" class="rk-note" style="margin-top:6px"></div></div>' +
       '<div class="f"><label>Choose a point on the map</label><div id="rklMap" role="application" aria-label="Office location map"></div><small class="rk-loc-help">Click the map or drag the marker. You can also enter latitude and longitude manually below.</small></div>' +
       '<div class="row"><div class="f"><label>Latitude *</label><input id="rklLat" type="number" min="-90" max="90" step="any" value="' + (x ? x.latitude : '') + '"></div>' +
       '<div class="f"><label>Longitude *</label><input id="rklLon" type="number" min="-180" max="180" step="any" value="' + (x ? x.longitude : '') + '"></div></div>' +
@@ -10998,11 +11024,13 @@ function showHrPlaceholder(title, group, description) {
     document.body.appendChild(shade);
     shade.addEventListener('click', function (e) { if (e.target === shade) closeDeskLocModal(); });
     document.getElementById('rklCancel').addEventListener('click', closeDeskLocModal);
+    document.getElementById('rklSearchBtn').addEventListener('click', deskLocSearch);
+    document.getElementById('rklSearchQ').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); deskLocSearch(); } });
     ['rklLat','rklLon'].forEach(function(id){ document.getElementById(id).addEventListener('change', function(){ deskLocSetFromInputs(true); }); });
     document.getElementById('rklRadius').addEventListener('input', deskLocUpdateCircle);
     document.getElementById('rklSave').addEventListener('click', function () {
       var latEl=document.getElementById('rklLat'), lonEl=document.getElementById('rklLon');
-      var d = { branch: document.getElementById('rklBranch').value.trim(), alamat: document.getElementById('rklAlamat').value.trim(),
+      var d = { oldBranch: x ? x.branch : null, branch: document.getElementById('rklBranch').value.trim(), alamat: document.getElementById('rklAlamat').value.trim(),
         latitude: parseFloat(latEl.value), longitude: parseFloat(lonEl.value), radius: parseInt(document.getElementById('rklRadius').value,10),
         maxAccuracy: parseInt(document.getElementById('rklAcc').value,10), status: document.getElementById('rklStatus').value };
       if (!d.branch || !isFinite(d.latitude) || Math.abs(d.latitude)>90 || !isFinite(d.longitude) || Math.abs(d.longitude)>180 || !isFinite(d.radius) || d.radius<1) { rkToast('Enter a valid branch, latitude (-90 to 90), longitude (-180 to 180), and radius.'); return; }
@@ -11022,6 +11050,21 @@ function showHrPlaceholder(title, group, description) {
     if (RK_DESK_LOC_MARKER) RK_DESK_LOC_MARKER.setLatLng([lat,lon]);
     if (RK_DESK_LOC_CIRCLE) RK_DESK_LOC_CIRCLE.setLatLng([lat,lon]);
     if (recenter && RK_DESK_LOC_MAP) RK_DESK_LOC_MAP.setView([lat,lon], Math.max(RK_DESK_LOC_MAP.getZoom(), 15));
+  }
+  function deskLocSearch() {
+    var qEl=document.getElementById('rklSearchQ'), result=document.getElementById('rklSearchRes');
+    var q=qEl ? qEl.value.trim() : '';
+    if(!q){ if(result)result.textContent='Enter an address or place name first.'; return; }
+    if(result)result.textContent='Searching address…';
+    var url='https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=id&q='+encodeURIComponent(q);
+    fetch(url,{headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('Geocoding service returned HTTP '+r.status);return r.json();}).then(function(rows){
+      if(!rows||!rows.length){if(result)result.textContent='No matching address found. Try adding city or district.';return;}
+      var lat=parseFloat(rows[0].lat),lon=parseFloat(rows[0].lon);
+      if(!isFinite(lat)||!isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)throw new Error('The search result has invalid coordinates.');
+      var address=document.getElementById('rklAlamat'); if(address)address.value=rows[0].display_name||q;
+      deskLocWritePoint(lat,lon,true);
+      if(result)result.textContent='Location found: '+(rows[0].display_name||q);
+    }).catch(function(e){if(result)result.textContent='Search failed: '+(e&&e.message||e)+'. You can still set the point on the map or enter coordinates.';});
   }
   function deskLocSetFromInputs(recenter) {
     var lat=parseFloat((document.getElementById('rklLat')||{}).value), lon=parseFloat((document.getElementById('rklLon')||{}).value);
