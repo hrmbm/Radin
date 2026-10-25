@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="en" =""="" =""><head>
-<meta name="reholz-release" content="v12.2.0-forced-upgrade-cache-warmup">
+<html lang="en"><head>
+<meta name="reholz-release" content="v13.1.0-sequenced-approval-tap-photo">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -9,11 +9,11 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="14.0-hrmsmbm-desktop-console">
+<meta name="app-release" content="v13.1.0-reholz-hris">
 <title>ReHolz HRIS</title>
-<meta name="description" content="ReHolz Employee Attendance app with a fixed ReHolz theme, Face ID, GPS geofencing, and Time Off Management.">
+<meta name="description" content="ReHolz HRIS for employee attendance, profile photo verification, GPS geofencing, and time-off management.">
 <meta property="og:title" content="ReHolz Attendance">
-<meta property="og:description" content="ReHolz Employee Attendance app with a fixed ReHolz theme, Face ID, GPS geofencing, and Time Off Management.">
+<meta property="og:description" content="ReHolz HRIS for employee attendance, profile photo verification, GPS geofencing, and time-off management.">
 <meta property="og:type" content="website">
 <style>
 /* ReHolz Premium Architectural Theme */
@@ -2764,24 +2764,7 @@ input, select, textarea {
   </svg></span>
       <span>Office Locations</span>
     </button>
-    <button class="d-nav-item" data-scr="s-face" onclick="go('s-face');loadFaceMgr()">
-      <span class="d-icon"><svg viewBox="0 0 36 36" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="wd5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4CAF7F"></stop><stop offset="50%" stop-color="#0E7A50"></stop><stop offset="100%" stop-color="#004C33"></stop></linearGradient>
-      <linearGradient id="lf5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60D286"></stop><stop offset="100%" stop-color="#00603F"></stop></linearGradient>
-      <filter id="sh5" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="1.2" flood-color="#00351F" flood-opacity="0.32"></feDropShadow></filter>
-    </defs>
-    <!-- 3D Wood Scanner Frame -->
-    <rect x="4.5" y="4.5" width="27" height="27" rx="7" fill="#EAF4EC" stroke="url(#wd5)" stroke-width="2.2" filter="url(#sh5)"></rect>
-    <path d="M8 12V9a1 1 0 011-1h3M28 12V9a1 1 0 00-1-1h-3M8 24v3a1 1 0 001 1h3M28 24v3a1 1 0 01-1 1h-3" stroke="#007850" stroke-width="2.2" stroke-linecap="round"></path>
-    <circle cx="18" cy="15.5" r="4.2" stroke="#007850" stroke-width="1.8" fill="#E4F2E8"></circle>
-    <path d="M12.5 24.5c1.4-2.2 3.4-3.3 5.5-3.3s4.1 1.1 5.5 3.3" stroke="#007850" stroke-width="1.8" stroke-linecap="round"></path>
-    <!-- 3D Organic Leaf -->
-    <path d="M25 4c2.5 1 4 3.8 2.8 6.5-2.8 1-5.5-.8-6.2-2.8.5-1.4 1.8-3.2 3.4-3.7z" fill="url(#lf5)" filter="url(#sh5)"></path>
-    <path d="M22 8c1.8 0 3.6-1.2 5-2.2" stroke="#B8F0CC" stroke-width="0.8" stroke-linecap="round"></path>
-  </svg></span>
-      <span>Face ID AI</span>
-    </button>
+    
     <div class="rh-nav-section">HR MANAGEMENT</div>
     <button class="d-nav-item rh-placeholder-link" onclick="showHrPlaceholder('Employee Directory','Employees','Employee directory, filters, employment status, and profile details.');"><span class="d-icon">👥</span><span>Employee Directory</span></button>
     <button class="d-nav-item rh-placeholder-link" onclick="showHrPlaceholder('Workforce Planning','Employees','Workforce needs and staffing plans.');"><span class="d-icon">📊</span><span>Manpower Planning</span></button>
@@ -2955,31 +2938,7 @@ window.__APP_PREPARING_ASSETS = true;
         <div class="d-welcome-title">Welcome, <span id="homeGreetName"></span>!</div>
         <div class="d-welcome-sub">Tuesday, October 13, 2026 • REHOLZ - LUCEO HRIS Portal</div>
         <div class="d-shortcuts">
-          <button class="d-shortcut-btn" onclick="startAttendance('MASUK')">
-            <span class="d-btn-ic"><svg viewBox="0 0 36 36" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="wd1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4CAF7F"></stop><stop offset="50%" stop-color="#0E7A50"></stop><stop offset="100%" stop-color="#004C33"></stop></linearGradient>
-      <linearGradient id="lf1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60D286"></stop><stop offset="100%" stop-color="#00603F"></stop></linearGradient>
-      <filter id="sh1" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="1.2" flood-color="#00351F" flood-opacity="0.32"></feDropShadow></filter>
-    </defs>
-    <!-- 3D Wood Tablet -->
-    <rect x="6.5" y="4" width="23" height="28" rx="4.5" fill="url(#wd1)" filter="url(#sh1)"></rect>
-    <!-- Wood grain subtle lines -->
-    <path d="M8 10h20M8 18h20M8 26h20" stroke="#7CC9A4" stroke-width="0.6" opacity="0.45" stroke-dasharray="3 2"></path>
-    <!-- Inner parchment -->
-    <rect x="8.5" y="6" width="19" height="24" rx="3" fill="#F2F9F4"></rect>
-    <!-- Clock & Check -->
-    <circle cx="18" cy="15" r="5.8" fill="#EAF4EC" stroke="#007850" stroke-width="1.6"></circle>
-    <path d="M18 12.2v3.2l2.4 1.4" stroke="#007850" stroke-width="1.6" stroke-linecap="round"></path>
-    <circle cx="21.5" cy="23.5" r="3.8" fill="#007850"></circle>
-    <path d="M19.8 23.5l1.2 1.2 2.4-2.4" stroke="#F2F9F4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-    <!-- 3D Organic Leaf -->
-    <path d="M23 3c3 0 6.5 2.5 5.5 6.5-3.5.8-7-.8-7.8-3.5.4-1.2 1-2.5 2.3-3z" fill="url(#lf1)" filter="url(#sh1)"></path>
-    <path d="M21 7c2.2-.4 4.8-1.8 6-3.2" stroke="#B8F0CC" stroke-width="0.8" stroke-linecap="round"></path>
-    <circle cx="25.5" cy="5.2" r="0.6" fill="#FFFFFF" opacity="0.85"></circle>
-  </svg></span>
-            <span>Online Attendance</span>
-          </button>
+          
           <button class="d-shortcut-btn" onclick="openSheet('shAjukan')">
             <span class="d-btn-ic"><svg viewBox="0 0 36 36" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -3215,33 +3174,7 @@ window.__APP_PREPARING_ASSETS = true;
         
 
     <div class="menu-grid">
-      <button class="menu-item" onclick="startAttendance('MASUK')">
-        <div class="menu-ic re-3d">
-          <svg viewBox="0 0 36 36" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="wd1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4CAF7F"></stop><stop offset="50%" stop-color="#0E7A50"></stop><stop offset="100%" stop-color="#004C33"></stop></linearGradient>
-      <linearGradient id="lf1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60D286"></stop><stop offset="100%" stop-color="#00603F"></stop></linearGradient>
-      <filter id="sh1" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="1.2" flood-color="#00351F" flood-opacity="0.32"></feDropShadow></filter>
-    </defs>
-    <!-- 3D Wood Tablet -->
-    <rect x="6.5" y="4" width="23" height="28" rx="4.5" fill="url(#wd1)"></rect>
-    <!-- Wood grain subtle lines -->
-    <path d="M8 10h20M8 18h20M8 26h20" stroke="#7CC9A4" stroke-width="0.6" opacity="0.45" stroke-dasharray="3 2"></path>
-    <!-- Inner parchment -->
-    <rect x="8.5" y="6" width="19" height="24" rx="3" fill="#F2F9F4"></rect>
-    <!-- Clock & Check -->
-    <circle cx="18" cy="15" r="5.8" fill="#EAF4EC" stroke="#007850" stroke-width="1.6"></circle>
-    <path d="M18 12.2v3.2l2.4 1.4" stroke="#007850" stroke-width="1.6" stroke-linecap="round"></path>
-    <circle cx="21.5" cy="23.5" r="3.8" fill="#007850"></circle>
-    <path d="M19.8 23.5l1.2 1.2 2.4-2.4" stroke="#F2F9F4" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-    <!-- 3D Organic Leaf -->
-    <path d="M23 3c3 0 6.5 2.5 5.5 6.5-3.5.8-7-.8-7.8-3.5.4-1.2 1-2.5 2.3-3z" fill="url(#lf1)"></path>
-    <path d="M21 7c2.2-.4 4.8-1.8 6-3.2" stroke="#B8F0CC" stroke-width="0.8" stroke-linecap="round"></path>
-    <circle cx="25.5" cy="5.2" r="0.6" fill="#FFFFFF" opacity="0.85"></circle>
-  </svg>
-        </div>
-        <span>Online Attendance</span>
-      </button>
+      
 
       <button class="menu-item" onclick="go('s-log');loadLog()">
         <div class="menu-ic re-3d">
@@ -3315,26 +3248,7 @@ window.__APP_PREPARING_ASSETS = true;
         <span>Time Off History</span>
       </button>
 
-      <button class="menu-item" id="menuFaceMgr" style="display: flex;" onclick="go('s-face')">
-        <div class="menu-ic re-3d">
-          <svg viewBox="0 0 36 36" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <linearGradient id="wd5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#4CAF7F"></stop><stop offset="50%" stop-color="#0E7A50"></stop><stop offset="100%" stop-color="#004C33"></stop></linearGradient>
-      <linearGradient id="lf5" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#60D286"></stop><stop offset="100%" stop-color="#00603F"></stop></linearGradient>
-      <filter id="sh5" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="1.2" flood-color="#00351F" flood-opacity="0.32"></feDropShadow></filter>
-    </defs>
-    <!-- 3D Wood Scanner Frame -->
-    <rect x="4.5" y="4.5" width="27" height="27" rx="7" fill="#EAF4EC" stroke="url(#wd5)" stroke-width="2.2"></rect>
-    <path d="M8 12V9a1 1 0 011-1h3M28 12V9a1 1 0 00-1-1h-3M8 24v3a1 1 0 001 1h3M28 24v3a1 1 0 01-1 1h-3" stroke="#007850" stroke-width="2.2" stroke-linecap="round"></path>
-    <circle cx="18" cy="15.5" r="4.2" stroke="#007850" stroke-width="1.8" fill="#E4F2E8"></circle>
-    <path d="M12.5 24.5c1.4-2.2 3.4-3.3 5.5-3.3s4.1 1.1 5.5 3.3" stroke="#007850" stroke-width="1.8" stroke-linecap="round"></path>
-    <!-- 3D Organic Leaf -->
-    <path d="M25 4c2.5 1 4 3.8 2.8 6.5-2.8 1-5.5-.8-6.2-2.8.5-1.4 1.8-3.2 3.4-3.7z" fill="url(#lf5)"></path>
-    <path d="M22 8c1.8 0 3.6-1.2 5-2.2" stroke="#B8F0CC" stroke-width="0.8" stroke-linecap="round"></path>
-  </svg>
-        </div>
-        <span>Manage Face ID</span>
-      </button>
+      
 
       <button class="menu-item" id="menuKaryawanMgr" style="display: flex;" onclick="go('s-kar');loadKaryawanMgr()">
         <div class="menu-ic re-3d">
@@ -3409,18 +3323,6 @@ window.__APP_PREPARING_ASSETS = true;
       <div class="team-row" id="teamRow"></div>
     </div>
 
-    <!-- Face banner -->
-    <div id="faceBanner" style="display: none; margin-top: 16px;" class="card">
-      <b>
-        <svg style="width:18px;height:18px;vertical-align:-3px" viewBox="0 0 24 24" fill="none" stroke="#007850" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="7" width="18" height="13" rx="2"></rect>
-          <path d="M9 7V5a2 2 0 012-2h2a2 2 0 012 2v2"></path>
-          <circle cx="12" cy="13" r="3"></circle>
-        </svg> Face ID
-      </b>
-      <p style="font-size:13px;color:var(--txt-muted);margin:6px 0 10px" id="faceBannerTxt">Face ID is not registered. Contact HR to obtain registration access.</p>
-      <button class="btn btn-blue" id="faceBannerBtn" style="display:none" onclick="registerFaceSelf()">Register Face ID Now</button>
-    </div>
   </div>
 </section>
 
@@ -3540,7 +3442,7 @@ window.__APP_PREPARING_ASSETS = true;
   </div>
   <div id="cutiFormPane" class="wrap" style="display: block;">
     <div class="card">
-      <div class="field"><label>Time-Off Type *</label><select id="ctKode" onchange="onCutiKode()"><option value="">Select a time-off type...</option><option value="CBA" data-wajib="1">CBA - Child Baptism Time Off</option><option value="CH" data-wajib="">CH - Menstrual Time Off</option><option value="CIH" data-wajib="1">CIH - Hajj Pilgrimage Time Off</option><option value="CIM" data-wajib="1">CIM - Time Off for Spouse’s Childbirth or Miscarriage</option><option value="CK" data-wajib="1">CK - Miscarriage Time Off</option><option value="CKA" data-wajib="1">CKA - Child Circumcision Time Off</option><option value="CKM" data-wajib="1">CKM - Time Off for a Family Death</option><option value="CKTN" data-wajib="1">CKTN - Time Off for National Duties</option><option value="CL" data-wajib="1">CL - Maternity Time Off</option><option value="CM" data-wajib="1">CM - Marriage Time Off</option><option value="CMA" data-wajib="1">CMA - Time Off for Child’s Wedding</option><option value="CRM" data-wajib="1">CRM - Time Off for Death of a Household Family Member</option><option value="CT" data-wajib="">CT - Annual Time Off</option><option value="CTPDP" data-wajib="1">CTPDP - Time Off for Company-Assigned Education</option><option value="CTSPB" data-wajib="1">CTSPB - Time Off for Union Duties</option><option value="DLKA1" data-wajib="">DLKA1 - Business Trip Outside the City, Area 1</option><option value="DLKA2" data-wajib="">DLKA2 - Business Trip Outside the City, Area 2</option><option value="DLKA3" data-wajib="">DLKA3 - Business Trip Outside the City, Area 3</option><option value="DLKA4" data-wajib="">DLKA4 - Business Trip Outside the City, Area 4</option><option value="ITB" data-wajib="">ITB - Permission to Be Absent from Work</option><option value="OTL" data-wajib="">OTL - Overtime Time Off</option><option value="SSD" data-wajib="1">SSD - Sick Time Off with a Doctor’s Note</option><option value="STD" data-wajib="">STD - Sick Time Off without a Doctor’s Note</option></select><div id="ctH7Notice" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;background:#FFF4E5;color:#8A4B08;font-size:12px;line-height:1.45">This time-off type must be requested at least 7 days before its start date.</div></div>
+      <div class="field"><label>Time-Off Type *</label><select id="ctKode" onchange="onCutiKode()"><option value="">Select a time-off type...</option><option value="CBA" data-wajib="1">CBA - Child Baptism Time Off</option><option value="CH" data-wajib="">CH - Menstrual Time Off</option><option value="CIH" data-wajib="1">CIH - Hajj Pilgrimage Time Off</option><option value="CIM" data-wajib="1">CIM - Time Off for Spouse’s Childbirth or Miscarriage</option><option value="CK" data-wajib="1">CK - Miscarriage Time Off</option><option value="CKA" data-wajib="1">CKA - Child Circumcision Time Off</option><option value="CKM" data-wajib="1">CKM - Time Off for a Family Death</option><option value="CKTN" data-wajib="1">CKTN - Time Off for National Duties</option><option value="CL" data-wajib="1">CL - Maternity Time Off</option><option value="CM" data-wajib="1">CM - Marriage Time Off</option><option value="CMA" data-wajib="1">CMA - Time Off for Child’s Wedding</option><option value="CRM" data-wajib="1">CRM - Time Off for Death of a Household Family Member</option><option value="CT" data-wajib="">CT - Annual Time Off</option><option value="CTPDP" data-wajib="1">CTPDP - Time Off for Company-Assigned Education</option><option value="CTSPB" data-wajib="1">CTSPB - Time Off for Union Duties</option><option value="DLKA1" data-wajib="">DLKA1 - Business Trip Outside the City, Area 1</option><option value="DLKA2" data-wajib="">DLKA2 - Business Trip Outside the City, Area 2</option><option value="DLKA3" data-wajib="">DLKA3 - Business Trip Outside the City, Area 3</option><option value="DLKA4" data-wajib="">DLKA4 - Business Trip Outside the City, Area 4</option><option value="ITB" data-wajib="">ITB - Permission to Be Absent from Work</option><option value="OTL" data-wajib="">OTL - Overtime Time Off</option><option value="SSD" data-wajib="1">SSD - Sick Time Off with a Doctor’s Note</option><option value="STD" data-wajib="">STD - Sick Time Off without a Doctor’s Note</option></select><div id="ctH7Notice" style="display:none;margin-top:8px;padding:10px 12px;border-radius:8px;background:#FFF4E5;color:#8A4B08;font-size:12px;line-height:1.45">This time-off request must be submitted at least 7 days in advance.</div></div>
       <div id="ctSisa" style="display:none;background:#F4EFE6;padding:11px 14px;border-radius:12px;font-size:13px;margin-bottom:14px;color:#00553A"></div>
       <div class="field"><label>Start Date *</label><input type="date" id="ctMulai"></div>
       <div class="field"><label>End Date *</label><input type="date" id="ctSelesai"></div>
@@ -3614,34 +3516,7 @@ window.__APP_PREPARING_ASSETS = true;
   <div id="teamList"><div class="empty">Loading...</div></div>
 </section>
 
-<!-- Face ID Management Screen -->
-<section id="s-face" class="scr">
-  <div class="topbar">
-    <button class="back" onclick="go('s-home')">
-      <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
-    </button>
-    <h1>
-      <svg style="width:20px;height:20px;vertical-align:-4px;margin-right:6px" viewBox="0 0 24 24" fill="none" stroke="#007850" stroke-width="1.8" stroke-linecap="round">
-        <rect x="3" y="3" width="18" height="18" rx="4"></rect>
-        <circle cx="12" cy="11" r="3.2"></circle><path d="M8 17c1-1.5 2.5-2.2 4-2.2s3 .7 4 2.2"></path>
-      </svg> Manage Face ID
-    </h1>
-  </div>
-  <div class="wrap">
-    <div class="card">
-      <b>Registration Progress</b>
-      <div id="faceProgTxt" style="margin-top:8px;color:var(--txt-muted)">Loading...</div>
-      <button class="btn btn-red" style="margin-top:12px" onclick="faceMgrMass()">🚀 Grant Bulk Access (60 minutes)</button>
-    </div>
-    <div class="search" style="margin:16px 0 10px">
-      <span class="ic"><svg viewBox="0 0 24 24" style="width:17px;height:17px" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg></span>
-      <input placeholder="Search employees" oninput="renderFaceMgrList(this.value)">
-    </div>
-    <div id="faceMgrList"><div class="empty">Loading...</div></div>
-    <input id="faceRefUploadInput" type="file" accept="image/jpeg,image/jpg,image/png,.jpg,.jpeg,.png" hidden onchange="faceMgrHandleUpload(this)">
-  </div>
-</section>
-
+<!-- Retired: Face ID administration is replaced by self-service profile photo update. -->
 <!-- Office Locations Screen -->
 <section id="s-loc" class="scr">
   <div class="topbar">
@@ -3799,7 +3674,7 @@ window.__APP_PREPARING_ASSETS = true;
 <section id="s-akun" class="scr">
   <div class="wrap">
     <div class="greet" style="padding-top:24px">
-      <div class="ava" id="akunAva" style="width:60px;height:60px;font-size:22px">SH</div>
+      <div class="ava" id="akunAva" role="button" tabindex="0" onclick="openProfilePhotoActions()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openProfilePhotoActions()}" aria-label="Change profile photo" title="Tap to change your profile photo" style="width:60px;height:60px;font-size:22px;cursor:pointer">SH</div>
       <div>
         <b id="akunName" style="font-size:19px">Samsul Hariyadi</b><br>
         <small id="akunPos" style="color:var(--txt-muted);font-size:13px">ADMIN</small><br>
@@ -3820,16 +3695,7 @@ window.__APP_PREPARING_ASSETS = true;
         <span class="arr"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#8FA79A" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg></span>
       </button>
 
-      <button class="sheet-item" id="akunFaceRow" style="display:none" onclick="registerFaceSelf()">
-        <div class="si">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 8V6a2 2 0 012-2h2M20 8V6a2 2 0 00-2-2h-2M4 16v2a2 2 0 002 2h2M20 16v2a2 2 0 01-2 2h-2"></path>
-            <circle cx="12" cy="11" r="3"></circle><path d="M8 17c1-1.5 2.5-2.5 4-2.5s3 1 4 2.5"></path>
-          </svg>
-        </div>
-        Face ID Registration
-        <span class="arr"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#8FA79A" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg></span>
-      </button>
+      
 
       <button class="sheet-item" onclick="openSheet('shPin')">
         <div class="si">
@@ -3902,6 +3768,20 @@ window.__APP_PREPARING_ASSETS = true;
       <div id="profBody"></div>
     </div>
 
+    <!-- Profile photo actions: opened by tapping the user's own photo on the Account screen -->
+    <div id="shPhotoActions" style="display:none">
+      <h3>
+        Change Profile Photo
+        <button onclick="closeSheet()">
+          <svg class="sh-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      </h3>
+      <p style="font-size:13.5px;color:var(--txt-muted);margin-bottom:14px">Choose a photo from your device or take a new selfie. A clear face is required for attendance verification.</p>
+      <input id="selfFaceUploadInput" type="file" accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp" hidden onchange="changeProfileFaceByUpload(this)">
+      <button class="btn btn-ghost" type="button" data-profile-photo-upload onclick="document.getElementById('selfFaceUploadInput').click()">Upload Photo</button>
+      <button class="btn btn-blue" type="button" style="margin-top:8px" onclick="closeSheet();registerFaceSelf()">Take Selfie</button>
+    </div>
+
     <!-- Pin change sheet -->
     <div id="shPin" style="display:none">
       <h3>
@@ -3920,7 +3800,7 @@ window.__APP_PREPARING_ASSETS = true;
     <!-- Face self enrollment sheet -->
     <div id="shFace" style="display:none">
       <h3>
-        Face ID Registration
+        Take a Selfie
         <button onclick="closeSheet()">
           <svg class="sh-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
         </button>
@@ -3963,10 +3843,10 @@ window.__APP_PREPARING_ASSETS = true;
       <div style="font-size:56px" id="outIcon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#007850" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.2-6.5-10.2a6.5 6.5 0 0113 0C18.5 15.8 12 21 12 21z"></path><circle cx="12" cy="10.5" r="2.4"></circle></svg></div>
     </div>
     <h3 style="justify-content:center" id="outTitle">You are outside the geofence</h3>
-    <p style="font-size:14px;color:#3E4F43;margin:6px 0 14px" id="outBody">Your location does not match the configured location. The company allows attendance with a <b>required note</b> and requires your manager’s approval.</p>
-    <p id="outNoteRequiredMsg" style="font-size:13px;font-weight:700;color:#9C382A;margin:0 0 8px">A note is required when clocking in outside the office location.</p>
+    <p style="font-size:14px;color:#3E4F43;margin:6px 0 14px" id="outBody">Select your area and add a note before clocking in.</p>
+    <p id="outNoteRequiredMsg" style="font-size:13px;font-weight:700;color:#9C382A;margin:0 0 8px">A note is required before clocking in outside the office location.</p>
     <div class="field"><label for="outArea">Area *</label><select id="outArea"><option value="">Select area...</option><option value="Area 1">Area 1</option><option value="Area 2">Area 2</option><option value="Area 3">Area 3</option><option value="Area 4">Area 4</option><option value="Area lainnya">Area lainnya</option></select></div>
-    <div class="field"><label for="outNote">Note *</label><input id="outNote" placeholder="Enter a required note" maxlength="120"></div>
+    <div class="field"><label for="outNote">Note *</label><input id="outNote" placeholder="Enter a note" maxlength="120"></div>
     <button class="btn btn-blue" id="outPrimary" onclick="outsideProceed()">Continue to Clock In</button>
     <button class="btn btn-ghost" style="margin-top:10px" onclick="outsideRecheck()">Check location again</button>
   </div>
@@ -4097,8 +3977,8 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v12.2.0-forced-upgrade-cache-warmup';
-var RH_DISPLAY_VERSION = 'v12.2.0';
+var RH_HTML_RELEASE = 'v13.1.0-sequenced-approval-tap-photo';
+var RH_DISPLAY_VERSION = 'v13.1.0';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -4166,7 +4046,7 @@ var FACE_UI_CONFIG = {
 var OUTSIDE_DIALOG = {
   icon: '📍',
   title: 'You are outside the geofence',
-  body: 'Your location does not match the configured location. The company allows attendance with a <b>required note</b> and requires your manager’s approval.',
+  body: 'Select your area and add a note before clocking in.',
   notePlaceholder: 'Note *',
   primary: 'Continue to Clock In',
   secondary: 'Check location again'
@@ -4251,7 +4131,7 @@ var SESSION_GEN = 0;
 function stale(gen) { return gen !== SESSION_GEN; }
 
 async function rpc(fn, params, timeoutMs) {
-  if (S && S.user && String(S.user.role || '').toUpperCase() === 'ADMIN' && /^(process_approval|process_cuti_approval|hr_set_role|hr_update_|hr_create_|hr_add_|hr_delete_|hr_deactivate|hr_reactivate|hr_reset_|hr_grant_|hr_revoke_|hr_save_|hr_upsert_|hr_import_|admin_delete_|grant_face_registration|grant_mass_face_registration|reset_face_registration|revoke_face_session|hr_save_face_reference|save_my_face|hr_update_employee_profile)/i.test(String(fn || ''))) {
+  if (S && S.user && String(S.user.role || '').toUpperCase() === 'ADMIN' && /^(process_approval|process_cuti_approval|hr_set_role|hr_update_|hr_create_|hr_add_|hr_delete_|hr_deactivate|hr_reactivate|hr_reset_|hr_grant_|hr_revoke_|hr_save_|hr_upsert_|hr_import_|admin_delete_|grant_face_registration|grant_mass_face_registration|reset_face_registration|revoke_face_session|hr_save_face_reference|save_lokasi_kantor|delete_lokasi_kantor|save_attendance_rule|save_calendar_override|admin_delete_attendance)/i.test(String(fn || ''))) {
     throw new Error('Administrator role is view-only. Contact Superadmin for changes.');
   }
   var gen = SESSION_GEN;
@@ -4419,7 +4299,7 @@ function resetRuntimeState() {
   LOC_MAP = null; LOC_MARKER = null; LOC_CIRCLE = null;
 }
 
-var RESTORABLE = ['s-home', 's-log', 's-cuti', 's-emp', 's-inbox', 's-appr', 's-team', 's-org', 's-face', 's-loc', 's-kar', 's-akun', 's-admin'];
+var RESTORABLE = ['s-home', 's-log', 's-cuti', 's-emp', 's-inbox', 's-appr', 's-team', 's-org', 's-loc', 's-kar', 's-akun', 's-admin'];
 function isAdminReadOnly() { return !!(S.user && String(S.user.role || '').toUpperCase() === 'ADMIN'); }
 function ensureAdminWriteAllowed(action) {
   if (isAdminReadOnly()) throw new Error('Administrator role is view-only. Contact Superadmin for changes.');
@@ -4428,11 +4308,10 @@ function ensureAdminWriteAllowed(action) {
 window.isAdminReadOnly = isAdminReadOnly;
 window.ensureAdminWriteAllowed = ensureAdminWriteAllowed;
 var ROLE_GATE = {
-  's-face': ['HR', 'ADMIN', 'SUPERADMIN'],
-  's-loc': ['HR', 'ADMIN', 'SUPERADMIN'],
-  's-kar': ['HR', 'ADMIN', 'SUPERADMIN'],
-  's-admin': ['SUPERADMIN'],
-  's-emp': ['HR', 'ADMIN', 'SUPERADMIN']
+  's-loc': ['ADMIN', 'SUPERADMIN'],
+  's-kar': ['ADMIN', 'SUPERADMIN'],
+  's-admin': ['ADMIN', 'SUPERADMIN'],
+  's-emp': ['ADMIN', 'SUPERADMIN']
 };
 /* Admin is strictly read-only in the UI. This protects buttons rendered by both legacy mobile and desktop modules. */
 document.addEventListener('click', function(ev) {
@@ -4507,7 +4386,7 @@ function setPrepProgress(p, t) {
 
 function registerAppServiceWorker() {
   if (!('serviceWorker' in navigator)) return Promise.resolve(false);
-  return navigator.serviceWorker.register('./sw.js?v=17', { scope: './', updateViaCache: 'none' }).then(function(registration) {
+  return navigator.serviceWorker.register('./sw.js?v=20', { scope: './', updateViaCache: 'none' }).then(function(registration) {
     // Ask the browser to revalidate sw.js instead of trusting an old HTTP-cache copy.
     try { if (registration && typeof registration.update === 'function') registration.update().catch(function() {}); } catch (e) {}
     // The new worker self-activates; this message also helps older compatible workers.
@@ -5245,7 +5124,7 @@ function normalizeFaceDescriptor(value) {
 async function api(fn, args, timeoutMs) {
   args = args || [];
   fn = String(fn);
-  if (S && S.user && String(S.user.role || '').toUpperCase() === 'ADMIN' && /^(simpanAbsensi|submitCuti|saveMyFaceDescriptor|hrAddKaryawan|hrUpdateKaryawan|hrDeactivate|hrReactivate|hrResetPin|processApproval|processCutiApproval|hrUpdateEmployeeProfile|hrSaveFaceReference|grantFace|grantMassFace|resetFace|revokeFace|adminDeleteRecord|adminDeleteToday|userSetRole|saveLocation|deleteLocation|saveAttendanceRule|saveCalendarOverride|importPublicHolidays)$/i.test(fn)) {
+  if (S && S.user && String(S.user.role || '').toUpperCase() === 'ADMIN' && /^(simpanAbsensi|submitCuti|hrAddKaryawan|hrUpdateKaryawan|hrDeactivate|hrReactivate|hrResetPin|processApproval|processCutiApproval|hrUpdateEmployeeProfile|hrSaveFaceReference|grantFace|grantMassFace|resetFace|revokeFace|adminDeleteRecord|adminDeleteToday|userSetRole|saveLocation|deleteLocation|saveAttendanceRule|saveCalendarOverride|importPublicHolidays)$/i.test(fn)) {
     throw new Error('Administrator role is view-only. Contact Superadmin for changes.');
   }
   if (fn === 'login') {
@@ -5378,10 +5257,12 @@ function loadSession() {
 
 var TABPAGES = {
   's-home': 1, 's-emp': 1, 's-inbox': 1, 's-akun': 1, 's-admin': 1,
-  's-face': 1, 's-team': 1, 's-org': 1, 's-loc': 1, 's-kar': 1
+  's-team': 1, 's-org': 1, 's-loc': 1, 's-kar': 1
 };
 
 function go(id, fromPop) {
+  if (id === 's-face') { toast('Face ID management is retired. Tap your own profile photo on Account to update it.'); id = 's-akun'; }
+  if (!document.getElementById(id)) { id = 's-home'; }
   var prev = currentScr();
   if (!fromPop && window.history && id && id !== 's-login') {
     try {
@@ -5427,7 +5308,7 @@ var _backTo = 's-inbox';
 function backTarget() { return _backTo; }
 
 function openSheet(id) {
-  ['shAjukan', 'shProfile', 'shPin', 'shFace', 'shKarForm', 'shKarDetail', 'shTema'].forEach(function(x) { var el = $(x); if (el) el.style.display = 'none'; });
+  ['shAjukan', 'shProfile', 'shPhotoActions', 'shPin', 'shFace', 'shKarForm', 'shKarDetail', 'shTema'].forEach(function(x) { var el = $(x); if (el) el.style.display = 'none'; });
   $(id).style.display = 'block';
   $('ov').classList.toggle('face-enroll-mode', id === 'shFace');
   $('ov').classList.add('on');
@@ -5439,12 +5320,13 @@ function closeSheet() {
 }
 
 function applyRoleMenus() {
-  var role = S.user ? S.user.role : 'KARYAWAN';
-  $('tabEmp').style.display = (role === 'HR' || role === 'ADMIN' || role === 'SUPERADMIN') ? 'flex' : 'none';
-  var faceMenu = $('menuFaceMgr'); if (faceMenu) faceMenu.style.display = (role === 'HR' || role === 'ADMIN' || role === 'SUPERADMIN') ? 'flex' : 'none';
-  $('menuKaryawanMgr').style.display = (role === 'HR' || role === 'ADMIN' || role === 'SUPERADMIN') ? 'flex' : 'none';
-  $('menuLokasi').style.display = (role === 'HR' || role === 'ADMIN' || role === 'SUPERADMIN') ? 'flex' : 'none';
-  $('menuAdminTools').style.display = (role === 'SUPERADMIN') ? 'flex' : 'none';
+  var role = S.user ? String(S.user.role || '').toUpperCase() : 'KARYAWAN';
+  var canViewAdmin = role === 'ADMIN' || role === 'SUPERADMIN';
+  var faceMenu = $('menuFaceMgr'); if (faceMenu) faceMenu.style.display = 'none';
+  if ($('tabEmp')) $('tabEmp').style.display = canViewAdmin ? 'flex' : 'none';
+  if ($('menuKaryawanMgr')) $('menuKaryawanMgr').style.display = canViewAdmin ? 'flex' : 'none';
+  if ($('menuLokasi')) $('menuLokasi').style.display = canViewAdmin ? 'flex' : 'none';
+  if ($('menuAdminTools')) $('menuAdminTools').style.display = canViewAdmin ? 'flex' : 'none';
 }
 
 function doLogin() {
@@ -5453,7 +5335,7 @@ function doLogin() {
   if (!nik || !pin) { $('lgErr').textContent = 'Employee ID and PIN are required.'; return; }
   var b = $('lgBtn');
   b.disabled = true;
-  b.innerHTML = '<span class="spin"></span> Memproses...';
+  b.innerHTML = '<span class="spin"></span> Signing in...';
   var wd = setTimeout(function() {
     if (b.disabled) {
       b.disabled = false;
@@ -5495,6 +5377,50 @@ function enterApp() {
   S.booting = true;
   applyRoleMenus();
   $('verTxt').textContent = 'Version ' + RH_DISPLAY_VERSION;
+  if (RH_RELEASE_UPGRADE_ACTIVE && S.user && !window.__RH_RELEASE_PREP_STARTED) {
+    window.__RH_RELEASE_PREP_STARTED = true;
+    var gen = SESSION_GEN;
+    var saved = S.freshLogin ? null : loadLastScreen();
+    var target = saved && RESTORABLE.indexOf(saved.scr) >= 0 ? saved.scr : 's-home';
+    if (ROLE_GATE[target] && ROLE_GATE[target].indexOf(String(S.user.role || '').toUpperCase()) < 0) target = 's-home';
+    showReleaseGate('Refreshing employee details, profile photos, and reference data...');
+    Promise.resolve(loadBootstrap()).then(function() {
+      if (stale(gen) || !window.__RH_RELEASE_PREP_STARTED) return;
+      return Promise.all([
+        prewarmSemiStaticData().catch(function() { return false; }),
+        prewarmTimeoffReferenceData().catch(function() { return false; })
+      ]);
+    }).then(function() {
+      if (stale(gen) || !window.__RH_RELEASE_PREP_STARTED) return;
+      try { localStorage.setItem(PREP_CACHE_KEY, '1'); } catch (e) {}
+      RH_RELEASE_UPGRADE_ACTIVE = false;
+      window.__RH_RELEASE_PREP_STARTED = false;
+      hideReleaseGate();
+      S.freshLogin = false;
+      go(target); syncDesktopNav(target);
+      // Refresh live attendance/approval information after semi-static assets have warmed.
+      loadTeam(); loadMyRequests(); updateBadges();
+    }).catch(function(e) {
+      console.warn('[ReHolz] Release data refresh incomplete; opening with available cache:', e && e.message || e);
+      if (stale(gen) || !window.__RH_RELEASE_PREP_STARTED) return;
+      RH_RELEASE_UPGRADE_ACTIVE = false;
+      window.__RH_RELEASE_PREP_STARTED = false;
+      hideReleaseGate();
+      go('s-home'); syncDesktopNav('s-home');
+      backgroundLoads();
+    });
+    // A failed or slow network must not leave the app blocked forever. Cache preparation continues in the background.
+    setTimeout(function() {
+      if (!window.__RH_RELEASE_PREP_STARTED || stale(gen)) return;
+      console.warn('[ReHolz] Release warm-up exceeded 45 seconds; using available cache.');
+      RH_RELEASE_UPGRADE_ACTIVE = false;
+      window.__RH_RELEASE_PREP_STARTED = false;
+      hideReleaseGate();
+      go('s-home'); syncDesktopNav('s-home');
+      backgroundLoads();
+    }, 45000);
+    return;
+  }
   if (S.freshLogin) {
     go('s-home');
     backgroundLoads();
@@ -5559,14 +5485,9 @@ function renderShiftStatus() {
 }
 
 function renderFaceBanner() {
+  // Legacy Face ID banner retired in v13.1.0. Tap the user's own avatar on Account to change it.
   var b = $('faceBanner');
-  if (S.face.registered) { b.style.display = 'none'; return; }
-  b.style.display = 'block';
-  $('faceBannerTxt').textContent = S.face.canRegister
-    ? 'Face ID is not registered. Register now to use attendance.'
-    : 'Face ID is not registered. Contact HR to obtain registration access.';
-  $('faceBannerBtn').style.display = S.face.canRegister ? 'flex' : 'none';
-  $('akunFaceRow').style.display = S.face.canRegister ? 'flex' : 'none';
+  if (b) b.style.display = 'none';
 }
 
 function renderAkun() {
@@ -5578,6 +5499,11 @@ function renderAkun() {
   $('akunOrg').textContent = (e.organization || '-') + (e.branch ? ' • ' + e.branch : '');
   renderFaceBanner();
   hydrateFaces();
+}
+
+function openProfilePhotoActions() {
+  if (!S.user) { toast('Sign in before changing your profile photo.'); return; }
+  openSheet('shPhotoActions');
 }
 
 function openProfileSheet() {
@@ -5623,7 +5549,8 @@ function loadBootstrap() {
     S.status = b.status;
     S.sisaCT = b.sisaCuti;
     S.face = b.faceStatus || { registered: false, canRegister: false };
-    S.approver = S.user.role !== 'ADMIN' && (S.user.role === 'HR' || S.user.role === 'SUPERADMIN' || b.hasSubordinates === true);
+    var currentRole = String(S.user.role || '').toUpperCase();
+    S.approver = currentRole === 'ADMIN' || currentRole === 'SUPERADMIN' || (currentRole === 'KARYAWAN' && b.hasSubordinates === true);
     S.pendingTotal = b.pendingTotal || 0;
     saveSession();
     applyRoleMenus();
@@ -6109,7 +6036,7 @@ async function startAttendance(type) {
   // Pulihkan pratinjau lokal tepat sebelum layar absensi dibuka; tidak menunggu API atau GPS baru.
   restoreGpsCache();
   restoreOfficeCache();
-  if (!S.face.registered) { toast('Face ID is not registered. Contact HR.'); return; }
+  if (!S.face.registered) { toast('Face ID is not registered. Tap your own profile photo in Account to add a photo or take a selfie.'); return; }
   var st = S.status || {};
   if (st.masuk && st.pulang) { toast('Clock In and Clock Out have already been recorded today.'); return; }
   if (type === 'MASUK' && st.masuk) { toast('Clock In has already been recorded today.'); return; }
@@ -6151,7 +6078,7 @@ async function startAttendance(type) {
   ensureNets().catch(function(e) { $('camStatus').textContent = '❌ AI: ' + e.message; });
   loadMyDescriptor().then(function(d) {
     if (!d) {
-      $('camStatus').textContent = '⚠️ Face data not found. Register Face ID first.';
+      $('camStatus').textContent = '⚠️ Face data not found. Update your profile photo from Account first.';
       $('camStatus').style.color = '#B77932';
     }
   }).catch(function(e) {
@@ -6224,7 +6151,7 @@ function openOutside() {
 function outsideProceed() {
   var note = $('outNote').value.trim();
   var area = $('outArea').value;
-  if (!note) { toast('A note is required when clocking in outside the office location.'); $('outNote').focus(); return; }
+  if (!note) { toast('A note is required before clocking in outside the office location.'); $('outNote').focus(); return; }
   if (!area) { toast('Select an Area before clocking in outside the office location.'); $('outArea').focus(); return; }
   ATT.area = area;
   ATT.outsideOk = true;
@@ -6416,14 +6343,14 @@ async function submitAttendance() {
   if (chkNow.inOffice) { ATT.outside = false; }
   else if (chkNow.clearlyOutside) { ATT.outside = true; }
   if (ATT.outside && ATT.type === 'MASUK') {
-    if (!catatan || !ATT.area) { toast('A note is required when clocking in outside the office location.'); openOutside(); return; }
+    if (!catatan || !ATT.area) { toast('A note is required before clocking in outside the office location.'); openOutside(); return; }
     var areaCode = ATT.area === 'Area 1' ? 'A1' : ATT.area === 'Area 2' ? 'A2' : ATT.area === 'Area 3' ? 'A3' : ATT.area === 'Area 4' ? 'A4' : 'AX';
     catatan = catatan.slice(0, 120).trim() + ' [[RHAREA=' + areaCode + ']]';
   }
   ATT.submitting = true;
   var b = $('btnKirim');
   b.disabled = true;
-  b.innerHTML = '<span class="spin"></span> Mengirim...';
+  b.innerHTML = '<span class="spin"></span> Submitting...';
   try {
     var fotoBase64 = null;
     try { fotoBase64 = snapPhoto(); } catch (e) {}
@@ -6666,8 +6593,7 @@ function renderDelegateOptions() {
   if (Array.from(sel.options).some(function(o){return o.value === current;})) sel.value = current;
 }
 function prewarmTimeoffReferenceData() {
-  // These lists rarely change; seed memory from IndexedDB immediately and refresh without blocking navigation.
-  RHMediaCache.kvGet('masterCuti').then(function(c) {
+  var masterTask = RHMediaCache.kvGet('masterCuti').then(function(c) {
     if (c && Array.isArray(c.list) && c.list.length && (!CACHE.masterCuti || !CACHE.masterCuti.length)) {
       CACHE.masterCuti = c.list; CACHE.masterCutiAt = c.at || 0;
     }
@@ -6675,10 +6601,10 @@ function prewarmTimeoffReferenceData() {
   }).then(function(list) {
     if (Array.isArray(list)) {
       CACHE.masterCuti = list; CACHE.masterCutiAt = Date.now();
-      RHMediaCache.kvSet('masterCuti', { list:list, at:CACHE.masterCutiAt, release:RH_HTML_RELEASE });
+      return RHMediaCache.kvSet('masterCuti', { list:list, at:CACHE.masterCutiAt, release:RH_HTML_RELEASE });
     }
   }).catch(function(e) { console.warn('[ReHolz] Time-off reference prewarm skipped:', e && e.message || e); });
-  Promise.all([RHMediaCache.kvGet('delegateOptions'), RHMediaCache.readyPromise]).then(function(parts) {
+  var delegateTask = Promise.all([RHMediaCache.kvGet('delegateOptions'), RHMediaCache.readyPromise]).then(function(parts) {
     var c = parts[0];
     if (c && Array.isArray(c.rows) && !DELEGATE_OPTIONS.loaded) {
       DELEGATE_OPTIONS.rows = c.rows; DELEGATE_OPTIONS.loaded = true;
@@ -6687,12 +6613,19 @@ function prewarmTimeoffReferenceData() {
   }).then(function(rows) {
     DELEGATE_OPTIONS.rows = Array.isArray(rows) ? rows : ((rows && Array.isArray(rows.list)) ? rows.list : []);
     DELEGATE_OPTIONS.loaded = true;
-    RHMediaCache.kvSet('delegateOptions', { rows:DELEGATE_OPTIONS.rows, at:Date.now(), release:RH_HTML_RELEASE });
+    return RHMediaCache.kvSet('delegateOptions', { rows:DELEGATE_OPTIONS.rows, at:Date.now(), release:RH_HTML_RELEASE });
   }).catch(function(e) { console.warn('[ReHolz] Delegate reference prewarm skipped:', e && e.message || e); });
+  return Promise.all([masterTask, delegateTask]);
 }
 
 var H7_TIMEOFF_CODES = ['CIH','CBA','CKA','CM','CMA','CKTN','CTPDP'];
-function isH7Timeoff(kode) { return H7_TIMEOFF_CODES.indexOf(String(kode || '').toUpperCase()) >= 0; }
+function isH7Timeoff(kode) {
+  var code = String(kode || '').toUpperCase().trim();
+  if (H7_TIMEOFF_CODES.indexOf(code) >= 0) return true;
+  var row = (CACHE.masterCuti || []).find(function(x) { return String(x.kode || x.code || '').toUpperCase().trim() === code; });
+  var label = String(row && (row.keterangan || row.name || row.label) || '').toLowerCase();
+  return /baptis anak|khitan.{0,20}anak|menikah|menikahkan anak|kewajiban terhadap negara|aktivitas bela negara|aktifitas bela negara|company-assigned education/.test(label);
+}
 function jakartaTodayISO() {
   var parts = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Jakarta', year:'numeric', month:'2-digit', day:'2-digit' }).formatToParts(new Date());
   var obj = {}; parts.forEach(function(p){ if(p.type!=='literal') obj[p.type]=p.value; });
@@ -6739,7 +6672,7 @@ function submitCuti() {
   if (selesai < mulai) { toast('The end date cannot be earlier than the start date.'); return; }
   // Special time-off categories require a 7-day minimum notice, using Jakarta's calendar date.
   if (isH7Timeoff(kode) && daysBetweenISO(mulai, jakartaTodayISO()) < 7) {
-    toast('This time-off type must be requested at least 7 days before its start date.');
+    toast('This time-off request must be submitted at least 7 days in advance.');
     return;
   }
   var o = $('ctKode').options[$('ctKode').selectedIndex];
@@ -6748,7 +6681,7 @@ function submitCuti() {
   function proceed(dok) {
     var b = $('ctBtn');
     b.disabled = true;
-    b.innerHTML = '<span class="spin"></span> Mengirim...';
+    b.innerHTML = '<span class="spin"></span> Submitting...';
     api('submitCuti', [{ nik: S.user.nik, kode: kode, tanggalMulai: mulai, tanggalSelesai: selesai, alasan: alasan, dokumen: dok, delegateTo: ($('ctDelegate') ? $('ctDelegate').value : '') }], 40000).then(function(r) {
       toast(r.message);
       $('ctKode').value = ''; $('ctMulai').value = ''; $('ctSelesai').value = ''; $('ctAlasan').value = ''; if ($('ctDelegate')) $('ctDelegate').value = '';
@@ -6789,7 +6722,7 @@ function cutiStatus(x) {
   if (x.statusAtasan === 'DITOLAK') return ['Rejected', 'no'];
   if (x.statusHR === 'DITOLAK') return ['Rejected', 'no'];
   if (x.statusHR === 'DISETUJUI') return ['Approved', 'ok'];
-  if (x.statusAtasan === 'DISETUJUI') return ['Pending HR Review', 'warn'];
+  if (x.statusAtasan === 'DISETUJUI') return ['Pending Superadmin Review', 'warn'];
   return ['Pending Approval', 'warn'];
 }
 
@@ -6824,8 +6757,10 @@ function openCutiDetail(id, fromAppr) {
   if (fromAppr && DATA.appr) x = (DATA.appr.cuti || []).find(function(c) { return c.id === id; });
   if (!x) x = DATA.cutiList.find(function(c) { return c.id === id; });
   if (!x) { toast('Data not found.'); return; }
-  var isAppr = S.approver && ((S.user.role === 'KARYAWAN' && x.statusAtasan === 'PENDING') || ((S.user.role === 'HR' || S.user.role === 'SUPERADMIN') && x.statusAtasan === 'DISETUJUI' && x.statusHR === 'PENDING'));
-  var html = '<div class="det-hero"><img src="' + (x.dokumenUrl ? driveThumb(x.dokumenUrl) : '') + '" onerror="this.parentNode.style.display=\'none\'" alt=""><div class="det-pill">' + statusPill(x.statusHR === 'PENDING' && x.statusAtasan === 'DISETUJUI' ? 'PENDING_HR' : (x.statusAtasan === 'PENDING' ? 'PENDING_ATASAN' : (x.statusAtasan === 'DITOLAK' || x.statusHR === 'DITOLAK' ? 'DITOLAK' : 'DISETUJUI'))) + '</div></div><div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(x.nik, x.nama, faceVerOf(x.nik)) + '>' + avaInner(x.nik, x.nama, faceVerOf(x.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(x.nama) + '</b><div class="sub">' + esc(x.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Requested time off</small><div><b>' + esc(x.keterangan) + '</b></div><div style="color:#555">' + esc(tglID(x.tanggalMulai)) + ' to ' + esc(tglID(x.tanggalSelesai)) + ' (' + x.totalHari + ' hr)</div></div><div class="det-row"><small>Reason</small><div>' + esc(x.alasan) + '</div></div>' + (x.delegateTo ? '<div class="det-row"><small>Delegate to</small><div>' + esc(x.delegateToName || x.delegateTo) + '</div></div>' : '<div class="det-row"><small>Delegate to</small><div>No delegate</div></div>') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlItem('base', 'Submitted by ' + esc(x.nama), x.waktuPengajuan || '') + (x.statusAtasan === 'PENDING' ? tlItem('wait', 'Pending Manager Approval', '') : x.statusAtasan === 'DISETUJUI' ? tlItem('ok', 'Approved by manager', '') : tlItem('no', 'Rejected by manager', x.alasanAtasan || '')) + (x.statusAtasan === 'DISETUJUI' ? (x.statusHR === 'PENDING' ? tlItem('wait', 'Pending HR Approval', '') : x.statusHR === 'DISETUJUI' ? tlItem('ok', 'Approved by HR', '') : tlItem('no', 'Rejected by HR', x.alasanHR || '')) : '') + '</div></div><div class="field" id="cdNoteWrap" style="' + (isAppr ? '' : 'display:none') + '"><label>Note</label><input id="cdNote" placeholder="Optional"></div>' + (isAppr ? '<div class="det-actions"><button class="btn btn-blue" onclick="actCuti(\'' + x.id + '\',true)">Approve</button><button class="btn btn-ghost" onclick="actCuti(\'' + x.id + '\',false)">Reject</button></div>' : '') + '</div>';
+  var actorRole = String(S.user.role || '').toUpperCase();
+  var isAppr = !!fromAppr && !!S.approver && ((actorRole === 'KARYAWAN' && x.statusAtasan === 'PENDING') || (actorRole === 'SUPERADMIN' && x.statusAtasan === 'DISETUJUI' && x.statusHR === 'PENDING'));
+  var waitingForManager = !!fromAppr && x.statusAtasan === 'PENDING' && (actorRole === 'SUPERADMIN' || actorRole === 'ADMIN');
+  var html = '<div class="det-hero"><img src="' + (x.dokumenUrl ? driveThumb(x.dokumenUrl) : '') + '" onerror="this.parentNode.style.display=\'none\'" alt=""><div class="det-pill">' + statusPill(x.statusHR === 'PENDING' && x.statusAtasan === 'DISETUJUI' ? 'PENDING_HR' : (x.statusAtasan === 'PENDING' ? 'PENDING_ATASAN' : (x.statusAtasan === 'DITOLAK' || x.statusHR === 'DITOLAK' ? 'DITOLAK' : 'DISETUJUI'))) + '</div></div><div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(x.nik, x.nama, faceVerOf(x.nik)) + '>' + avaInner(x.nik, x.nama, faceVerOf(x.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(x.nama) + '</b><div class="sub">' + esc(x.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Requested time off</small><div><b>' + esc(x.keterangan) + '</b></div><div style="color:#555">' + esc(tglID(x.tanggalMulai)) + ' to ' + esc(tglID(x.tanggalSelesai)) + ' (' + x.totalHari + ' hr)</div></div><div class="det-row"><small>Reason</small><div>' + esc(x.alasan) + '</div></div>' + (x.delegateTo ? '<div class="det-row"><small>Delegate to</small><div>' + esc(x.delegateToName || x.delegateTo) + '</div></div>' : '<div class="det-row"><small>Delegate to</small><div>No delegate</div></div>') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlItem('base', 'Submitted by ' + esc(x.nama), x.waktuPengajuan || '') + (x.statusAtasan === 'PENDING' ? tlItem('wait', 'Pending Manager Approval', '') : x.statusAtasan === 'DISETUJUI' ? tlItem('ok', 'Approved by manager', '') : tlItem('no', 'Rejected by manager', x.alasanAtasan || '')) + (x.statusAtasan === 'DISETUJUI' ? (x.statusHR === 'PENDING' ? tlItem('wait', 'Pending Superadmin Approval', '') : x.statusHR === 'DISETUJUI' ? tlItem('ok', 'Approved by Superadmin', '') : tlItem('no', 'Rejected by Superadmin', x.alasanHR || '')) : '') + '</div></div>' + (waitingForManager ? '<div class="warn-banner" style="margin:0 0 14px;border-radius:10px"><span>Waiting for direct manager approval. You can review this request, but Approve/Reject will become available only after the manager updates its status.</span></div>' : '') + '<div class="field" id="cdNoteWrap" style="' + (isAppr ? '' : 'display:none') + '"><label>Note</label><input id="cdNote" placeholder="Optional"></div>' + (isAppr ? '<div class="det-actions"><button class="btn btn-blue" onclick="actCuti(\'' + x.id + '\',true)">Approve</button><button class="btn btn-ghost" onclick="actCuti(\'' + x.id + '\',false)">Reject</button></div>' : '') + '</div>';
   $('cdetBody').innerHTML = html;
   go('s-cdet');
   saveDetailScreen('s-cdet', id);
@@ -7384,12 +7319,9 @@ function karBuildForm(data, opts, mode) {
   html += '<div class="field"><label>Full Name *</label><input id="kNama" value="' + esc(data.nama || '') + '"></div>';
   html += '<div class="row2"><div class="field"><label>Branch *</label>' + karSelect('kBranch', karBranchOpts(o.branch), data.branch) + '</div><div class="field"><label>Employment Status</label>' + karSelect('kStatusKerja', [{ v: 'Contract', t: 'Contract' }, { v: 'Permanent', t: 'Permanent' }, { v: 'Outsourcing', t: 'Outsourcing' }, { v: 'Intern', t: 'Intern' }], data.statusKerja) + '</div></div>';
   html += '<div class="row2"><div class="field"><label>Organization *</label>' + karSelectWithNew('kOrg', karStrOpts(o.organisasi), data.organisasi) + '</div><div class="field"><label>Level</label>' + karSelectWithNew('kLevel', karStrOpts(o.level), data.level) + '</div></div>';
-  html += '<div class="row2"><div class="field"><label>Position *</label>' + karSelectWithNew('kPos', karStrOpts(o.jabatan), data.posisi) + '</div><div class="field"><label>Role</label>' + karSelect('kRole', [{ v: 'KARYAWAN', t: 'Employee' }, { v: 'HR', t: 'HR' }, { v: 'ADMIN', t: 'Administrator' }, { v: 'SUPERADMIN', t: 'Superadmin' }], data.role) + '</div></div>';
+  html += '<div class="row2"><div class="field"><label>Position *</label>' + karSelectWithNew('kPos', karStrOpts(o.jabatan), data.posisi) + '</div><div class="field"><label>Role</label>' + karSelect('kRole', [{ v: 'KARYAWAN', t: 'Employee' }, { v: 'ADMIN', t: 'Administrator' }, { v: 'SUPERADMIN', t: 'Superadmin' }], data.role) + '</div></div>';
   html += '<div class="field"><label>Direct Manager</label>' + karSelect('kAtasan', [{ v: '', t: '-- None --' }].concat((o.atasan || []).map(function(a) { return { v: a.nik, t: a.nama + ' (' + a.nik + ')' }; })), data.atasanId) + '</div>';
   html += '<div class="field"><label>Start Date</label><input type="date" id="kJoin" value="' + esc(data.joinDate || todayISO()) + '"></div>';
-  if (mode === 'add') {
-    html += '<div class="field"><label>Options</label><div style="display:flex;align-items:center;gap:8px;margin-top:6px"><input type="checkbox" id="kGrantFace" checked style="width:auto"> <label for="kGrantFace" style="margin:0;font-weight:400">Grant Face ID registration access for 60 minutes</label></div></div>';
-  }
   html += '<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-blue" onclick="karSave(\'' + mode + '\')">💾 Save</button><button class="btn btn-ghost" onclick="closeSheet()">Cancel</button></div>';
   html += '<div id="karPinResult"></div>';
   return html;
@@ -7477,7 +7409,6 @@ function karSave(mode) {
   var atasanId = $('kAtasan').value;
   var statusKerja = $('kStatusKerja').value;
   var joinDate = $('kJoin').value;
-  var grantFace = mode === 'add' && ($('kGrantFace') ? $('kGrantFace').checked : false);
   if (!nik || !nama || !branch || !organisasi || !posisi) { toast('Required fields are incomplete.'); return; }
   var data = {
     nik: nik, nama: nama, branch: branch, organisasi: organisasi, level: level, posisi: posisi,
@@ -7488,9 +7419,6 @@ function karSave(mode) {
     toast(r.message);
     if (mode === 'add' && r.pin) {
       $('karPinResult').innerHTML = '<div class="pin-display"><div style="font-size:13px;color:#007850">🔑 PIN for ' + esc(nama) + ':</div><b>' + esc(r.pin) + '</b><div style="font-size:11px;color:#007850;margin-top:4px">Save this PIN. It will not be shown again.</div></div>';
-      if (grantFace && r.nik) {
-        api('grantFace', [r.nik, 60]).then(function() { toast('Face ID access granted for 60 minutes.'); }).catch(function() {});
-      }
     }
     loadKaryawanMgr(true);
   }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
@@ -7676,7 +7604,8 @@ async function openAbsenDetail(id, fromAppr) {
 
 function renderAbsenDetail(a, fromAppr) {
   normalizeAbsensiEvidence(a);
-  var canAct = fromAppr && ((S.user.role === 'KARYAWAN' && a.statusApproval === 'PENDING_ATASAN') || ((S.user.role === 'HR' || S.user.role === 'SUPERADMIN') && a.statusApproval === 'PENDING_HR'));
+  var approvalRole = String(S.user.role || '').toUpperCase();
+  var canAct = !!fromAppr && ((approvalRole === 'KARYAWAN' && a.statusApproval === 'PENDING_ATASAN') || (approvalRole === 'SUPERADMIN' && a.statusApproval === 'PENDING_HR'));
   var alasan = alasanOf(a);
   var hero;
   if ((a._fotoDisplayUrl || a.fotoUrl) && a.latitude) {
@@ -7690,9 +7619,9 @@ function renderAbsenDetail(a, fromAppr) {
   if (a.statusApproval === 'PENDING_ATASAN') {
     tlHtml = tlItem('wait', 'Pending Manager Approval', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   } else if (a.statusApproval === 'PENDING_HR') {
-    tlHtml = tlItem('wait', 'Pending HR Approval', '') + tlItem('ok', 'Approved by manager', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
+    tlHtml = tlItem('wait', 'Pending Superadmin Approval', '') + tlItem('ok', 'Approved by manager', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   } else if (a.statusApproval === 'DISETUJUI') {
-    tlHtml = tlItem('ok', 'Approved by HR', '') + tlItem('ok', 'Approved by manager', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
+    tlHtml = tlItem('ok', 'Approved by Superadmin', '') + tlItem('ok', 'Approved by manager', '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   } else {
     tlHtml = tlItem('no', 'Rejected', a.alasanApproval || '') + tlItem('base', 'Submitted by ' + esc(a.nama), a.waktuPengajuan || '');
   }
@@ -7721,7 +7650,6 @@ function actAbsen(id, approve) {
 }
 
 async function registerFaceSelf() {
-  if (!S.face.canRegister) { toast('Registration access has not been granted by HR.'); return; }
   FACESELF.desc = null;
   FACESELF.present = false;
   FACESELF.presentAt = 0;
@@ -7786,13 +7714,13 @@ function saveSelfFace() {
   if (Date.now() - FACESELF.descAt > FACE_UI_CONFIG.freshSaveMs) { toast('Position your face in front of the camera first.'); return; }
   var b = $('faceSaveBtn');
   b.disabled = true;
-  b.innerHTML = '<span class="spin"></span> Saving...';
+  b.innerHTML = '<span class="spin"></span> Saving photo...';
   var photo = snapFacePhoto($('faceVideo'), 160, 0.65);
   api('saveMyFaceDescriptor', [S.user.nik, FACESELF.desc, photo]).then(function(r) {
     try { RHMediaCache.invalidate(S.user.nik); } catch (e) {}
     toast(r.message);
     S.face.registered = true;
-    S.face.canRegister = false;
+    S.face.canRegister = true;
     renderFaceBanner();
     closeSheet();
     loadBootstrap();
@@ -7801,7 +7729,7 @@ function saveSelfFace() {
     if (e && e.message === 'STALE') return;
     toast(e.message);
     b.disabled = false;
-    b.textContent = 'Save Face ID';
+    b.textContent = 'Save Profile Photo';
   });
 }
 
@@ -7818,7 +7746,7 @@ function loadMyRequests() {
 }
 
 function loadAdminTools() {
-  if (!S.user || S.user.role !== 'SUPERADMIN') { toast('Access denied.'); go('s-home'); return; }
+  if (!S.user || ['ADMIN','SUPERADMIN'].indexOf(String(S.user.role || '').toUpperCase()) < 0) { toast('Access denied.'); go('s-home'); return; }
   $('admKaryawan').innerHTML = '<option value="">Loading...</option>';
   $('admHistory').innerHTML = '<div class="empty">Select an employee to view attendance history.</div>';
   $('admQuickActions').style.display = 'none';
@@ -7847,7 +7775,7 @@ function loadAdminHistory() {
     $('admQuickActions').style.display = 'none';
     return;
   }
-  $('admQuickActions').style.display = 'block';
+  $('admQuickActions').style.display = (S.user && S.user.role === 'SUPERADMIN') ? 'block' : 'none';
   $('admHistory').innerHTML = '<div class="empty">Loading history...</div>';
   $('admTodayInfo').textContent = 'Loading...';
   var now = new Date();
@@ -7862,8 +7790,8 @@ function loadAdminHistory() {
     }
     var html = '<div class="date-lbl">History • ' + bulanID(new Date(now.getFullYear(), now.getMonth())) + ' ' + now.getFullYear() + ' • ' + records.length + ' record</div>';
     records.forEach(function(rec) {
-      var statusLabel = rec.statusApproval === 'VALID' ? 'Valid' : rec.statusApproval === 'DISETUJUI' ? 'Approved' : rec.statusApproval === 'PENDING_ATASAN' ? 'Pending Manager' : rec.statusApproval === 'PENDING_HR' ? 'Pending HR' : rec.statusApproval === 'DITOLAK_ATASAN' ? 'Rejected by Manager' : rec.statusApproval === 'DITOLAK_HR' ? 'Rejected by HR' : rec.statusApproval;
-      html += '<div class="req-item"><div class="req-body"><b>' + esc(rec.tanggal) + ' • ' + esc(rec.jam) + '</b><div class="sub">' + (rec.tipe === 'MASUK' ? '🟢 Clock In' : '🔴 Clock Out') + ' • ' + statusLabel + '</div></div><button class="btn btn-red" style="width:auto;padding:8px 14px;font-size:12px;flex-shrink:0" onclick="adminDeleteRecord(\'' + esc(rec.id) + '\')">Delete</button></div>';
+      var statusLabel = rec.statusApproval === 'VALID' ? 'Valid' : rec.statusApproval === 'DISETUJUI' ? 'Approved' : rec.statusApproval === 'PENDING_ATASAN' ? 'Pending Manager' : rec.statusApproval === 'PENDING_HR' ? 'Pending Superadmin' : rec.statusApproval === 'DITOLAK_ATASAN' ? 'Rejected by Manager' : rec.statusApproval === 'DITOLAK_HR' ? 'Rejected by Superadmin' : rec.statusApproval;
+      html += '<div class="req-item"><div class="req-body"><b>' + esc(rec.tanggal) + ' • ' + esc(rec.jam) + '</b><div class="sub">' + (rec.tipe === 'MASUK' ? '🟢 Clock In' : '🔴 Clock Out') + ' • ' + statusLabel + '</div></div>' + (S.user && S.user.role === 'SUPERADMIN' ? '<button class="btn btn-red" style="width:auto;padding:8px 14px;font-size:12px;flex-shrink:0" onclick="adminDeleteRecord(\'' + esc(rec.id) + '\')">Delete</button>' : '') + '</div>';
     });
     $('admHistory').innerHTML = html;
   }).catch(function(e) {
@@ -7873,11 +7801,13 @@ function loadAdminHistory() {
 }
 
 function adminDeleteRecord(id) {
+  if (!S.user || S.user.role !== 'SUPERADMIN') { toast('Only Superadmin can delete attendance.'); return; }
   if (!confirm('Delete this attendance record? This cannot be undone.')) return;
   api('adminDeleteRecord', [id]).then(function(r) { toast(r.message); loadAdminHistory(); }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
 }
 
 function adminDeleteToday() {
+  if (!S.user || S.user.role !== 'SUPERADMIN') { toast('Only Superadmin can delete attendance.'); return; }
   var nik = $('admKaryawan').value;
   if (!nik) { toast('Select an employee first.'); return; }
   if (!confirm('Delete ALL attendance records for today for ' + nik + '? This cannot be undone.')) return;
@@ -7968,6 +7898,75 @@ if (document.readyState === 'loading') {
   } catch (e) { console.warn('[ReHolz] Service-worker update check unavailable:', e && e.message || e); }
 })();
 
+
+async function changeProfileFaceByUpload(input) {
+  var file = input && input.files && input.files[0];
+  if (input) input.value = '';
+  if (!S.user) { toast('Sign in before changing your profile photo.'); return; }
+  if (!file) return;
+  if (!/^image\/(jpeg|png|webp)$/i.test(file.type || '')) { toast('Choose a JPG, PNG, or WebP image.'); return; }
+  if (file.size > 8 * 1024 * 1024) { toast('The image must be 8 MB or smaller.'); return; }
+  var submitButton = document.querySelector('#shPhotoActions button[data-profile-photo-upload]');
+  try {
+    if (submitButton) { submitButton.disabled = true; submitButton.textContent = 'Checking photo...'; }
+    await ensureNets();
+    var source = await new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function() { resolve(String(reader.result || '')); };
+      reader.onerror = function() { reject(new Error('The image file could not be read.')); };
+      reader.readAsDataURL(file);
+    });
+    var img = await new Promise(function(resolve, reject) {
+      var im = new Image();
+      im.onload = function() { resolve(im); };
+      im.onerror = function() { reject(new Error('The image file could not be opened.')); };
+      im.src = source;
+    });
+    var scale = Math.min(1, 480 / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+    canvas.height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+    canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+    var photo = canvas.toDataURL('image/jpeg', 0.76);
+    var detection = await faceapi.detectSingleFace(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 })).withFaceLandmarks().withFaceDescriptor();
+    if (!detection || !detection.descriptor || detection.descriptor.length !== 128) {
+      throw new Error('No clear face was found. Use a front-facing photo or take a selfie.');
+    }
+    if (submitButton) submitButton.textContent = 'Saving photo...';
+    await api('saveMyFaceDescriptor', [S.user.nik, Array.from(detection.descriptor), photo], 30000);
+    try { RHMediaCache.invalidate(S.user.nik); } catch (e) {}
+    S.face = S.face || {};
+    S.face.registered = true;
+    S.face.canRegister = true;
+    S.myDescriptor = Array.from(detection.descriptor);
+    await loadBootstrap();
+    await loadMyDescriptor();
+    renderAkun();
+    renderFaceBanner();
+    hydrateFaces();
+    closeSheet();
+    toast('Profile photo and Face ID updated.');
+  } catch (e) {
+    toast((e && e.message) || 'Unable to update the profile photo.');
+  } finally {
+    if (submitButton) { submitButton.disabled = false; submitButton.textContent = 'Upload Photo'; }
+  }
+}
+
+function showReleaseGate(message) {
+  var gate = document.getElementById('rhReleaseGate');
+  if (!gate) {
+    gate = document.createElement('div'); gate.id = 'rhReleaseGate';
+    gate.style.cssText = 'position:fixed;inset:0;z-index:100000;background:linear-gradient(155deg,#003824,#00573A 55%,#002E1E);color:#fff;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;font-family:system-ui,sans-serif';
+    gate.innerHTML = '<div style="max-width:420px"><div style="font-size:34px;margin-bottom:14px">♻</div><h2 style="font-size:20px;margin:0 0 10px">Updating ReHolz HRIS</h2><div class="spin" style="width:30px;height:30px;margin:10px auto 16px"></div><p id="rhReleaseGateMessage" style="font-size:14px;line-height:1.5">Preparing the latest version...</p><p style="font-size:12px;opacity:.8;margin-top:12px">Please keep this page open while employee details and profile photos are refreshed.</p></div>';
+    document.body.appendChild(gate);
+  }
+  var msg = document.getElementById('rhReleaseGateMessage'); if (msg && message) msg.textContent = message;
+  gate.style.display = 'flex';
+}
+function hideReleaseGate() { var gate = document.getElementById('rhReleaseGate'); if (gate) gate.remove(); }
+
+
 // Expose functions to window for inline HTML event handlers
 Object.assign(window, {
   doLogin, doLogout, go, currentScr, openSheet, closeSheet,
@@ -7979,9 +7978,9 @@ Object.assign(window, {
   locSearch, locSave, locDelete, locUpdateCircle, loadKaryawanMgr, renderKarList,
   karOpenAdd, karOpenEdit, karOnSelectNew, karSave, karDeactivate, karReactivate,
   karResetPin, karOpenDetail, karDetailTab, switchInboxTab, loadInbox, openApprList, openAbsenDetail, openCutiDetail,
-  actAbsen, actCuti, registerFaceSelf, saveSelfFace, loadAdminHistory, adminDeleteToday,
+  actAbsen, actCuti, registerFaceSelf, saveSelfFace, changeProfileFaceByUpload, loadAdminHistory, adminDeleteToday,
   adminDeleteRecord, backTarget, nextAttType, outsideProceed, outsideRecheck,
-  renderCutiList, openProfileSheet, changePin, enableOverride, downloadAppHtml
+  renderCutiList, openProfileSheet, openProfilePhotoActions, changePin, enableOverride, downloadAppHtml
 });
 
 /* Ekspor tambahan untuk Desktop HR Console & RHMediaCache (tidak mengubah perilaku) */
@@ -9162,7 +9161,7 @@ function showHrPlaceholder(title, group, description) {
       <div class="rk-group">
         <button type="button" class="rk-parent" onclick="RHDeskApi.rkToggleGroup(this)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>System Settings<span class="rk-chev">▾</span></button>
         <div class="rk-sub">
-      <button data-p="face"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><circle cx="12" cy="10" r="3"/><path d="M7 19c.6-2.5 2.6-4 5-4s4.4 1.5 5 4"/></svg>Face ID</button>
+
           <button data-p="lap"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" rx="0.5"/><rect x="12" y="8" width="3" height="10" rx="0.5"/><rect x="17" y="5" width="3" height="13" rx="0.5"/></svg>HR Reports</button>
           <button data-p="users"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/><path d="M18.5 8.5l1 1 2-2"/></svg>User Management</button>
           <button data-p="log"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 2.5"/><circle cx="12" cy="12" r="9"/></svg>Activity Log</button>
@@ -9228,7 +9227,6 @@ function showHrPlaceholder(title, group, description) {
     <section class="rk-page" id="rkp-emp"></section>
     <section class="rk-page" id="rkp-att"></section>
     <section class="rk-page" id="rkp-apr"></section>
-    <section class="rk-page" id="rkp-face"></section>
     <section class="rk-page" id="rkp-loc"></section>
     <section class="rk-page" id="rkp-attset"></section>
     <section class="rk-page" id="rkp-calendar"></section>
@@ -9293,7 +9291,6 @@ function showHrPlaceholder(title, group, description) {
     calendar: ['Working Calendar', 'Manage national holidays, working days, and day-off overrides'],
     cuti: ['Time Off Request', 'Time-off and absence requests by type'],
     apr: ['Approval List', 'Attendance & time-off approvals'],
-    face: ['Face ID', 'Manage employee face registration'],
     loc: ['Office Locations', 'Attendance locations and geofence radius by branch'],
     lap: ['HR Reports', 'Monthly HR reports ready to print and export'],
     users: ['User Management', 'Roles, account status, and access security'],
@@ -9391,7 +9388,6 @@ function showHrPlaceholder(title, group, description) {
     if (p === 'rekap') renderRekapPage();
     if (p === 'cuti') renderCutiPage();
     if (p === 'apr') renderAprPage();
-    if (p === 'face') renderFacePage();
     if (p === 'loc') renderLocPage();
     if (p === 'attset') renderAttendanceRulesPage();
     if (p === 'calendar') renderWorkingCalendarPage();
@@ -9498,7 +9494,7 @@ function showHrPlaceholder(title, group, description) {
           '<div class="rk-dash-att-summary"><div><b>' + hadir + '</b><span>Present / Complete</span></div><div><b>' + belum + '</b><span>Incomplete</span></div></div>' +
           '<div class="rk-dash-att-track"><span style="width:' + pct + '%"></span></div><div class="rk-dash-att-caption">' + pct.toFixed(1) + '% of ' + total + ' employees</div>';
       } else {
-        box.innerHTML = '<h3>Today’s Attendance</h3><div class="rk-note">Attendance summary is not available from the backend yet.</div>';
+        box.innerHTML = '<h3>Today’s Attendance</h3><div class="rk-note">The &quot;hr_attendance_today&quot; backend function is missing or rejected the request. Apply the v13.1 SQL migration; if it is already applied, check the browser console and Supabase function permissions.</div>';
       }
       restartDashCard(box);
     }).catch(function () {
@@ -10008,7 +10004,7 @@ function showHrPlaceholder(title, group, description) {
 
   /* RPC opsional: tidak error bila backend belum memasang */
   function rpcOptional(fn, params) {
-    if (window.ensureAdminWriteAllowed && window.isAdminReadOnly && window.isAdminReadOnly() && /^(submit_attendance_with_photo|submit_cuti|process_approval|process_cuti_approval|hr_set_role|hr_update_|hr_create_|hr_add_|hr_delete_|hr_deactivate|hr_reactivate|hr_reset_|hr_grant_|hr_revoke_|hr_save_|hr_upsert_|hr_import_|admin_delete_|grant_face_registration|grant_mass_face_registration|reset_face_registration|revoke_face_session|hr_save_face_reference|save_my_face)/i.test(String(fn || ''))) {
+    if (window.ensureAdminWriteAllowed && window.isAdminReadOnly && window.isAdminReadOnly() && /^(submit_attendance_with_photo|submit_cuti|process_approval|process_cuti_approval|hr_set_role|hr_update_|hr_create_|hr_add_|hr_delete_|hr_deactivate|hr_reactivate|hr_reset_|hr_grant_|hr_revoke_|hr_save_|hr_upsert_|hr_import_|admin_delete_|grant_face_registration|grant_mass_face_registration|reset_face_registration|revoke_face_session|hr_save_face_reference|save_lokasi_kantor|delete_lokasi_kantor|save_attendance_rule|save_calendar_override)/i.test(String(fn || ''))) {
       return Promise.resolve({ ok:false, message:'Administrator role is view-only.' });
     }
     return new Promise(function (resolve) {
@@ -10021,9 +10017,18 @@ function showHrPlaceholder(title, group, description) {
           var p = params || {};
           p.p_token = getToken();
           client.rpc(fn, p).then(function (r) {
-            if (r && r.error) return resolve(null);
+            if (r && r.error) {
+              window.__RH_OPTIONAL_RPC_LAST_ERROR = { function: fn, message: r.error.message || String(r.error) };
+              console.warn('[ReHolz] Optional backend function failed:', fn, r.error.message || r.error);
+              return resolve(null);
+            }
+            window.__RH_OPTIONAL_RPC_LAST_ERROR = null;
             resolve(r ? r.data : null);
-          }).catch(function () { resolve(null); });
+          }).catch(function (err) {
+            window.__RH_OPTIONAL_RPC_LAST_ERROR = { function: fn, message: err && err.message || String(err) };
+            console.warn('[ReHolz] Optional backend function failed:', fn, err && err.message || err);
+            resolve(null);
+          });
         }).catch(function () { resolve(null); });
       } catch (e) { resolve(null); }
     });
@@ -10452,7 +10457,7 @@ function showHrPlaceholder(title, group, description) {
     if (!shade) { shade=document.createElement('div'); shade.id='rkEmpEditShade'; shade.className='rk-emp-modal-shade'; document.body.appendChild(shade); shade.addEventListener('click',function(e){if(e.target===shade || (e.target.closest&&e.target.closest('[data-emp-edit-close]')))empCloseModal('rkEmpEditShade'); if(e.target.closest&&e.target.closest('[data-emp-edit-save]'))empSaveEditor();}); shade.addEventListener('keydown',function(e){if(e.key==='Escape')empCloseModal('rkEmpEditShade');}); }
     var managerId = String(x.atasanId || '');
     var managerOptions = '<option value="">— None —</option>' + empCurrentList().map(empNormalize).filter(function(y){return y.nik && y.nik!==x.nik;}).map(function(y){return '<option value="'+escH(y.nik)+'"'+(y.nik===managerId?' selected':'')+'>'+escH(y.nama)+' ('+escH(y.nik)+')</option>';}).join('');
-    var roleField = isAdd ? '<div class="rk-emp-edit-field"><label for="edRole">System Role</label><select id="edRole"><option value="KARYAWAN" selected>Employee</option><option value="HR">HR</option><option value="ADMIN">Administrator</option></select></div>' : '';
+    var roleField = isAdd ? '<div class="rk-emp-edit-field"><label for="edRole">System Role</label><select id="edRole"><option value="KARYAWAN" selected>Employee</option><option value="ADMIN">Administrator</option><option value="SUPERADMIN">Superadmin</option></select></div>' : '';
     shade.innerHTML = '<section class="rk-emp-modal rk-emp-editor-modal" role="dialog" aria-modal="true" aria-labelledby="rkEmpEditorTitle"><header class="rk-emp-modal-head"><div><h2 id="rkEmpEditorTitle">' + (isAdd ? 'Add Employee' : 'Edit Employee Profile') + '</h2><p>' + (isAdd ? 'Create an employee record' : escH(x.nama) + ' · ' + escH(x.nik)) + '</p></div><button class="rk-emp-modal-close" type="button" data-emp-edit-close aria-label="Close">×</button></header><div class="rk-emp-modal-content">' +
       '<div class="rk-emp-form-section"><h3>Employment Information</h3><div class="rk-emp-edit-grid">' +
       empEditorField('Employee ID (NIK)','edNik',x.nik,'text','') + empEditorField('Full Name','edName',x.nama,'text','') + empEditorField('Department','edDepartment',x.department,'text','') + '<div class="rk-emp-edit-field"><label for="edBranch">Branch (attendance schedule)</label><select id="edBranch">'+(isAdd?'<option value="" selected>Select branch</option>':'')+profileBranchOptions(x.branch,false)+'</select></div>' +
@@ -10579,7 +10584,7 @@ function showHrPlaceholder(title, group, description) {
     if (raw === 'DISETUJUI' || raw === 'APPROVED') return '<span class="rk-pill ok">Approved</span>';
     if (raw === 'VALID') return '<span class="rk-pill ok">Valid</span>';
     if (raw === 'PENDING_ATASAN') return '<span class="rk-pill warn">Pending Manager</span>';
-    if (raw === 'PENDING_HR') return '<span class="rk-pill warn">Pending HR</span>';
+    if (raw === 'PENDING_HR') return '<span class="rk-pill warn">Pending Superadmin</span>';
     if (/PENDING|MENUNGGU/.test(raw)) return '<span class="rk-pill warn">Pending</span>';
     return '<span class="rk-pill info">' + escH(raw || '—') + '</span>';
   }
@@ -10798,7 +10803,7 @@ function showHrPlaceholder(title, group, description) {
   function attMonExportRow(x) {
     var lat=attMonFirst(x,['latitude','lat','gps_latitude','gps_lat']), lon=attMonFirst(x,['longitude','lon','lng','gps_longitude','gps_lon']);
     var st=String(attMonFirst(x,['status_approval','statusApproval','approval_status'])||'');
-    if(st==='VALID') st='Valid'; else if(st==='DISETUJUI'||st==='APPROVED') st='Approved'; else if(st==='PENDING_ATASAN') st='Pending Manager'; else if(st==='PENDING_HR') st='Pending HR'; else if(/^DITOLAK/.test(st)) st='Rejected';
+    if(st==='VALID') st='Valid'; else if(st==='DISETUJUI'||st==='APPROVED') st='Approved'; else if(st==='PENDING_ATASAN') st='Pending Manager'; else if(st==='PENDING_HR') st='Pending Superadmin'; else if(/^DITOLAK/.test(st)) st='Rejected';
     var branch=attMonFirst(x,['employee_branch_snapshot','location_setting_name','branch'])||'';
     var gpsName=attMonFirst(x,['location_gps_name','locationGpsName'])|| (branch ? 'Office '+branch : '');
     var photo=attMonFirst(x,['photo_url','photoUrl','foto_url','fotoUrl','photo','foto','evidence_path','foto_path','photo_path']);
@@ -10843,7 +10848,7 @@ function showHrPlaceholder(title, group, description) {
         box.innerHTML = '<h3>Today’s Summary</h3><div class="rk-card-sub">' + escH(r.tanggal || '') + '</div>' +
           donut([{ l: 'Present / Complete', v: hadir, c: '#007850' }, { l: 'Incomplete', v: Math.max(total - hadir, 0), c: '#B77932' }], 140, 24, total, 'employees');
       } else {
-        box.innerHTML = '<h3>Today’s Summary</h3><div class="rk-note">The <b>hr_attendance_today</b> endpoint is not available. Configure it using the <i>AI Backend Instructions</i>.</div>';
+        box.innerHTML = '<h3>Today’s Summary</h3><div class="rk-note">The <b>hr_attendance_today</b> function is missing or rejected the request. Apply the v13.1 SQL migration, then refresh. Check the browser console if the function already exists. Configure it using the <i>AI Backend Instructions</i>.</div>';
       }
     });
     rpcOptional('hr_attendance_week', { p_end: null }).then(function (r) {
@@ -10938,60 +10943,6 @@ function showHrPlaceholder(title, group, description) {
       renderAprPage(true);
       refreshBadge();
     }).catch(function (e) { rkToast('❌ ' + (e && e.message || e)); });
-  }
-
-  /* ---------------- FACE ID ---------------- */
-  function renderFacePage() {
-    var el = document.getElementById('rkp-face');
-    if (!el) return;
-    el.innerHTML =
-      '<div class="rk-card" style="margin-bottom:16px"><h3>Registration Progress Face ID</h3>' +
-      '<div id="rkFaceProg"><div class="rk-loading">Loading...</div></div>' +
-      '<button class="rk-btn" id="rkFaceMass" style="margin-top:12px">🚀 Grant Bulk Access (60 minutes)</button></div>' +
-      '<div class="rk-card"><h3>Face ID Status by Employee</h3><div class="rk-card-sub">Grant access, reset, or revoke face-registration sessions</div>' +
-      '<div class="rk-toolbar"><input class="rk-in" id="rkFaceQ" placeholder="Search name / Employee ID..." style="width:240px"></div>' +
-      '<div class="rk-table-wrap"><table class="rk-table"><thead><tr><th>Employees</th><th>Employee ID (NIK)</th><th>Status</th><th>Access Session</th><th style="width:250px">Actions</th></tr></thead>' +
-      '<tbody id="rkFaceBody"><tr><td colspan="5"><div class="rk-loading">Loading...</div></td></tr></tbody></table></div></div>';
-    document.getElementById('rkFaceMass').addEventListener('click', function () {
-      try { faceMgrMass(); } catch (e) { rkToast(e.message); }
-      setTimeout(refreshFace, 1500);
-    });
-    document.getElementById('rkFaceQ').addEventListener('input', function () { paintFaceRows(this.value); });
-    refreshFace();
-  }
-  function refreshFace() {
-    api('getFaceProgress', [], 20000).then(function (p) {
-      var box = document.getElementById('rkFaceProg');
-      if (!box || !p) return;
-      var pct = p.total ? Math.round(p.registered / p.total * 100) : 0;
-      box.innerHTML = '<div style="font-size:13px;font-weight:700">' + p.registered + ' / ' + p.total + ' employees registered (' + pct + '%)</div>' +
-        '<div class="rk-face-prog"><i style="width:' + pct + '%"></i></div>' +
-        '<div style="font-size:12px;color:#5E6E63">Remaining unregistered: ' + p.remaining + '</div>';
-    }).catch(function () {});
-    ensureKar(false).then(function () { paintFaceRows((document.getElementById('rkFaceQ') || {}).value || ''); });
-  }
-  function paintFaceRows(q) {
-    var body = document.getElementById('rkFaceBody');
-    if (!body) return;
-    q = (q || '').toLowerCase();
-    var list = (DATA.karList || []).filter(function (x) {
-      return !q || (x.nama || '').toLowerCase().indexOf(q) >= 0 || (x.nik || '').toLowerCase().indexOf(q) >= 0;
-    });
-    if (!list.length) { body.innerHTML = '<tr><td colspan="5"><div class="rk-empty">No data.</div></td></tr>'; return; }
-    body.innerHTML = list.map(function (x) {
-      var ava = '<span class="rk-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>';
-      var st = x.face === 'YES' ? '<span class="rk-pill ok">Registered</span>' : '<span class="rk-pill warn">Not registered</span>';
-      var sesi = x.faceSessionUntil ? ('<span class="rk-pill info">Access until ' + escH(String(x.faceSessionUntil).slice(0, 16).replace('T', ' ')) + '</span>') : '<span style="color:#8AA093;font-size:12px">-</span>';
-      return '<tr>' +
-        '<td><div style="display:flex;align-items:center;gap:10px">' + ava + '<b>' + escH(x.nama) + '</b></div></td>' +
-        '<td>' + escH(x.nik) + '</td><td>' + st + '</td><td>' + sesi + '</td>' +
-        '<td><div style="display:flex;gap:6px;flex-wrap:wrap">' +
-          '<button class="rk-mini primary" onclick="RHDeskApi.faceGrant(\'' + escH(x.nik) + '\')">Beri Akses</button>' +
-          '<button class="rk-mini" onclick="RHDeskApi.faceReset(\'' + escH(x.nik) + '\')">Reset</button>' +
-          '<button class="rk-mini danger" onclick="RHDeskApi.faceRevoke(\'' + escH(x.nik) + '\')">Cabut Sesi</button>' +
-        '</div></td></tr>';
-    }).join('');
-    try { hydrateFaces(); } catch (e) {}
   }
 
   /* ---------------- LOKASI KANTOR ---------------- */
@@ -11283,7 +11234,7 @@ function showHrPlaceholder(title, group, description) {
       var badLabel = s.indexOf('DITOLAK') >= 0 || s === 'REJECTED' ? 'Rejected' : (s === 'NONAKTIF' ? 'Inactive' : 'Failed');
       return '<span class="rk-pill no">' + escH(badLabel) + '</span>';
     }
-    if (s.indexOf('PENDING') >= 0 || s === 'MENUNGGU') { var pendingLabel = s === 'MENUNGGU' ? 'Pending' : (s === 'PENDING_ATASAN' ? 'Pending Manager Approval' : (s === 'PENDING_HR' ? 'Pending HR Review' : st)); return '<span class="rk-pill warn">' + escH(pendingLabel) + '</span>'; }
+    if (s.indexOf('PENDING') >= 0 || s === 'MENUNGGU') { var pendingLabel = s === 'MENUNGGU' ? 'Pending' : (s === 'PENDING_ATASAN' ? 'Pending Manager Approval' : (s === 'PENDING_HR' ? 'Pending Superadmin Review' : st)); return '<span class="rk-pill warn">' + escH(pendingLabel) + '</span>'; }
     if (s === 'HADIR') return '<span class="rk-pill ok">Present</span>';
     if (s === 'BELUM CLOCK OUT') return '<span class="rk-pill warn">Not Clocked Out</span>';
     if (s === 'MASUK') return '<span class="rk-pill info">Clock In</span>';
@@ -11523,7 +11474,7 @@ function showHrPlaceholder(title, group, description) {
   }
   function desktopCutiCanSuperadminAct(x) {
     var a=String(x.statusAtasan||'PENDING').toUpperCase(), h=String(x.statusHR||'PENDING').toUpperCase();
-    return isHR() && S.user && String(S.user.role || '').toUpperCase() !== 'ADMIN' && /DISETUJUI|APPROVED/.test(a) && !/DISETUJUI|APPROVED|DITOLAK|REJECTED/.test(h);
+    return !!(S.user && String(S.user.role || '').toUpperCase() === 'SUPERADMIN' && /DISETUJUI|APPROVED/.test(a) && !/DISETUJUI|APPROVED|DITOLAK|REJECTED/.test(h));
   }
   function openDesktopCutiDetail(id) {
     var x=(cutiUI.data||[]).find(function(row){return String(row.id)===String(id);});
@@ -11541,7 +11492,7 @@ function showHrPlaceholder(title, group, description) {
     var canAct=desktopCutiCanSuperadminAct(x);
     document.getElementById('rkCutiDetailContent').innerHTML='<h2 id="rkCutiDetailTitle">Time Off Request</h2><div class="rk-cuti-detail-person">'+empAvatarMarkup(person,true)+'<div><b>'+escH(x.nama||person.nama||'—')+'</b><small>'+escH(nik)+' · '+escH(person.department||person.organization||'—')+'</small></div>'+desktopCutiOverallStatus(x)+'</div><div class="rk-cuti-detail-grid">'+
       empField('Request ID',x.id)+empField('Requested Date',desktopCutiRequestedDate(x.waktuPengajuan))+empField('Policy',x.keterangan||x.kode||'—')+empField('Start Date',empDateText(x.tanggalMulai))+empField('End Date',empDateText(x.tanggalSelesai))+empField('Days',x.totalHari)+empField('Delegate to',x.delegateToName || x.delegateTo || 'No delegate')+empField('Manager',cutiApprovalText(x,'manager').replace(/<[^>]*>/g,''))+empField('Superadmin',cutiApprovalText(x,'superadmin').replace(/<[^>]*>/g,''))+'</div><div class="rk-cuti-detail-block"><label>Reason</label><p>'+escH(x.alasan||'—')+'</p></div><div class="rk-cuti-detail-block"><label>Manager&#39;s Note</label><p>'+escH(x.alasanAtasan||'No note left by the Manager.')+'</p></div><div class="rk-cuti-detail-block"><label>Superadmin&#39;s Note</label><p>'+escH(x.alasanHR||'No Superadmin note yet.')+'</p></div><div class="rk-cuti-detail-block"><label>Attachment</label><p>'+fileHtml+'</p></div>'+
-      (canAct?'<div class="rk-cuti-detail-block"><label for="rkCutiSuperadminNote">Approval note</label><textarea id="rkCutiSuperadminNote" class="rk-in rk-cuti-note" rows="3" placeholder="Enter a note for this decision..."></textarea></div><div class="rk-cuti-detail-actions"><button type="button" class="rk-btn" data-cuti-detail-action="APPROVE">Approve</button><button type="button" class="rk-btn danger" data-cuti-detail-action="REJECT">Reject</button></div><p class="rk-card-sub">Superadmin actions are available because the Manager stage is complete.</p>' : '<div class="rk-cuti-detail-wait">'+(String(x.statusAtasan||'').match(/DITOLAK|REJECTED/)?'The request was rejected by the Manager.':'Approve/Reject actions appear here when the request reaches the Superadmin stage.')+'</div>');
+      (canAct?'<div class="rk-cuti-detail-block"><label for="rkCutiSuperadminNote">Approval note</label><textarea id="rkCutiSuperadminNote" class="rk-in rk-cuti-note" rows="3" placeholder="Enter a note for this decision..."></textarea></div><div class="rk-cuti-detail-actions"><button type="button" class="rk-btn" data-cuti-detail-action="APPROVE">Approve</button><button type="button" class="rk-btn danger" data-cuti-detail-action="REJECT">Reject</button></div><p class="rk-card-sub">Superadmin actions are available because the Manager stage is complete.</p>' : '<div class="rk-cuti-detail-wait">'+(String(x.statusAtasan||'').match(/DITOLAK|REJECTED/)?'The request was rejected by the direct manager.':(/PENDING|MENUNGGU/.test(String(x.statusAtasan||'PENDING'))?'Waiting for direct manager approval. You can review the full request, but you cannot approve or reject it at this stage.':'Approve/Reject actions appear only for Superadmin after the direct manager has approved and the final review is pending.'))+'</div>');
     shade.classList.add('on');hydrateDesktopEmployeeFaces(shade);
   }
   function submitDesktopCutiAction(id,action) {
@@ -11817,7 +11768,7 @@ function showHrPlaceholder(title, group, description) {
           '<button class="rk-btn ghost" id="rkUsersReload">↻ Reload</button>' +
         '</div>' +
         '<div class="rk-card"><h3>User Accounts</h3>' +
-        '<div class="rk-card-sub">Manage access roles (EMPLOYEE / HR / ADMIN), account status, and PIN resets</div>' +
+        '<div class="rk-card-sub">Manage access roles (Employee / Administrator / Superadmin), account status, and PIN resets</div>' +
         '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
           '<th>Employees</th><th>Employee ID (NIK)</th><th>Role</th><th>Account Status</th><th>Face ID</th><th style="width:280px">Actions</th>' +
         '</tr></thead><tbody id="rkUsersBody"><tr><td colspan="6"><div class="rk-loading">Loading...</div></td></tr></tbody></table></div></div>';
@@ -11842,7 +11793,7 @@ function showHrPlaceholder(title, group, description) {
     body.innerHTML = list.map(function (x) {
       var ava = '<span class="rk-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>';
       var roleSel = '<select class="rk-role" data-role-for="' + escH(x.nik) + '"' + (canManageUsers ? '' : ' disabled') + '>' +
-        ['KARYAWAN', 'HR', 'ADMIN', 'SUPERADMIN'].map(function (r) { var roleLabel = r === 'KARYAWAN' ? 'Employee' : (r === 'ADMIN' ? 'Administrator' : (r === 'SUPERADMIN' ? 'Superadmin' : 'HR'));  return '<option value="' + r + '"' + (x.role === r ? ' selected' : '') + '>' + roleLabel + '</option>'; }).join('') + '</select>';
+        ['KARYAWAN', 'ADMIN', 'SUPERADMIN'].map(function (r) { var roleLabel = r === 'KARYAWAN' ? 'Employee' : (r === 'ADMIN' ? 'Administrator' : 'Superadmin'); return '<option value="' + r + '"' + (x.role === r ? ' selected' : '') + '>' + roleLabel + '</option>'; }).join('') + '</select>';
       return '<tr>' +
         '<td><div style="display:flex;align-items:center;gap:10px">' + ava + '<b>' + escH(x.nama) + '</b></div></td>' +
         '<td>' + escH(x.nik) + '</td>' +
@@ -12275,7 +12226,7 @@ function showHrPlaceholder(title, group, description) {
         return;
       }
       list.innerHTML = items.map(function (n) {
-        var page = ['dash','emp','pfile','att','rekap','cuti','apr','face','loc','attset','calendar','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
+        var page = ['dash','emp','pfile','att','rekap','cuti','apr','loc','attset','calendar','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
         return '<button type="button" class="rk-notif-item" data-rk-notif-page="' + page + '"' + (n.id ? ' data-rk-notif-id="' + escH(n.id) + '"' : '') + (n.kind ? ' data-rk-notif-kind="' + escH(n.kind) + '"' : '') +
           (n.kind && n.id ? ' data-rk-notif-anchor="rkApproval_' + escH(String(n.kind + '_' + n.id).replace(/[^A-Za-z0-9_-]/g, '_')) + '"' : '') + '>' +
           '<span class="rk-notif-item-ic ' + escH(n.tone || '') + '">' + escH(n.icon || '•') + '</span>' +
