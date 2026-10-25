@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.8.2-attendance-approval-detail-outcome-notifications">
+<meta name="app-release" content="v13.8.3.3-global-read-and-complete-notifications">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -3705,8 +3705,8 @@ window.__APP_PREPARING_ASSETS = true;
     </h1>
   </div>
   <div class="inbox-tabs">
-    <button id="itab0" class="on" onclick="switchInboxTab(0)">Notifications</button>
-    <button id="itab1" onclick="switchInboxTab(1)">Needs Approval <span class="badge-n" id="inboxBadge" style="display: inline-block;">3</span></button>
+    <button id="itab0" class="on" onclick="switchInboxTab(0)">Untuk Anda</button>
+    <button id="itab1" onclick="switchInboxTab(1)">Perlu persetujuan <span class="badge-n" id="inboxBadge" style="display: none;">0</span></button>
   </div>
   <div id="paneNotif"><div class="empty">Loading...</div></div>
   <div id="paneAppr" style="display:none"><div class="empty">Loading...</div></div>
@@ -4054,7 +4054,7 @@ window.__APP_PREPARING_ASSETS = true;
     <circle cx="25.5" cy="5" r="0.6" fill="#FFFFFF" opacity="0.85"></circle>
   </svg></span>
     Inbox
-    <span class="tbadge" id="tabBadge" style="display: block;">3</span>
+    <span class="tbadge" id="tabBadge" style="display: none;">0</span>
   </button>
   <button data-t="s-akun" onclick="go('s-akun')" class="">
     <span class="tic"><svg viewBox="0 0 36 36" width="34" height="34" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -4082,8 +4082,8 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v13.8.2-attendance-approval-detail-outcome-notifications';
-var RH_DISPLAY_VERSION = 'v13.8.2';
+var RH_HTML_RELEASE = 'v13.8.3.3-global-read-and-complete-notifications';
+var RH_DISPLAY_VERSION = 'v13.8.3.3';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -4273,8 +4273,13 @@ async function rpc(fn, params, timeoutMs) {
 var S = {
   user: null, office: null, status: null, sisaCT: null,
   face: { registered: false, canRegister: false },
-  pendingTotal: 0, approver: false, myDescriptor: null, freshLogin: false, booting: false
+  pendingTotal: 0, unreadNotificationTotal: 0, approver: false, myDescriptor: null, freshLogin: false, booting: false
 };
+var RH_NOTIF_STATE = window.RH_NOTIF_STATE || {
+  unreadCount: 0, unreadCountAuthoritative: false, pendingCount: 0, myRequestsAt: 0, mobileAt: 0, mobileUser: '', mobileHtml: '', mobileItems: [],
+  desktopAt: 0, desktopUser: '', desktopItems: { approvals: [], personal: [] }, activeDesktopTab: 'approvals'
+};
+window.RH_NOTIF_STATE = RH_NOTIF_STATE;
 
 var GPS = { pos: null, at: 0, watchId: null, cached: false };
 var CAM = { stream: null, run: false, desc: null, descAt: 0, state: 'detecting', win: [], present: false, presentAt: 0, override: false, refLoading: false };
@@ -4314,13 +4319,25 @@ function esc(v) {
   });
 }
 
+function reholzFeedbackTone(message) {
+  var m = String(message || '').toLowerCase();
+  // A successfully submitted rejection is still a rejection: keep its outcome visibly red.
+  if (/\b(ditolak|rejected)\b/i.test(m)) return 'error';
+  if (/\b(failed|unable|error|gagal|tidak dapat|tidak bisa|access denied|denied|unauthorized|invalid|❌|⚠️)/i.test(m)) return 'error';
+  if (/(required|wajib|isi catatan|hanya superadmin|view-only|akses lihat saja|not authorized|tidak berwenang|belum tersedia|tidak ditemukan|no data|tidak ada data)/i.test(m)) return 'warning';
+  if (/(success|berhasil|approved|disetujui|saved|tersimpan|updated|diperbarui|deleted|dihapus|created|ditambahkan|recorded|tercatat|reset|changed|diubah|downloaded|diunduh|export|ekspor|submitted|diajukan|granted|diberikan|revoked|dicabut|uploaded|diunggah|completed|selesai)/i.test(m)) return 'success';
+  return 'info';
+}
+window.reholzFeedbackTone = reholzFeedbackTone;
 function toast(m) {
   if (!m || m === 'STALE') return;
   var t = $('toast');
-  t.textContent = m;
+  var tone = reholzFeedbackTone(m);
+  t.dataset.tone = tone; t.setAttribute('role', tone === 'error' ? 'alert' : 'status'); t.setAttribute('aria-live', tone === 'error' ? 'assertive' : 'polite');
+  t.textContent = String(m);
   t.classList.add('on');
   clearTimeout(t._h);
-  t._h = setTimeout(function() { t.classList.remove('on'); }, 3200);
+  t._h = setTimeout(function() { t.classList.remove('on'); }, 3600);
 }
 
 function initials(n) {
@@ -4390,6 +4407,8 @@ function resetRuntimeState() {
   ATT.type = 'MASUK'; ATT.submitting = false; ATT.outside = false; ATT.outsideOk = false; ATT.area = ''; ATT.lastOutsideAt = 0; ATT.recheckingOutside = false; ATT.outsideDialogShown = false; ATT.outsideAwaitContinue = false;
   destroyAttMap();
   DATA.cutiList = []; DATA.empList = []; DATA.appr = null; DATA.myReq = null;
+  S.unreadNotificationTotal = 0; S.pendingTotal = 0;
+  RH_NOTIF_STATE.unreadCount = 0; RH_NOTIF_STATE.pendingCount = 0; RH_NOTIF_STATE.mobileAt = 0; RH_NOTIF_STATE.desktopAt = 0; RH_NOTIF_STATE.mobileHtml = ''; RH_NOTIF_STATE.mobileItems = [];
   DATA.faceList = []; DATA.team = []; DATA.faceVer = {}; DATA.locList = [];
   DATA.karList = []; DATA.karOpts = null;
   CACHE.masterCuti = null; CACHE.masterCutiAt = 0;
@@ -5252,6 +5271,10 @@ async function api(fn, args, timeoutMs) {
   if (fn === 'getSisaCuti') return rpc('get_sisa_cuti', { p_token: getToken(), p_kode: args[1] || 'CT' });
   if (fn === 'getMyPendingRequests') return (await rpc('get_my_pending_requests', { p_token: getToken() })) || { absensi: [], cuti: [] };
   if (fn === 'getMyNotifications') return (await rpc('get_my_notifications', { p_token: getToken() })) || { list: [] };
+  if (fn === 'markMyNotificationRead') return (await rpc('mark_my_notification_read', { p_token: getToken(), p_notification_id: String(args[0] || '') })) || { ok: false };
+  if (fn === 'markMyNotificationsRead') return (await rpc('mark_my_notifications_read', { p_token: getToken() })) || { ok: false };
+  if (fn === 'getMyAttendanceRequest') return rpc('get_my_attendance_approval_detail', { p_token: getToken(), p_id: String(args[0] || '') });
+  if (fn === 'getMyTimeOffRequest') return rpc('get_my_timeoff_request_detail', { p_token: getToken(), p_id: String(args[0] || '') });
   if (fn === 'changeMyPassword') return rpc('change_my_password', { p_token: getToken(), p_old_pin: args[1], p_new_pin: args[2] });
   if (fn === 'simpanAbsensi') {
     var p = args[0] || {};
@@ -5656,7 +5679,7 @@ function loadBootstrap() {
     S.face = b.faceStatus || { registered: false, canRegister: false };
     var currentRole = String(S.user.role || '').toUpperCase();
     S.approver = currentRole === 'ADMIN' || currentRole === 'SUPERADMIN' || (currentRole === 'KARYAWAN' && b.hasSubordinates === true);
-    S.pendingTotal = b.pendingTotal || 0;
+    S.pendingTotal = currentRole === 'ADMIN' ? 0 : (b.pendingTotal || 0);
     saveSession();
     applyRoleMenus();
     var cur = currentScr();
@@ -5681,14 +5704,24 @@ function loadBootstrap() {
 }
 
 function updateBadges() {
-  var n = S.pendingTotal || 0;
+  var pending = Math.max(0, Number(S.pendingTotal || 0));
+  var unread = Math.max(0, Number(S.unreadNotificationTotal || 0));
+  var total = pending + unread;
+  RH_NOTIF_STATE.pendingCount = pending; RH_NOTIF_STATE.unreadCount = unread;
   var b = $('tabBadge');
-  b.textContent = n;
-  b.style.display = n ? 'block' : 'none';
+  if (b) { b.textContent = total > 99 ? '99+' : String(total); b.style.display = total ? 'block' : 'none'; }
   var b2 = $('inboxBadge');
-  b2.textContent = n;
-  b2.style.display = n ? 'inline-block' : 'none';
+  if (b2) { b2.textContent = pending > 99 ? '99+' : String(pending); b2.style.display = pending ? 'inline-block' : 'none'; }
+  var oldInbox = $('dInboxBadge');
+  if (oldInbox) { oldInbox.textContent = total > 99 ? '99+' : String(total); oldInbox.style.display = total ? 'inline-flex' : 'none'; }
+  var oldBell = $('dNotifDot');
+  if (oldBell) { oldBell.textContent = total > 99 ? '99+' : String(total); oldBell.style.display = total ? 'inline-flex' : 'none'; oldBell.setAttribute('aria-label', total + ' notifikasi atau tugas belum selesai'); }
+  var deskBadge = $('rkNotifBadge');
+  if (deskBadge) { deskBadge.textContent = total > 99 ? '99+' : String(total); deskBadge.style.display = total ? 'inline-flex' : 'none'; }
 }
+// Bridge for classic desktop script and legacy inline handlers. The core app is an ES module.
+window.updateBadges = updateBadges;
+window.updatebadges = updateBadges;
 
 // Cache posisi GPS terakhir per pengguna. Data ini hanya untuk tampilan awal,
 // dan selalu ditandai cached sampai browser memberi fix GPS baru.
@@ -6880,7 +6913,8 @@ function approvalAssignedManagerId(row, kind) {
 function isCurrentUserDirectManager(row, kind) {
   var actor = approvalCurrentEmployeeId();
   var manager = approvalAssignedManagerId(row, kind);
-  return !!actor && !!manager && actor === manager;
+  var requester = String(row && (row.nik || row.employee_id || row.employeeId) || '').trim().toUpperCase();
+  return !!actor && !!manager && actor === manager && actor !== requester;
 }
 function canActAsDirectManager(role, row, kind) {
   role = String(role || '').toUpperCase();
@@ -6927,18 +6961,19 @@ function actCuti(id, approve) {
     if ($('cdNote')) $('cdNote').focus();
     return;
   }
+  var actionButtons = document.querySelectorAll('#cdetBody .det-actions button');
+  Array.prototype.forEach.call(actionButtons, function(btn) { btn.disabled = true; btn.dataset.originalLabel = btn.textContent; btn.textContent = 'Menyimpan…'; });
   api('processCutiApproval', [S.user.role, S.user.nik, id, approve ? 'APPROVE' : 'REJECT', note]).then(function(r) {
-    toast(r.message);
+    var successText = (r && r.message) || (approve ? 'Time Off disetujui.' : 'Time Off ditolak.');
+    toast(successText);
     logNotif(approve ? '✅ You approved the time-off request' : '❌ You rejected the time-off request');
-    return refreshPending().then(function() {
-      renderNotifs();
-      var latest = ((DATA.appr && DATA.appr.cuti) || []).find(function(row) { return String(row.id) === String(id); });
-      var nextStage = latest && (canActAsDirectManager(String(S.user && S.user.role || '').toUpperCase(), latest, 'cuti') || (String(S.user && S.user.role || '').toUpperCase() === 'SUPERADMIN' && /^(DISETUJUI|APPROVED)$/i.test(String(latest.statusAtasan || '')) && /^PENDING$/i.test(String(latest.statusHR || 'PENDING'))));
-      if (nextStage) openCutiDetail(id, true);
-      else { go('s-inbox'); switchInboxTab(1); }
+    RH_NOTIF_STATE.mobileAt = 0; RH_NOTIF_STATE.desktopAt = 0;
+    return refreshPending().then(function() { return renderNotifs(true); }).then(function() {
+      go('s-inbox'); switchInboxTab(1); openApprList('cuti');
     });
   }).catch(function(e) {
     if (e && e.message === 'STALE') return;
+    Array.prototype.forEach.call(actionButtons, function(btn) { btn.disabled = false; btn.textContent = btn.dataset.originalLabel || (approve ? 'Approve' : 'Reject'); });
     toast(e.message);
   });
 }
@@ -7625,6 +7660,7 @@ function switchInboxTab(i) {
   $('paneNotif').style.display = i === 0 ? 'block' : 'none';
   $('paneAppr').style.display = i === 1 ? 'block' : 'none';
   if (i === 1) loadApprPane();
+  else if (Array.isArray(RH_NOTIF_STATE.mobileItems)) markAllMyNotificationsReadUi(RH_NOTIF_STATE.mobileItems, 'mobile-tab-open').catch(function () {});
 }
 
 function loadInbox() {
@@ -7644,46 +7680,305 @@ function logNotif(txt) {
   try { localStorage.setItem('tk_notif', JSON.stringify(l)); } catch (e) {}
 }
 
-function renderNotifs() {
-  Promise.all([
-    loadMyRequests(),
-    api('getMyNotifications', [], 20000).catch(function() { return { list: [] }; })
+function completeMyNotificationTitle(n) {
+  n = n || {};
+  var title = String(n.title || 'Hasil persetujuan');
+  var kind = String(n.kind || n.type || '').toLowerCase();
+  var area = (/absen|attendance/.test(kind) || /absensi|clock in|clock out/i.test(title)) ? 'absensi' : 'timeoff';
+  var subject = area === 'absensi' ? 'Pengajuan absensi Anda' : 'Pengajuan Time Off Anda';
+  if (/ditolak.*atasan|atasan.*ditolak/i.test(title)) return subject + ' ditolak oleh atasan langsung';
+  if (/ditolak.*(superadmin|hr)|((superadmin|hr).*ditolak)/i.test(title)) return subject + ' ditolak oleh Superadmin';
+  if (/disetujui.*atasan|atasan.*disetujui/i.test(title) && /menunggu|pending/i.test(title)) return subject + ' disetujui oleh atasan langsung dan menunggu persetujuan Superadmin';
+  if (/disetujui.*atasan|atasan.*disetujui/i.test(title)) return subject + ' disetujui oleh atasan langsung';
+  if (/disetujui.*(superadmin|hr)|(superadmin|hr).*disetujui/i.test(title)) return subject + ' disetujui oleh Superadmin';
+  if (/approved.*manager|manager.*approved/i.test(title) && /pending|wait|superadmin/i.test(title)) return subject + ' disetujui oleh atasan langsung dan menunggu persetujuan Superadmin';
+  if (/rejected.*manager|manager.*rejected/i.test(title)) return subject + ' ditolak oleh atasan langsung';
+  if (/rejected.*(superadmin|hr)|(superadmin|hr).*rejected/i.test(title)) return subject + ' ditolak oleh Superadmin';
+  if (/approved.*(superadmin|hr)|(superadmin|hr).*approved/i.test(title)) return subject + ' disetujui oleh Superadmin';
+  return /^pengajuan .* anda/i.test(title) ? title : subject + ': ' + title;
+}
+
+window.completeMyNotificationTitle = completeMyNotificationTitle;
+
+function renderNotifs(force) {
+  var userKey = String(S.user && S.user.nik || '');
+  if (!force && RH_NOTIF_STATE.mobileUser === userKey && RH_NOTIF_STATE.mobileAt && Date.now() - RH_NOTIF_STATE.mobileAt < 8000 && RH_NOTIF_STATE.mobileHtml) {
+    $('paneNotif').innerHTML = RH_NOTIF_STATE.mobileHtml;
+    S.unreadNotificationTotal = RH_NOTIF_STATE.unreadCount || 0;
+    updateBadges();
+    // The mobile inbox defaults to 'Untuk Anda': opening it marks personal outcomes read in bulk.
+    markAllMyNotificationsReadUi(RH_NOTIF_STATE.mobileItems || [], 'mobile-cache').catch(function () {});
+    return Promise.resolve(RH_NOTIF_STATE.mobileItems);
+  }
+  $('paneNotif').innerHTML = '<div class="empty">Memuat pemberitahuan...</div>';
+  var myReqFresh = !!(DATA.myReq && RH_NOTIF_STATE.myRequestsAt && Date.now() - RH_NOTIF_STATE.myRequestsAt < 20000);
+  var myRequestsPromise = (!force && myReqFresh) ? Promise.resolve(DATA.myReq) : loadMyRequests();
+  return Promise.all([
+    myRequestsPromise,
+    api('getMyNotifications', [], 20000).catch(function() { return { list: [], unreadCount: null, _failed: true }; })
   ]).then(function(results) {
     var r = results[0] || { absensi: [], cuti: [] };
     var notifResult = results[1] || {};
     var outcomes = Array.isArray(notifResult) ? notifResult : (notifResult.list || notifResult.notifications || []);
     var items = [];
     outcomes.forEach(function(n) {
-      var title = String(n.title || 'Hasil persetujuan');
+      var title = completeMyNotificationTitle(n);
       var detail = String(n.detail || '');
+      if (n.actorName || n.actor_name) detail += (detail ? ' · ' : '') + 'Diproses oleh: ' + String(n.actorName || n.actor_name);
       if (/ditolak|rejected/i.test(title) && n.reason) detail += (detail ? ' • ' : '') + 'Alasan: ' + String(n.reason);
       if (n.createdAt) detail += (detail ? ' • ' : '') + String(n.createdAt);
-      items.push({ ic: /ditolak|rejected/i.test(title) ? 'bell' : 'check', t: title, s: detail, outcome: true });
+      items.push({ ic: /ditolak|rejected/i.test(title) ? 'bell' : 'check', t: title, s: detail,
+        outcome: true, id: String(n.id || ''), kind: String(n.kind || ''), requestId: String(n.requestId || n.request_id || ''),
+        isRead: n.isRead === true || n.is_read === true });
     });
     (r.absensi || []).forEach(function(a) {
-      items.push({ ic: 'absensi', t: 'Attendance request ' + (a.tipe === 'MASUK' ? 'clock in' : 'clock out') + ' pending approval', s: tglID(a.tanggal) + ' • ' + (a.jam || '').slice(0, 5), id: a.id });
+      items.push({ ic: 'absensi', t: 'Pengajuan absensi Anda', s: (a.tipe === 'MASUK' ? 'Masuk' : 'Pulang') + ' menunggu persetujuan · ' + tglID(a.tanggal) + ' · ' + (a.jam || '').slice(0, 5),
+        kind: 'absen', requestId: String(a.id || ''), myRequest: true, isRead: true });
     });
     (r.cuti || []).forEach(function(x) {
-      items.push({ ic: 'cuti', t: 'Time Off request ' + x.keterangan + ' pending approval', s: tglID(x.tanggalMulai) + ' (' + x.totalHari + ' days)' });
+      items.push({ ic: 'cuti', t: 'Pengajuan Time Off Anda', s: String(x.keterangan || x.kode || 'Time Off') + ' menunggu persetujuan · ' + tglID(x.tanggalMulai) + ' (' + x.totalHari + ' hari)',
+        kind: 'cuti', requestId: String(x.id || x.request_id || x.cuti_id || ''), myRequest: true, isRead: true });
     });
     var st = S.status || {};
-    if (st.masuk) items.push({ ic: 'check', t: 'Clock In recorded', s: 'Attendance status updated • ' + (st.jamMasuk || '').slice(0, 5) });
-    if (st.pulang) items.push({ ic: 'check', t: 'Clock Out recorded', s: 'Attendance status updated • ' + (st.jamPulang || '').slice(0, 5) });
+    if (st.masuk) items.push({ ic: 'check', t: 'Clock In tercatat', s: 'Status presensi diperbarui · ' + (st.jamMasuk || '').slice(0, 5), isRead: true });
+    if (st.pulang) items.push({ ic: 'check', t: 'Clock Out tercatat', s: 'Status presensi diperbarui · ' + (st.jamPulang || '').slice(0, 5), isRead: true });
     localNotifs().forEach(function(n) {
-      items.push({ ic: 'bell', t: n.txt, s: new Date(n.t).toLocaleString('id-ID') });
+      items.push({ ic: 'bell', t: n.txt, s: new Date(n.t).toLocaleString('id-ID'), isRead: true });
     });
+    var hasUnreadCount = notifResult && notifResult.unreadCount != null && Number.isFinite(Number(notifResult.unreadCount));
+    var unread = hasUnreadCount
+      ? Math.max(0, Number(notifResult.unreadCount))
+      : (notifResult && notifResult._failed
+          ? Math.max(0, Number(RH_NOTIF_STATE.unreadCount || S.unreadNotificationTotal || 0))
+          : outcomes.filter(function(n) { return !(n.isRead === true || n.is_read === true); }).length);
+    S.unreadNotificationTotal = unread;
+    RH_NOTIF_STATE.unreadCount = unread;
+    RH_NOTIF_STATE.unreadCountAuthoritative = !!(hasUnreadCount && !(notifResult && notifResult._failed));
+    RH_NOTIF_STATE.mobileItems = items;
+    RH_NOTIF_STATE.mobileUser = userKey;
+    RH_NOTIF_STATE.mobileAt = (notifResult && notifResult._failed) ? 0 : Date.now();
     if (!items.length) {
-      $('paneNotif').innerHTML = '<div class="empty"><div class="big">🔔</div>No notifications.</div>';
-      return;
+      $('paneNotif').innerHTML = '<div class="empty"><div class="big">🔔</div>Tidak ada pemberitahuan.</div>';
+      RH_NOTIF_STATE.mobileHtml = $('paneNotif').innerHTML;
+      updateBadges();
+      markAllMyNotificationsReadUi(items, 'mobile-empty-open').catch(function () {});
+      return items;
     }
     $('paneNotif').innerHTML = items.map(function(n) {
-      var click = n.id && !n.outcome ? (' style="cursor:pointer" onclick="openAbsenDetail(\'' + n.id + '\',false)"') : '';
-      return '<div class="notif-item"' + click + '><div class="notif-ic">' + nIcon(n.ic) + '</div><div style="flex:1"><b>' + esc(n.t) + '</b><span>' + esc(n.s) + '</span></div></div>';
+      var canOpen = !!((n.outcome || n.myRequest) && n.kind && n.requestId);
+      var cl = 'notif-item' + (n.isRead ? ' is-read' : ' is-unread');
+      var attrs = (n.outcome ? ' data-notif-outcome="1" data-notif-id="' + esc(n.id) + '"' : '') +
+        (n.kind ? ' data-notif-kind="' + esc(n.kind) + '"' : '') +
+        (n.requestId ? ' data-notif-request-id="' + esc(n.requestId) + '"' : '') +
+        ' data-notif-read="' + (n.isRead ? '1' : '0') + '"';
+      var content = '<span class="notif-ic">' + nIcon(n.ic) + '</span><span class="notif-content"><b>' + esc(n.t) + '</b><span>' + esc(n.s) + '</span></span>' +
+        (n.outcome && !n.isRead ? '<span class="notif-unread-mark" aria-label="Belum dibaca"></span>' : '');
+      return canOpen ? '<button type="button" class="' + cl + '"' + attrs + ' onclick="handleMobileNotificationClick(this)">' + content + '</button>' : '<div class="' + cl + '"' + attrs + '>' + content + '</div>';
     }).join('');
+    RH_NOTIF_STATE.mobileHtml = $('paneNotif').innerHTML;
+    updateBadges();
+    // Mark every personal result read when the global 'Untuk Anda' pane is opened, not row-by-row.
+    markAllMyNotificationsReadUi(items, 'mobile-open').catch(function () {});
+    return items;
   }).catch(function() {
-    $('paneNotif').innerHTML = '<div class="empty">Failed to load notifications.</div>';
+    $('paneNotif').innerHTML = '<div class="empty">Pemberitahuan gagal dimuat. Silakan coba lagi.</div>';
   });
 }
+
+async function markMyNotificationReadUi(notificationId, wasRead) {
+  var id = String(notificationId || '').trim();
+  if (!id || wasRead) return true;
+  try {
+    var result = await api('markMyNotificationRead', [id], 15000);
+    if (result && result.ok === false) throw new Error(result.message || 'Status baca tidak dapat disimpan.');
+    var hasServerUnread = !!(result && result.unreadCount != null && Number.isFinite(Number(result.unreadCount)));
+    if (hasServerUnread) S.unreadNotificationTotal = Math.max(0, Number(result.unreadCount));
+    else S.unreadNotificationTotal = Math.max(0, Number(S.unreadNotificationTotal || 0) - 1);
+    RH_NOTIF_STATE.unreadCount = S.unreadNotificationTotal;
+    RH_NOTIF_STATE.unreadCountAuthoritative = hasServerUnread;
+    [RH_NOTIF_STATE.mobileItems || [], RH_NOTIF_STATE.desktopItems && RH_NOTIF_STATE.desktopItems.personal || []].forEach(function(arr) {
+      arr.forEach(function(item) { if (String(item.id || '') === id && item.outcome) item.isRead = true; });
+    });
+    document.querySelectorAll('[data-notif-id], [data-rk-notif-id]').forEach(function(el) {
+      var elementId = el.getAttribute('data-notif-id') || el.getAttribute('data-rk-notif-id') || '';
+      if (String(elementId) !== id) return;
+      el.setAttribute('data-notif-read', '1'); el.classList.remove('is-unread'); el.classList.add('is-read');
+      var mark = el.querySelector('.notif-unread-mark, .rk-notif-unread-dot'); if (mark) mark.remove();
+    });
+    var mr = $('paneNotif'); if (mr) RH_NOTIF_STATE.mobileHtml = mr.innerHTML;
+    // Invalidate both caches after a read so the next device/panel entry reconciles exact server state.
+    RH_NOTIF_STATE.mobileAt = 0; RH_NOTIF_STATE.desktopAt = 0;
+    updateBadges();
+    var deskPersonalCount = document.getElementById('rkNotifPersonalCount');
+    if (deskPersonalCount) deskPersonalCount.textContent = String(S.unreadNotificationTotal || 0);
+    var deskSummary = document.getElementById('rkNotifSummary');
+    if (deskSummary && RH_NOTIF_STATE.activeDesktopTab === 'personal') deskSummary.textContent = (S.unreadNotificationTotal || 0) + ' belum dibaca';
+    return true;
+  } catch (e) {
+    toast('Status baca belum tersimpan di server. ' + (e && e.message || 'Coba lagi saat koneksi tersedia.'));
+    return false;
+  }
+}
+
+// Compatibility bridge: older inline handlers used multiple spellings/capitalizations.
+// Expose all known variants so classic scripts and dynamically-created buttons resolve consistently.
+window.markMyNotificationReadUi = markMyNotificationReadUi;
+window.markMyNotificationReadUI = markMyNotificationReadUi;
+window.MarkmyNotificationreadUI = markMyNotificationReadUi;
+window.markmyNotificationreadUI = markMyNotificationReadUi;
+
+var RH_MARK_ALL_READ_PROMISE = null;
+async function markAllMyNotificationsReadUi(items, source) {
+  // Opening the personal "Untuk Anda" inbox marks all personal outcome notices read.
+  // Approval tasks are deliberately excluded and their queue count is never changed here.
+  if (RH_MARK_ALL_READ_PROMISE) return RH_MARK_ALL_READ_PROMISE;
+  var list = Array.isArray(items) ? items : [];
+  var ids = list.filter(function (n) { return n && n.outcome && n.id && !n.isRead; })
+    .map(function (n) { return String(n.id); });
+  var backendUnread = Math.max(0, Number(RH_NOTIF_STATE.unreadCount || S.unreadNotificationTotal || 0));
+  if (!ids.length && backendUnread <= 0) return true;
+
+  // Optimistic UI update. If persistence fails, server state is reconciled below.
+  function markLocal() {
+    [RH_NOTIF_STATE.mobileItems || [], RH_NOTIF_STATE.desktopItems && RH_NOTIF_STATE.desktopItems.personal || []].forEach(function (arr) {
+      arr.forEach(function (n) { if (n && n.outcome) n.isRead = true; });
+    });
+    document.querySelectorAll('[data-notif-outcome="1"], [data-rk-notif-outcome="1"]').forEach(function (el) {
+      el.setAttribute('data-notif-read', '1');
+      el.classList.remove('is-unread'); el.classList.add('is-read');
+      var dot = el.querySelector('.notif-unread-mark, .rk-notif-unread-dot'); if (dot) dot.remove();
+    });
+    S.unreadNotificationTotal = 0;
+    RH_NOTIF_STATE.unreadCount = 0;
+    RH_NOTIF_STATE.unreadCountAuthoritative = false;
+    var pane = $('paneNotif'); if (pane) RH_NOTIF_STATE.mobileHtml = pane.innerHTML;
+    var deskPersonalCount = document.getElementById('rkNotifPersonalCount'); if (deskPersonalCount) deskPersonalCount.textContent = '0';
+    var deskSummary = document.getElementById('rkNotifSummary');
+    if (deskSummary && RH_NOTIF_STATE.activeDesktopTab === 'personal') deskSummary.textContent = 'Semua pemberitahuan untuk Anda sudah dibaca';
+    updateBadges();
+    if (typeof window.paintDeskNotifItems === 'function') window.paintDeskNotifItems();
+  }
+  markLocal();
+  RH_MARK_ALL_READ_PROMISE = (async function () {
+    var bulkSaved = false;
+    try {
+      // Preferred path: one owner-scoped backend operation marks all events read,
+      // including events older than the current 100-item notification window.
+      var bulk = await api('markMyNotificationsRead', [], 20000);
+      if (bulk && bulk.ok === false) throw new Error(bulk.message || 'Bulk read is not available.');
+      bulkSaved = true;
+    } catch (bulkError) {
+      // Backward-compatible fallback for installations that have not applied the small v13.8.3.3 SQL addition.
+      // Existing v13.8.3 per-notification RPC remains owner-scoped.
+      var failures = [];
+      for (var offset = 0; offset < ids.length; offset += 6) {
+        var batch = ids.slice(offset, offset + 6);
+        var outcomes = await Promise.all(batch.map(async function (id) {
+          try {
+            var r = await api('markMyNotificationRead', [id], 15000);
+            if (r && r.ok === false) throw new Error(r.message || 'Unable to mark notification read.');
+            return true;
+          } catch (e) { failures.push({ id: id, error: e }); return false; }
+        }));
+        if (outcomes.some(function (ok) { return !ok; })) break;
+      }
+      if (failures.length) throw new Error('Sebagian pemberitahuan belum berhasil ditandai dibaca.');
+    }
+
+    // Verify authoritative count after writes when bulk RPC was unavailable.
+    if (!bulkSaved) {
+      var fresh = await api('getMyNotifications', [], 20000);
+      var rows = Array.isArray(fresh) ? fresh : (fresh && (fresh.list || fresh.notifications)) || [];
+      var count = fresh && fresh.unreadCount != null && Number.isFinite(Number(fresh.unreadCount))
+        ? Math.max(0, Number(fresh.unreadCount))
+        : rows.filter(function (n) { return !(n.isRead === true || n.is_read === true); }).length;
+      S.unreadNotificationTotal = count;
+      RH_NOTIF_STATE.unreadCount = count;
+      RH_NOTIF_STATE.unreadCountAuthoritative = !!(fresh && fresh.unreadCount != null && Number.isFinite(Number(fresh.unreadCount)));
+    } else {
+      S.unreadNotificationTotal = 0;
+      RH_NOTIF_STATE.unreadCount = 0;
+      RH_NOTIF_STATE.unreadCountAuthoritative = true;
+    }
+    RH_NOTIF_STATE.mobileAt = Date.now();
+    RH_NOTIF_STATE.desktopAt = Date.now();
+    var paneAfter = $('paneNotif'); if (paneAfter) RH_NOTIF_STATE.mobileHtml = paneAfter.innerHTML;
+    updateBadges();
+    if (typeof window.paintDeskNotifItems === 'function') window.paintDeskNotifItems();
+    return true;
+  })().catch(async function (err) {
+    // Do not silently hide unseen notifications when backend persistence failed.
+    try {
+      var latest = await api('getMyNotifications', [], 15000);
+      var rows = Array.isArray(latest) ? latest : (latest && (latest.list || latest.notifications)) || [];
+      var count = latest && latest.unreadCount != null && Number.isFinite(Number(latest.unreadCount))
+        ? Math.max(0, Number(latest.unreadCount))
+        : rows.filter(function (n) { return !(n.isRead === true || n.is_read === true); }).length;
+      S.unreadNotificationTotal = count; RH_NOTIF_STATE.unreadCount = count;
+      RH_NOTIF_STATE.unreadCountAuthoritative = !!(latest && latest.unreadCount != null && Number.isFinite(Number(latest.unreadCount)));
+      // Restore unread state for ids the server says are still unread.
+      var unreadIds = Object.create(null);
+      rows.forEach(function (n) { if (!(n.isRead === true || n.is_read === true)) unreadIds[String(n.id || '')] = true; });
+      [RH_NOTIF_STATE.mobileItems || [], RH_NOTIF_STATE.desktopItems && RH_NOTIF_STATE.desktopItems.personal || []].forEach(function (arr) {
+        arr.forEach(function (n) { if (n && n.outcome && unreadIds[String(n.id || '')]) n.isRead = false; });
+      });
+      document.querySelectorAll('[data-notif-outcome="1"], [data-rk-notif-outcome="1"]').forEach(function (el) {
+        var id = el.getAttribute('data-notif-id') || el.getAttribute('data-rk-notif-id') || '';
+        if (unreadIds[id]) { el.setAttribute('data-notif-read', '0'); el.classList.remove('is-read'); el.classList.add('is-unread'); }
+      });
+      var pane = $('paneNotif'); if (pane) RH_NOTIF_STATE.mobileHtml = pane.innerHTML;
+    } catch (_) {
+      S.unreadNotificationTotal = Math.max(0, backendUnread);
+      RH_NOTIF_STATE.unreadCount = S.unreadNotificationTotal;
+      RH_NOTIF_STATE.unreadCountAuthoritative = false;
+    }
+    updateBadges();
+    if (typeof window.paintDeskNotifItems === 'function') window.paintDeskNotifItems();
+    toast('Pemberitahuan belum semuanya tersimpan sebagai sudah dibaca. Periksa koneksi lalu buka kembali Untuk Anda.');
+    return false;
+  }).finally(function () { RH_MARK_ALL_READ_PROMISE = null; });
+  return RH_MARK_ALL_READ_PROMISE;
+}
+window.markAllMyNotificationsReadUI = markAllMyNotificationsReadUi;
+window.markallmynotificationsreadUI = markAllMyNotificationsReadUi;
+
+async function handleMobileNotificationClick(el) {
+  if (!el) return;
+  var outcome = el.getAttribute('data-notif-outcome') === '1';
+  var notificationId = el.getAttribute('data-notif-id') || '';
+  var wasRead = el.getAttribute('data-notif-read') === '1';
+  var kind = String(el.getAttribute('data-notif-kind') || '').toLowerCase();
+  var requestId = el.getAttribute('data-notif-request-id') || '';
+  if (outcome && notificationId && !wasRead) await markMyNotificationReadUi(notificationId, false);
+  if (!requestId || !kind) return;
+  if (kind === 'absen' || kind === 'attendance') {
+    await Promise.all([loadMyRequests(), S.approver ? refreshPending() : Promise.resolve()]);
+    var isApproval = !!(((DATA.appr && DATA.appr.absensi) || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(requestId); }));
+    var own = ((DATA.myReq && DATA.myReq.absensi) || []).find(function(x) { return String(x.id || '') === String(requestId); });
+    if (!isApproval && !own && outcome) {
+      try { own = await api('getMyAttendanceRequest', [requestId], 15000); } catch (_) {}
+      if (own && own.id) { DATA.myReq = DATA.myReq || { absensi: [], cuti: [] }; DATA.myReq.absensi = DATA.myReq.absensi || []; DATA.myReq.absensi.push(own); }
+    }
+    openAbsenDetail(requestId, isApproval);
+    return;
+  }
+  if (kind === 'cuti' || kind === 'timeoff') {
+    await Promise.all([loadCutiListSilent(), S.approver ? refreshPending() : Promise.resolve()]);
+    var own = DATA.cutiList.find(function(x) { return String(x.id || x.cutiId || '') === String(requestId); });
+    var pending = ((DATA.appr && DATA.appr.cuti) || []).find(function(x) { return String(x.id || x.cutiId || '') === String(requestId); });
+    if (!own && pending) { DATA.cutiList.push(pending); own = pending; }
+    if (!own && outcome) {
+      try { own = await api('getMyTimeOffRequest', [requestId], 15000); } catch (_) {}
+      if (own && own.id) DATA.cutiList.push(own);
+    }
+    if (!own) { toast('Detail pengajuan Time Off belum tersedia. Silakan muat ulang data.'); return; }
+    openCutiDetail(requestId, !!pending);
+  }
+}
+
+// The notification list uses inline onclick markup, which resolves handlers on window.
+// This module-scoped function must be exposed from this same module scope.
+window.handleMobileNotificationClick = handleMobileNotificationClick;
 
 function normalizeAbsensiEvidence(a) {
   if (!a || typeof a !== 'object') return a;
@@ -7712,7 +8007,8 @@ function refreshPending() {
     rawAbsensi.forEach(normalizeAbsensiEvidence);
     var readyAbsensi = rawAbsensi.filter(approvalEvidenceReady);
     DATA.appr = Object.assign({}, r, { absensi: readyAbsensi, total: readyAbsensi.length + (Array.isArray(r.cuti) ? r.cuti.length : 0) });
-    S.pendingTotal = DATA.appr.total || 0;
+    S.pendingTotal = String(S.user && S.user.role || '').toUpperCase() === 'ADMIN' ? 0 : (DATA.appr.total || 0);
+    RH_NOTIF_STATE.pendingCount = S.pendingTotal;
     updateBadges();
     if ($('s-inbox').classList.contains('on') && !$('paneAppr').style.display) renderApprPane();
     return DATA.appr;
@@ -7841,20 +8137,19 @@ function actAbsen(id, approve) {
     if ($('adNote')) $('adNote').focus();
     return;
   }
+  var actionButtons = document.querySelectorAll('#adetBody .det-actions button');
+  Array.prototype.forEach.call(actionButtons, function(btn) { btn.disabled = true; btn.dataset.originalLabel = btn.textContent; btn.textContent = 'Menyimpan…'; });
   api('processApproval', [S.user.role, S.user.nik, id, approve ? 'APPROVE' : 'REJECT', note]).then(function(r) {
-    toast(r.message);
+    toast((r && r.message) || (approve ? 'Absensi disetujui.' : 'Absensi ditolak.'));
     logNotif(approve ? '✅ You approved the attendance request' : '❌ You rejected the attendance request');
-    return refreshPending().then(function() {
-      renderNotifs();
-      var latest = ((DATA.appr && DATA.appr.absensi) || []).find(function(row) { return String(row.id) === String(id); });
-      var latestRole = String(S.user && S.user.role || '').toUpperCase();
-      var nextStage = latest && ((String(latest.statusApproval || '').toUpperCase() === 'PENDING_ATASAN' && canActAsDirectManager(latestRole, latest, 'absensi')) || (latestRole === 'SUPERADMIN' && String(latest.statusApproval || '').toUpperCase() === 'PENDING_HR'));
-      if (returnToApproval && nextStage) openAbsenDetail(id, true);
-      else if (returnToApproval) { go('s-inbox'); switchInboxTab(1); openApprList('absensi'); }
+    RH_NOTIF_STATE.mobileAt = 0; RH_NOTIF_STATE.desktopAt = 0;
+    return refreshPending().then(function() { return renderNotifs(true); }).then(function() {
+      if (returnToApproval) { go('s-inbox'); switchInboxTab(1); openApprList('absensi'); }
       else { go('s-home'); }
     });
   }).catch(function(e) {
     if (e && e.message === 'STALE') return;
+    Array.prototype.forEach.call(actionButtons, function(btn) { btn.disabled = false; btn.textContent = btn.dataset.originalLabel || (approve ? 'Approve' : 'Reject'); });
     toast(e.message);
   });
 }
@@ -7948,6 +8243,7 @@ function loadMyRequests() {
   return api('getMyPendingRequests', [S.user.nik], 25000).then(function(r) {
     if (stale(gen)) return r;
     DATA.myReq = r;
+    RH_NOTIF_STATE.myRequestsAt = Date.now();
     return r;
   }).catch(function() {
     DATA.myReq = { absensi: [], cuti: [] };
@@ -9441,6 +9737,7 @@ function showHrPlaceholder(title, group, description) {
             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
           </button>
         </div>
+        <div class="rk-notif-tabs" role="tablist" aria-label="Jenis notifikasi"><button type="button" class="on" id="rkNotifTabApprovals" data-rk-notif-tab="approvals" role="tab" aria-selected="true">Perlu persetujuan <span id="rkNotifApprovalCount">0</span></button><button type="button" id="rkNotifTabPersonal" data-rk-notif-tab="personal" role="tab" aria-selected="false">Untuk Anda <span id="rkNotifPersonalCount">0</span></button></div>
         <div class="rk-notif-list" id="rkNotifList"><div class="rk-empty">Buka notifikasi untuk memuat pembaruan.</div></div>
       </section>
     </div>
@@ -9565,10 +9862,13 @@ function showHrPlaceholder(title, group, description) {
   }
   function t(s) { try { return tglID(s); } catch (e) { return s; } }
   function rkToast(m) {
+    if (!m || m === 'STALE') return;
     var el = document.getElementById('rkToast');
     if (!el) { try { toast(m); } catch (e) {} return; }
-    el.textContent = m; el.classList.add('on');
-    clearTimeout(el._h); el._h = setTimeout(function () { el.classList.remove('on'); }, 2600);
+    var tone = window.reholzFeedbackTone ? window.reholzFeedbackTone(m) : 'info';
+    el.dataset.tone = tone; el.setAttribute('role', tone === 'error' ? 'alert' : 'status'); el.setAttribute('aria-live', tone === 'error' ? 'assertive' : 'polite');
+    el.textContent = String(m); el.classList.add('on');
+    clearTimeout(el._h); el._h = setTimeout(function () { el.classList.remove('on'); }, 3600);
   }
 
   /* ---------------- Aktivasi / deaktivasi konsol ---------------- */
@@ -11445,6 +11745,8 @@ function showHrPlaceholder(title, group, description) {
     }
     var user = window.S && window.S.user ? window.S.user : null;
     var actor = String(user && (user.nik || user.employee_id || user.employeeId) || '').trim().toUpperCase();
+    var requesterId = String(row.nik || row.employee_id || row.employeeId || '').trim().toUpperCase();
+    if (actor && requesterId && actor === requesterId) return false;
     var keys = kind === 'absensi'
       ? ['atasanId', 'atasan_id', 'managerEmployeeId', 'manager_employee_id']
       : ['approvalLineId', 'approval_line_id', 'approvalLineID', 'atasanId', 'manager_employee_id'];
@@ -11495,10 +11797,9 @@ function showHrPlaceholder(title, group, description) {
       ? (String(x.statusApproval || x.status_approval || '').toUpperCase() === 'PENDING_ATASAN' ? 'Pending manager approval' : 'Pending Superadmin approval')
       : (/^PENDING\//.test(rowStatus) ? 'Pending manager approval' : (/^(DISETUJUI|APPROVED)\/PENDING$/.test(rowStatus) ? 'Pending Superadmin approval' : rowStatus));
     var actionButtons = kind === 'absen'
-      ? '<button class="rk-mini primary" onclick="RHDeskApi.attendanceDetail(\'' + escH(id) + '\')">Details</button>'
+      ? '<button class="rk-mini primary" onclick="RHDeskApi.attendanceDetail(\'' + escH(id) + '\')">Buka pengajuan</button>'
       : (canAct
-        ? '<button class="rk-mini primary" onclick="RHDeskApi.approve(\'' + kind + '\',\'' + escH(id) + '\')">Approve</button>' +
-          '<button class="rk-mini danger" onclick="RHDeskApi.reject(\'' + kind + '\',\'' + escH(id) + '\')">Reject</button>'
+        ? '<button class="rk-mini primary" onclick="RHDeskApi.approvalDetail(\'' + kind + '\',\'' + escH(id) + '\')">Buka pengajuan</button>'
         : '<span class="rk-muted">' + (String(S.user && S.user.role || '').toUpperCase() === 'ADMIN' ? 'View only' : 'Not assigned to this approval stage') + '</span>');
     return '<div class="rk-appr-item" id="' + anchorId + '">' + ava +
       '<div class="b"><b>' + escH(nama) + '</b> <span style="color:#5E6E63;font-size:12px">(' + escH(nik) + ')</span>' +
@@ -11507,7 +11808,7 @@ function showHrPlaceholder(title, group, description) {
   }
 
   function openDesktopAttendanceDetail(id) {
-    function findRow() { return (aprCache.absensi || []).find(function (row) { return String(row.id || row.absensiId || row.requestId || '') === String(id); }); }
+    function findRow() { return (aprCache.absensi || []).concat((DATA.myReq && DATA.myReq.absensi) || []).find(function (row) { return String(row.id || row.absensiId || row.requestId || '') === String(id); }); }
     function show(row) {
       if (!row) { rkToast('Pengajuan absensi tidak ditemukan pada antrean terbaru.'); return; }
       var shade = document.getElementById('rkAttApprovalShade');
@@ -11575,10 +11876,19 @@ function showHrPlaceholder(title, group, description) {
     }
     var row = findRow();
     if (row) { show(row); return; }
-    api('getPendingApprovalsFull', [], 25000).then(function (r) {
+    api('getPendingApprovalsFull', [], 20000).then(function (r) {
       aprCache.absensi = (r && r.absensi) || []; aprCache.cuti = (r && r.cuti) || []; aprCache.at = Date.now();
-      show(findRow());
-    }).catch(function (e) { rkToast('Unable to load attendance request: ' + (e && e.message || e)); });
+      var current = findRow();
+      if (current) { show(current); return; }
+      return api('getMyAttendanceRequest', [id], 15000).then(function (ownRow) {
+        if (ownRow && ownRow.id) show(ownRow);
+        else rkToast('Pengajuan absensi tidak ditemukan pada antrean atau riwayat Anda.');
+      });
+    }).catch(function (e) {
+      api('getMyAttendanceRequest', [id], 15000).then(function (ownRow) {
+        if (ownRow && ownRow.id) show(ownRow); else rkToast('Unable to load attendance request: ' + (e && e.message || e));
+      }).catch(function () { rkToast('Unable to load attendance request: ' + (e && e.message || e)); });
+    });
   }
 
   function submitDesktopAttendanceAction(id, action) {
@@ -11588,7 +11898,7 @@ function showHrPlaceholder(title, group, description) {
     var note = noteEl ? String(noteEl.value || '').trim() : '';
     if (action === 'REJECT' && !note) { rkToast('Isi catatan penolakan.'); if (noteEl) noteEl.focus(); return; }
     var shade = document.getElementById('rkAttApprovalShade');
-    if (shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-att-detail-action]'), function (btn) { btn.disabled = true; });
+    if (shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-att-detail-action]'), function (btn) { btn.disabled = true; btn.dataset.originalLabel = btn.textContent; btn.textContent = 'Menyimpan…'; });
     api('getPendingApprovalsFull', [], 25000).then(function (queue) {
       queue = queue || {};
       aprCache.absensi = queue.absensi || []; aprCache.cuti = queue.cuti || [];
@@ -11596,19 +11906,16 @@ function showHrPlaceholder(title, group, description) {
       if (!target || !desktopCanActApprovalRow('absen', target)) throw new Error('Tahap persetujuan sudah berubah atau Anda bukan approver yang ditugaskan.');
       return api('processApproval', [null, null, id, action, note], 25000);
     }).then(function (result) {
-      rkToast((result && result.message) || (action === 'APPROVE' ? 'Attendance request approved.' : 'Attendance request rejected.'));
-      aprCache.at = 0;
+      rkToast((result && result.message) || (action === 'APPROVE' ? 'Absensi disetujui.' : 'Absensi ditolak.'));
+      aprCache.at = 0; RH_NOTIF_STATE.mobileAt = 0; RH_NOTIF_STATE.desktopAt = 0;
+      if (shade) shade.classList.remove('on');
       return Promise.all([
         renderAprPage(true).catch(function () { return null; }),
-        renderDeskNotifications().catch(function () { return null; }),
+        renderDeskNotifications(true).catch(function () { return null; }),
         Promise.resolve(refreshBadge()).catch(function () { return null; })
-      ]).then(function () {
-        var latest = (aprCache.absensi || []).find(function (row) { return String(row.id || row.absensiId || row.requestId || '') === String(id); });
-        if (latest && desktopCanActApprovalRow('absen', latest)) openDesktopAttendanceDetail(id);
-        else if (shade) shade.classList.remove('on');
-      });
+      ]);
     }).catch(function (e) {
-      if (shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-att-detail-action]'), function (btn) { btn.disabled = false; });
+      if (shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-att-detail-action]'), function (btn) { btn.disabled = false; btn.textContent = btn.dataset.originalLabel || (btn.getAttribute('data-att-detail-action') === 'APPROVE' ? 'Approve' : 'Reject'); });
       rkToast('Unable to update attendance request: ' + (e && e.message || e));
     });
   }
@@ -11616,29 +11923,15 @@ function showHrPlaceholder(title, group, description) {
   function aprAct(kind, id, action) {
     if (window.isAdminReadOnly && window.isAdminReadOnly()) { rkToast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
     if (action !== 'APPROVE' && action !== 'REJECT') { rkToast('Invalid approval action.'); return; }
-    // Re-read the queue before writing so a stale desktop list cannot authorize an old stage.
-    api('getPendingApprovalsFull', [], 25000).then(function (queue) {
+    // Open the request sheet first. Approval and rejection happen there; Reject requires an inline note,
+    // never a native browser prompt or an extra confirmation dialog.
+    api('getPendingApprovalsFull', [], 20000).then(function (queue) {
       queue = queue || {};
-      var rows = kind === 'cuti' ? (queue.cuti || []) : (queue.absensi || []);
+      aprCache.absensi = queue.absensi || []; aprCache.cuti = queue.cuti || []; aprCache.at = Date.now();
+      var rows = kind === 'cuti' ? aprCache.cuti : aprCache.absensi;
       var target = rows.find(function (row) { return String(row.id || row.cutiId || row.absensiId || row.requestId || '') === String(id); });
-      if (!target || !desktopCanActApprovalRow(kind, target)) {
-        throw new Error('You are not assigned to this approval stage, or the request status has changed. Refresh the list.');
-      }
-      var alasan = '';
-      if (action === 'REJECT') {
-        alasan = prompt('Catatan penolakan (wajib):') || '';
-        if (!alasan.trim()) return { cancelled: true };
-      }
-      var fn = kind === 'cuti' ? 'processCutiApproval' : 'processApproval';
-      return api(fn, [null, null, id, action, alasan], 25000).then(function (r) { return { result: r }; });
-    }).then(function (out) {
-      if (!out || out.cancelled) return;
-      var r = out.result;
-      rkToast((r && r.message) || (action === 'APPROVE' ? 'Approved.' : 'Rejected.'));
-      aprCache.at = 0;
-      var jobs = [renderAprPage(true).catch(function () { return null; }), Promise.resolve(refreshBadge()).catch(function () { return null; }), renderDeskNotifications().catch(function () { return null; })];
-      if (kind === 'cuti') { cutiUI.data = null; jobs.push(loadCutiData(true).catch(function () { return null; })); }
-      return Promise.all(jobs);
+      if (!target || !desktopCanActApprovalRow(kind, target)) throw new Error('Tahap persetujuan sudah berubah atau Anda bukan approver yang ditugaskan.');
+      if (kind === 'cuti') openTimeOffDetailFromNotification(id, target); else openDesktopAttendanceDetail(id);
     }).catch(function (e) { rkToast('❌ ' + (e && e.message || e)); });
   }
 
@@ -12016,6 +12309,7 @@ function showHrPlaceholder(title, group, description) {
   var timeOffRequestGroup = 'cuti';
   var timeOffRequestUI = { status: '', q: '' };
   var deskNotifTimeOffRows = Object.create(null);
+  var deskNotifAttendanceRows = Object.create(null);
 
   function timeOffCategory(row) {
     row = row || {};
@@ -12546,23 +12840,19 @@ function showHrPlaceholder(title, group, description) {
     if(action==='REJECT'&&!note.trim()){rkToast('Isi catatan penolakan.');var rejectNote=document.getElementById('rkCutiSuperadminNote');if(rejectNote)rejectNote.focus();return;}
     if(action!=='APPROVE' && action!=='REJECT'){rkToast('Invalid approval action.');return;}
     var shade=document.getElementById('rkCutiDetailShade');
-    if(shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-cuti-detail-action]'),function(btn){btn.disabled=true;});
+    if(shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-cuti-detail-action]'),function(btn){btn.disabled=true;btn.dataset.originalLabel=btn.textContent;btn.textContent='Menyimpan…';});
     api('processCutiApproval',[S.user.role,S.user.nik,id,action,note.trim()],25000).then(function(r){
-      rkToast((r&&r.message)||(action==='APPROVE'?'Time-off request approved.':'Time-off request rejected.'));
-      aprCache.at=0;refreshBadge();cutiUI.data=null;
+      rkToast((r&&r.message)||(action==='APPROVE'?'Time Off disetujui.':'Time Off ditolak.'));
+      aprCache.at=0;cutiUI.data=null;RH_NOTIF_STATE.mobileAt=0;RH_NOTIF_STATE.desktopAt=0;
+      if(shade) shade.classList.remove('on');
       return Promise.all([
         loadCutiData(true).catch(function(){return null;}),
         renderAprPage(true).catch(function(){return null;}),
         Promise.resolve(refreshBadge()).catch(function(){return null;}),
-        Promise.resolve(renderDeskNotifications()).catch(function(){return null;})
-      ]).then(function(){
-        var latest=(cutiUI.data||[]).find(function(row){return String(row.id)===String(id);});
-        var queued=(aprCache.cuti||[]).find(function(row){return String(row.id)===String(id);});
-        if(latest && queued && desktopCutiActionStage(latest)) openDesktopCutiDetail(id);
-        else if(shade) shade.classList.remove('on');
-      });
+        Promise.resolve(renderDeskNotifications(true)).catch(function(){return null;})
+      ]);
     }).catch(function(e){
-      if(shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-cuti-detail-action]'),function(btn){btn.disabled=false;});
+      if(shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-cuti-detail-action]'),function(btn){btn.disabled=false;btn.textContent=btn.dataset.originalLabel||(btn.getAttribute('data-cuti-detail-action')==='APPROVE'?'Approve':'Reject');});
       rkToast('Unable to update request: '+(e&&e.message||e));
     });
   }
@@ -13268,7 +13558,11 @@ function showHrPlaceholder(title, group, description) {
     panel.classList.toggle('on', !!open);
     panel.setAttribute('aria-hidden', open ? 'false' : 'true');
     toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) renderDeskNotifications();
+    if (open) {
+      // Desktop intentionally opens on actionable approvals; mobile Inbox opens on personal notifications.
+      setDeskNotifTab('approvals');
+      renderDeskNotifications();
+    }
   }
 
   function openTimeOffDetailFromNotification(id, rawRow) {
@@ -13276,7 +13570,8 @@ function showHrPlaceholder(title, group, description) {
     if (!wanted) { rkToast('ID pengajuan Time Off tidak tersedia pada notifikasi.'); return; }
     var existing = (cutiUI.data || []).find(function (row) { return String(row.id) === wanted; });
     if (existing) { openDesktopCutiDetail(wanted); return; }
-    var fallbackRow = rawRow ? normalizeCutiRow(rawRow) : null;
+    var ownRow = (DATA.cutiList || []).concat((DATA.myReq && DATA.myReq.cuti) || []).find(function (row) { return String(row.id || row.request_id || row.cuti_id || '') === wanted; });
+    var fallbackRow = rawRow ? normalizeCutiRow(rawRow) : (ownRow ? normalizeCutiRow(ownRow) : null);
     var year = fallbackRow ? cutiYearOf(fallbackRow) : 0;
     if (!year && wanted) {
       var m = wanted.match(/^CT-(20\d{2})/i);
@@ -13290,108 +13585,162 @@ function showHrPlaceholder(title, group, description) {
         cutiUI.data.push(fallbackRow);
         found = true;
       }
-      if (found) openDesktopCutiDetail(wanted);
-      else rkToast('Detail pengajuan tidak dapat dimuat. Muat ulang notifikasi atau daftar Time Off.');
+      if (found) { openDesktopCutiDetail(wanted); return; }
+      return api('getMyTimeOffRequest', [wanted], 15000).then(function (ownRow) {
+        if (ownRow && ownRow.id) {
+          cutiUI.data = cutiUI.data || []; cutiUI.data.push(normalizeCutiRow(ownRow));
+          openDesktopCutiDetail(wanted);
+        } else rkToast('Detail pengajuan tidak dapat dimuat. Muat ulang notifikasi atau daftar Time Off.');
+      }).catch(function () { rkToast('Detail pengajuan tidak dapat dimuat. Muat ulang notifikasi atau daftar Time Off.'); });
     });
   }
 
-  function renderDeskNotifications() {
+  function setDeskNotifTab(tab) {
+    activeDeskNotifTab = tab === 'personal' ? 'personal' : 'approvals';
+    RH_NOTIF_STATE.activeDesktopTab = activeDeskNotifTab;
+    var a = document.getElementById('rkNotifTabApprovals');
+    var p = document.getElementById('rkNotifTabPersonal');
+    if (a) { a.classList.toggle('on', activeDeskNotifTab === 'approvals'); a.setAttribute('aria-selected', activeDeskNotifTab === 'approvals' ? 'true' : 'false'); }
+    if (p) { p.classList.toggle('on', activeDeskNotifTab === 'personal'); p.setAttribute('aria-selected', activeDeskNotifTab === 'personal' ? 'true' : 'false'); }
+    paintDeskNotifItems();
+    if (activeDeskNotifTab === 'personal' && typeof window.markAllMyNotificationsReadUI === 'function') window.markAllMyNotificationsReadUI((RH_NOTIF_STATE.desktopItems && RH_NOTIF_STATE.desktopItems.personal) || [], 'desktop-tab-open').catch(function () {});
+  }
+  var activeDeskNotifTab = 'approvals';
+  function paintDeskNotifItems() {
     var list = document.getElementById('rkNotifList');
     var badge = document.getElementById('rkNotifBadge');
     var summary = document.getElementById('rkNotifSummary');
+    if (!list) return;
+    var state = RH_NOTIF_STATE.desktopItems || { approvals: [], personal: [] };
+    var approvals = state.approvals || [], personal = state.personal || [];
+    var shown = activeDeskNotifTab === 'approvals' ? approvals : personal;
+    var approvalCount = approvals.length;
+    var visiblePersonalUnread = personal.filter(function (n) { return n.outcome && !n.isRead; }).length;
+    // The server counter is authoritative and may include notifications older than the rendered list limit.
+    var personalUnread = RH_NOTIF_STATE.unreadCountAuthoritative
+      ? Math.max(0, Number(RH_NOTIF_STATE.unreadCount || 0))
+      : Math.max(visiblePersonalUnread, Math.max(0, Number(RH_NOTIF_STATE.unreadCount || 0)));
+    var cA = document.getElementById('rkNotifApprovalCount'); if (cA) cA.textContent = approvalCount > 99 ? '99+' : String(approvalCount);
+    var cP = document.getElementById('rkNotifPersonalCount'); if (cP) cP.textContent = personalUnread > 99 ? '99+' : String(personalUnread);
+    if (summary) summary.textContent = activeDeskNotifTab === 'approvals'
+      ? (approvalCount ? approvalCount + ' pengajuan menunggu keputusan' : 'Tidak ada pengajuan yang perlu diproses')
+      : (personalUnread ? personalUnread + ' pemberitahuan untuk Anda belum dibaca' : 'Semua pemberitahuan untuk Anda sudah dibaca');
+    var total = approvalCount + personalUnread;
+    S.unreadNotificationTotal = personalUnread;
+    RH_NOTIF_STATE.unreadCount = personalUnread; RH_NOTIF_STATE.pendingCount = approvalCount;
+    S.pendingTotal = approvalCount;
+    if (badge) { badge.textContent = total > 99 ? '99+' : String(total); badge.style.display = total ? 'inline-flex' : 'none'; }
+    var bell = document.getElementById('rkNotifToggle');
+    if (bell) { bell.classList.toggle('has-notifications', total > 0); bell.setAttribute('aria-label', total ? ('Notifikasi, ' + total + ' belum dibaca/perlu tindakan') : 'Notifikasi'); }
+    if (typeof window.updateBadges === 'function') window.updateBadges();
+    if (!shown.length) {
+      list.innerHTML = '<div class="rk-notif-empty">' + (activeDeskNotifTab === 'approvals' ? 'Tidak ada pengajuan yang perlu persetujuan.' : 'Belum ada pemberitahuan untuk Anda.') + '</div>';
+      return;
+    }
+    list.innerHTML = shown.map(function (n) {
+      var page = ['dash','emp','pfile','att','rekap','cuti','timeoffRequest','timeoff-detail','apr','loc','attset','calendar','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
+      var read = n.isRead === true;
+      return '<button type="button" class="rk-notif-item' + (n.outcome ? (read ? ' is-read' : ' is-unread') : '') + '" data-rk-notif-page="' + page + '"' +
+        (n.id ? ' data-rk-notif-id="' + escH(n.id) + '"' : '') + (n.requestId ? ' data-rk-request-id="' + escH(n.requestId) + '"' : '') +
+        (n.kind ? ' data-rk-notif-kind="' + escH(n.kind) + '"' : '') +
+        ' data-rk-notif-outcome="' + (n.outcome ? '1' : '0') + '" data-rk-notif-read="' + (read ? '1' : '0') + '">' +
+        '<span class="rk-notif-item-ic ' + escH(n.tone || '') + '">' + escH(n.icon || '•') + '</span>' +
+        '<span class="rk-notif-item-body"><b>' + escH(n.title || 'Pemberitahuan') + '</b><span>' + escH(n.detail || '') + '</span></span>' +
+        (n.outcome && !read ? '<span class="rk-notif-unread-dot" aria-label="Belum dibaca"></span>' : '') + '</button>';
+    }).join('');
+  }
+  // Expose this painter only as a bridge for the main module's notification-read updates.
+  window.paintDeskNotifItems = paintDeskNotifItems;
+
+  function renderDeskNotifications(force) {
+    var list = document.getElementById('rkNotifList');
     if (!list) return Promise.resolve(null);
-    deskNotifTimeOffRows = Object.create(null);
-    list.innerHTML = '<div class="rk-notif-empty">Memuat notifikasi...</div>';
-    var requestPromise = (typeof window.loadMyRequests === 'function')
-      ? window.loadMyRequests().catch(function () { return DATA.myReq || { absensi: [], cuti: [] }; })
-      : Promise.resolve(DATA.myReq || { absensi: [], cuti: [] });
-    var approvalPromise = isHR()
+    var userKey = String(window.S && S.user && S.user.nik || '');
+    if (!force && RH_NOTIF_STATE.desktopUser === userKey && RH_NOTIF_STATE.desktopAt && Date.now() - RH_NOTIF_STATE.desktopAt < 8000 && RH_NOTIF_STATE.desktopItems) {
+      paintDeskNotifItems();
+      if (activeDeskNotifTab === 'personal' && typeof window.markAllMyNotificationsReadUI === 'function') window.markAllMyNotificationsReadUI(RH_NOTIF_STATE.desktopItems.personal || [], 'desktop-cache').catch(function () {});
+      return Promise.resolve(RH_NOTIF_STATE.desktopItems);
+    }
+    list.innerHTML = '<div class="rk-notif-empty">Memuat pemberitahuan…</div>';
+    var myReqFresh = !!(DATA.myReq && RH_NOTIF_STATE.myRequestsAt && Date.now() - RH_NOTIF_STATE.myRequestsAt < 20000);
+    var requestPromise = (!force && myReqFresh)
+      ? Promise.resolve(DATA.myReq)
+      : ((typeof window.loadMyRequests === 'function')
+          ? window.loadMyRequests().catch(function () { return DATA.myReq || { absensi: [], cuti: [] }; })
+          : Promise.resolve(DATA.myReq || { absensi: [], cuti: [] }));
+    // S.approver includes KARYAWAN users with subordinates, ADMIN and SUPERADMIN; ordinary employees avoid this extra request.
+    var approvalPromise = S.approver
       ? api('getPendingApprovalsFull', [], 20000).catch(function () { return null; })
       : Promise.resolve(null);
-    var outcomePromise = api('getMyNotifications', [], 20000).catch(function () { return { list: [] }; });
+    var outcomePromise = api('getMyNotifications', [], 20000).catch(function () { return { list: [], unreadCount: null, _failed: true }; });
     return Promise.all([requestPromise, approvalPromise, outcomePromise]).then(function (results) {
       var requests = results[0] || DATA.myReq || {};
       var approvals = results[1] || {};
       var outcomeResult = results[2] || {};
       var outcomes = Array.isArray(outcomeResult) ? outcomeResult : (outcomeResult.list || outcomeResult.notifications || []);
-      var items = [], outcomeItems = [];
+      deskNotifTimeOffRows = Object.create(null); deskNotifAttendanceRows = Object.create(null);
+      aprCache.absensi = Array.isArray(approvals.absensi) ? approvals.absensi.slice() : [];
+      aprCache.cuti = Array.isArray(approvals.cuti) ? approvals.cuti.slice() : [];
+      aprCache.at = Date.now();
+      var personal = [], approvalItems = [];
       outcomes.forEach(function (n) {
-        var title = String(n.title || 'Hasil persetujuan');
+        var title = (typeof window.completeMyNotificationTitle === 'function' ? window.completeMyNotificationTitle(n) : String(n.title || 'Hasil persetujuan'));
         var detail = String(n.detail || '');
+        if (n.actorName || n.actor_name) detail += (detail ? ' · ' : '') + 'Diproses oleh: ' + String(n.actorName || n.actor_name);
         if (/ditolak|rejected/i.test(title) && n.reason) detail += (detail ? ' · ' : '') + 'Alasan: ' + String(n.reason);
         if (n.createdAt) detail += (detail ? ' · ' : '') + String(n.createdAt);
-        outcomeItems.push({ icon: /ditolak|rejected/i.test(title) ? '×' : '✓', tone: /ditolak|rejected/i.test(title) ? 'amber' : '', title: title, detail: detail, page: n.kind === 'absen' ? 'att' : 'cuti' });
+        personal.push({ id: String(n.id || ''), requestId: String(n.requestId || n.request_id || ''), kind: String(n.kind || ''),
+          icon: /ditolak|rejected/i.test(title) ? '×' : '✓', tone: /ditolak|rejected/i.test(title) ? 'amber' : '', title: title, detail: detail,
+          page: n.kind === 'absen' ? 'att' : 'cuti', outcome: true, isRead: n.isRead === true || n.is_read === true });
       });
       (requests.absensi || []).forEach(function (a) {
-        items.push({
-          icon: '◷', tone: 'blue', title: 'Pengajuan absensi menunggu persetujuan',
-          detail: (a.tipe === 'MASUK' ? 'Masuk' : 'Pulang') + ' · ' + (a.tanggal || '') + (a.jam ? ' · ' + String(a.jam).slice(0, 5) : ''),
-          page: 'att', id: a.id
-        });
+        var id = String(a.id || a.absensiId || a.requestId || ''); if (id) deskNotifAttendanceRows[id] = a;
+        personal.push({ icon: '◷', tone: 'blue', title: 'Pengajuan absensi Anda', detail: (a.tipe === 'MASUK' ? 'Masuk' : 'Pulang') + ' · ' + (a.tanggal || '') + (a.jam ? ' · ' + String(a.jam).slice(0, 5) : '') + ' · Menunggu keputusan',
+          page: 'att', kind: 'absen', requestId: id, outcome: false, isRead: true });
       });
       (requests.cuti || []).forEach(function (x) {
-        var id = String(x.id || x.request_id || x.cuti_id || '');
-        if (id) deskNotifTimeOffRows[id] = x;
-        items.push({
-          icon: '▦', tone: 'amber', title: 'Pengajuan Time Off',
-          detail: (x.keterangan || x.kode || 'Time Off') + ' · ' + (x.tanggalMulai || x.tanggal_mulai || '') + (x.totalHari != null ? ' · ' + x.totalHari + ' hari' : ''),
-          page: 'timeoff-detail', kind: 'cuti', id: id
-        });
+        var id = String(x.id || x.request_id || x.cuti_id || ''); if (id) deskNotifTimeOffRows[id] = x;
+        personal.push({ icon: '▦', tone: 'amber', title: 'Pengajuan Time Off Anda', detail: (x.keterangan || x.kode || 'Time Off') + ' · ' + (x.tanggalMulai || x.tanggal_mulai || '') + (x.totalHari != null ? ' · ' + x.totalHari + ' hari' : '') + ' · Menunggu keputusan',
+          page: 'timeoff-detail', kind: 'cuti', requestId: id, outcome: false, isRead: true });
       });
       var status = window.S && S.status ? S.status : {};
-      if (status.masuk) items.push({ icon: '✓', tone: '', title: 'Presensi masuk tercatat', detail: 'Status presensi diperbarui' + (status.jamMasuk ? ' · ' + String(status.jamMasuk).slice(0, 5) : ''), page: 'att' });
-      if (status.pulang) items.push({ icon: '✓', tone: '', title: 'Presensi pulang tercatat', detail: 'Status presensi diperbarui' + (status.jamPulang ? ' · ' + String(status.jamPulang).slice(0, 5) : ''), page: 'att' });
-      if (isHR()) {
-        (approvals.absensi || []).forEach(function (a) {
-          items.push({
-            icon: '◷', tone: 'blue', title: 'Persetujuan absensi menunggu',
-            detail: (a.nama || a.employeeName || a.nik || 'Karyawan') + ' · ' + [a.tanggal, a.tipe === 'MASUK' ? 'Masuk' : (a.tipe === 'PULANG' ? 'Pulang' : a.tipe), a.jam].filter(Boolean).join(' · '),
-            page: 'apr', kind: 'absen', id: a.id || a.absensiId || a.requestId
-          });
-        });
-        (approvals.cuti || []).forEach(function (x) {
-          var id = String(x.id || x.cutiId || x.requestId || x.request_id || '');
-          if (id) deskNotifTimeOffRows[id] = x;
-          items.push({
-            icon: '▦', tone: 'amber', title: 'Persetujuan Time Off menunggu',
-            detail: (x.nama || x.employeeName || x.nik || 'Karyawan') + ' · ' + [x.tanggalMulai || x.tanggal_mulai || x.mulai, x.tanggalSelesai || x.tanggal_selesai || x.selesai, x.kode || x.kode_cuti].filter(Boolean).join(' · '),
-            page: 'timeoff-detail', kind: 'cuti', id: id
-          });
-        });
-      }
-      if (typeof localNotifs === 'function') {
-        localNotifs().forEach(function (n) {
-          items.push({ icon: '•', tone: '', title: String(n.txt || 'Notifikasi aplikasi'), detail: n.t ? new Date(n.t).toLocaleString('id-ID') : '', page: 'log' });
-        });
-      }
-      // Most recent local messages first, with active/pending requests and approvals still included.
-      items.reverse();
-      items = outcomeItems.concat(items);
-      if (badge) {
-        badge.textContent = items.length > 99 ? '99+' : String(items.length);
-        badge.style.display = items.length ? 'inline-flex' : 'none';
-      }
-      var bell = document.getElementById('rkNotifToggle');
-      if (bell) {
-        bell.classList.toggle('has-notifications', items.length > 0);
-        bell.setAttribute('aria-label', items.length ? ('Notifikasi, ' + items.length + ' pembaruan') : 'Notifikasi');
-      }
-      if (summary) summary.textContent = items.length ? items.length + ' pembaruan dan item menunggu' : 'Tidak ada pembaruan baru';
-      if (!items.length) {
-        list.innerHTML = '<div class="rk-notif-empty">Tidak ada notifikasi saat ini.</div>';
-        return null;
-      }
-      list.innerHTML = items.map(function (n) {
-        var page = ['dash','emp','pfile','att','rekap','cuti','timeoffRequest','timeoff-detail','apr','loc','attset','calendar','lap','users','log','myprofile'].indexOf(n.page) >= 0 ? n.page : 'dash';
-        return '<button type="button" class="rk-notif-item" data-rk-notif-page="' + page + '"' + (n.id ? ' data-rk-notif-id="' + escH(n.id) + '"' : '') + (n.kind ? ' data-rk-notif-kind="' + escH(n.kind) + '"' : '') +
-          (n.kind && n.id ? ' data-rk-notif-anchor="rkApproval_' + escH(String(n.kind + '_' + n.id).replace(/[^A-Za-z0-9_-]/g, '_')) + '"' : '') + '>' +
-          '<span class="rk-notif-item-ic ' + escH(n.tone || '') + '">' + escH(n.icon || '•') + '</span>' +
-          '<span class="rk-notif-item-body"><b>' + escH(n.title || 'Notification') + '</b><span>' + escH(n.detail || '') + '</span></span>' +
-          '</button>';
-      }).join('');
+      if (status.masuk) personal.push({ icon: '✓', tone: '', title: 'Presensi masuk tercatat', detail: 'Status presensi diperbarui' + (status.jamMasuk ? ' · ' + String(status.jamMasuk).slice(0, 5) : ''), page: 'att', isRead: true });
+      if (status.pulang) personal.push({ icon: '✓', tone: '', title: 'Presensi pulang tercatat', detail: 'Status presensi diperbarui' + (status.jamPulang ? ' · ' + String(status.jamPulang).slice(0, 5) : ''), page: 'att', isRead: true });
+      if (typeof localNotifs === 'function') localNotifs().forEach(function (n) {
+        personal.push({ icon: '•', tone: '', title: String(n.txt || 'Pemberitahuan aplikasi'), detail: n.t ? new Date(n.t).toLocaleString('id-ID') : '', page: 'log', isRead: true });
+      });
+      (approvals.absensi || []).forEach(function (a) {
+        var id = String(a.id || a.absensiId || a.requestId || ''); if (id) deskNotifAttendanceRows[id] = a;
+        // Only rows assigned to this user belong to the actionable count. Admin remains view-only.
+        if (!desktopCanActApprovalRow('absen', a)) return;
+        approvalItems.push({ icon: '◷', tone: 'blue', title: 'Persetujuan absensi menunggu',
+          detail: (a.nama || a.employeeName || a.nik || 'Karyawan') + ' · ' + [a.tanggal, a.tipe === 'MASUK' ? 'Masuk' : (a.tipe === 'PULANG' ? 'Pulang' : a.tipe), a.jam].filter(Boolean).join(' · '),
+          page: 'apr', kind: 'absen', requestId: id, isRead: true });
+      });
+      (approvals.cuti || []).forEach(function (x) {
+        var id = String(x.id || x.cutiId || x.requestId || x.request_id || ''); if (id) deskNotifTimeOffRows[id] = x;
+        if (!desktopCanActApprovalRow('cuti', x)) return;
+        approvalItems.push({ icon: '▦', tone: 'amber', title: 'Persetujuan Time Off menunggu',
+          detail: (x.nama || x.employeeName || x.nik || 'Karyawan') + ' · ' + [x.tanggalMulai || x.tanggal_mulai || x.mulai, x.tanggalSelesai || x.tanggal_selesai || x.selesai, x.kode || x.kode_cuti].filter(Boolean).join(' · '),
+          page: 'timeoff-detail', kind: 'cuti', requestId: id, isRead: true });
+      });
+      var serverUnread = (outcomeResult && outcomeResult.unreadCount != null && Number.isFinite(Number(outcomeResult.unreadCount)))
+        ? Math.max(0, Number(outcomeResult.unreadCount))
+        : (outcomeResult && outcomeResult._failed
+            ? Math.max(0, Number(RH_NOTIF_STATE.unreadCount || S.unreadNotificationTotal || 0))
+            : outcomes.filter(function(n){return !(n.isRead===true||n.is_read===true);}).length);
+      RH_NOTIF_STATE.desktopItems = { approvals: approvalItems, personal: personal };
+      RH_NOTIF_STATE.desktopUser = userKey; RH_NOTIF_STATE.desktopAt = (outcomeResult && outcomeResult._failed) ? 0 : Date.now();
+      S.unreadNotificationTotal = serverUnread; S.pendingTotal = approvalItems.length;
+      RH_NOTIF_STATE.unreadCount = serverUnread;
+      RH_NOTIF_STATE.unreadCountAuthoritative = !!(outcomeResult && !outcomeResult._failed && outcomeResult.unreadCount != null && Number.isFinite(Number(outcomeResult.unreadCount)));
+      RH_NOTIF_STATE.pendingCount = approvalItems.length;
+      paintDeskNotifItems();
+      if (activeDeskNotifTab === 'personal' && typeof window.markAllMyNotificationsReadUI === 'function') window.markAllMyNotificationsReadUI(RH_NOTIF_STATE.desktopItems.personal || [], 'desktop-open').catch(function () {});
+      return RH_NOTIF_STATE.desktopItems;
     }).catch(function () {
       list.innerHTML = '<div class="rk-notif-empty">Notifikasi tidak dapat dimuat. Silakan coba lagi.</div>';
-      if (summary) summary.textContent = 'Gagal memuat ulang';
+      var summary = document.getElementById('rkNotifSummary'); if (summary) summary.textContent = 'Gagal memuat ulang';
     });
   }
 
@@ -13470,31 +13819,34 @@ function showHrPlaceholder(title, group, description) {
       });
     }
     var notifReload = document.getElementById('rkNotifReload');
-    if (notifReload) notifReload.addEventListener('click', function (e) { e.stopPropagation(); renderDeskNotifications(); });
+    if (notifReload) notifReload.addEventListener('click', function (e) { e.stopPropagation(); renderDeskNotifications(true); });
     var notifList = document.getElementById('rkNotifList');
-    if (notifList) notifList.addEventListener('click', function (e) {
+    var notifTabs = notifPanel ? notifPanel.querySelectorAll('[data-rk-notif-tab]') : [];
+    Array.prototype.forEach.call(notifTabs, function (tab) { tab.addEventListener('click', function (e) { e.stopPropagation(); setDeskNotifTab(tab.getAttribute('data-rk-notif-tab')); }); });
+    if (notifList) notifList.addEventListener('click', async function (e) {
       var item = e.target.closest ? e.target.closest('.rk-notif-item') : null;
       if (!item) return;
       var dest = item.getAttribute('data-rk-notif-page') || 'dash';
-      var anchor = item.getAttribute('data-rk-notif-anchor');
       var notifId = item.getAttribute('data-rk-notif-id') || '';
-      var notifKind = item.getAttribute('data-rk-notif-kind') || '';
+      var requestId = item.getAttribute('data-rk-request-id') || '';
+      var notifKind = String(item.getAttribute('data-rk-notif-kind') || '').toLowerCase();
+      var isOutcome = item.getAttribute('data-rk-notif-outcome') === '1';
+      var isRead = item.getAttribute('data-rk-notif-read') === '1';
       setDeskNotifPanel(false);
-      if ((dest === 'timeoff-detail' || notifKind === 'cuti') && notifId) {
-        openTimeOffDetailFromNotification(notifId, deskNotifTimeOffRows[String(notifId)] || null);
-      } else if (dest === 'apr' && anchor) {
-        aprCache.at = 0;
-        goPage(dest);
-        var tries = 0;
-        var locateApproval = function () {
-          var target = document.getElementById(anchor);
-          if (target) {
-            target.classList.add('rk-notif-target');
-            try { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
-            setTimeout(function () { target.classList.remove('rk-notif-target'); }, 2400);
-          } else if (tries++ < 20) setTimeout(locateApproval, 140);
-        };
-        setTimeout(locateApproval, 120);
+      if (isOutcome && notifId && !isRead && typeof window.markMyNotificationReadUI === 'function') await window.markMyNotificationReadUI(notifId, false);
+      if (requestId && (notifKind === 'absen' || notifKind === 'attendance')) {
+        if (dest === 'apr') {
+          aprCache.at = 0;
+          try {
+            var fresh = await api('getPendingApprovalsFull', [], 20000);
+            aprCache.absensi = (fresh && fresh.absensi) || []; aprCache.cuti = (fresh && fresh.cuti) || []; aprCache.at = Date.now();
+          } catch (_) {}
+        }
+        openDesktopAttendanceDetail(requestId);
+      } else if (requestId && (notifKind === 'cuti' || notifKind === 'timeoff')) {
+        openTimeOffDetailFromNotification(requestId, deskNotifTimeOffRows[String(requestId)] || null);
+      } else if (dest === 'apr') {
+        goPage('apr');
       } else {
         goPage(dest);
       }
@@ -13537,7 +13889,7 @@ function showHrPlaceholder(title, group, description) {
     injectLoginSplit();
   }
 
-  // Publik untuk inline handler di markup konsol
+  // Handler mobile notification is exported by its owning module above.
   window.RHDeskApi = {
     empPage: function () { /* Directory intentionally uses continuous rows; no pagination. */ },
     empPageTo: function () { /* Directory intentionally uses continuous rows; no pagination. */ },
@@ -13546,8 +13898,9 @@ function showHrPlaceholder(title, group, description) {
     empDeactivate: function (nik) { try { karDeactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
     empReactivate: function (nik) { try { karReactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
     empResetPin: function (nik) { try { karResetPin(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
-    approve: function (kind, id) { if (kind === 'absen') openDesktopAttendanceDetail(id); else aprAct(kind, id, 'APPROVE'); },
-    reject: function (kind, id) { if (kind === 'absen') openDesktopAttendanceDetail(id); else aprAct(kind, id, 'REJECT'); },
+    approve: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
+    reject: function (kind, id) { aprAct(kind, id, 'REJECT'); },
+    approvalDetail: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
     attendanceDetail: function (id) { openDesktopAttendanceDetail(id); },
     rkToggleGroup: function (btn) { var g = btn && btn.parentNode; if (g && g.classList) g.classList.toggle('closed'); },
     changePin: function () { submitDesktopPinChange(); },
@@ -14760,3 +15113,32 @@ body.rh-desk-on .rk-cuti-detail-actions button:disabled {
 
 </body></html>
 
+
+
+
+<style id="rh-v13-8-3-notification-feedback-css">
+  #toast, #rkToast { transition: opacity .18s ease, transform .18s ease, background-color .18s ease; }
+  #toast[data-tone="success"], #rkToast[data-tone="success"] { background:#087A4B !important; color:#fff !important; box-shadow:0 8px 24px rgba(0,92,52,.25) !important; }
+  #toast[data-tone="error"], #rkToast[data-tone="error"] { background:#9C352B !important; color:#fff !important; box-shadow:0 8px 24px rgba(121,39,31,.25) !important; }
+  #toast[data-tone="warning"], #rkToast[data-tone="warning"] { background:#8A5A12 !important; color:#fff !important; box-shadow:0 8px 24px rgba(104,68,12,.22) !important; }
+  #toast[data-tone="info"], #rkToast[data-tone="info"] { background:#17452F !important; color:#fff !important; }
+  .notif-item { width:100%; border:0; font:inherit; text-align:left; cursor:default; }
+  button.notif-item { cursor:pointer; }
+  .notif-content { display:block; flex:1; min-width:0; }
+  .notif-content > b { display:block; }
+  .notif-content > span { display:block; margin-top:3px; }
+  .notif-item.is-read { opacity:.84; }
+  .notif-item.is-unread { background:#F4FAF6; }
+  .notif-unread-mark { width:9px; height:9px; border-radius:50%; flex:0 0 9px; align-self:center; background:#0B8052; box-shadow:0 0 0 3px rgba(11,128,82,.12); }
+  .notif-item:disabled { opacity:.6; cursor:wait; }
+  body.rh-desk-on .rk-notif-tabs { display:grid; grid-template-columns:1fr 1fr; gap:4px; padding:8px 10px; border-bottom:1px solid var(--rk-line); background:#fff; }
+  body.rh-desk-on .rk-notif-tabs button { min-width:0; border:1px solid transparent; border-radius:8px; background:#F4F8F5; color:#587064; padding:9px 8px; font-family:inherit; font-size:11px; line-height:1.25; font-weight:600; cursor:pointer; }
+  body.rh-desk-on .rk-notif-tabs button.on { color:#075D3D; background:#E5F3E9; border-color:#B7D8C3; box-shadow:inset 0 0 0 1px rgba(0,120,80,.04); }
+  body.rh-desk-on .rk-notif-tabs button span { display:inline-flex; align-items:center; justify-content:center; min-width:17px; height:17px; margin-left:4px; padding:0 4px; border-radius:10px; background:#E0E9E3; font-size:10px; }
+  body.rh-desk-on .rk-notif-tabs button.on span { background:#0A7A4D; color:#fff; }
+  body.rh-desk-on .rk-notif-item.is-unread { background:#F1F8F3; }
+  body.rh-desk-on .rk-notif-item.is-read { opacity:.78; }
+  body.rh-desk-on .rk-notif-unread-dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; margin:5px 2px 0 0; background:#087A4B; }
+  #dNotifDot { width:auto !important; min-width:18px; height:18px; padding:0 4px; border-radius:9px !important; align-items:center; justify-content:center; font-size:10px; line-height:18px; font-weight:800; color:#fff; }
+  @media (prefers-reduced-motion:reduce) { #toast,#rkToast { transition:none!important; } }
+</style>
