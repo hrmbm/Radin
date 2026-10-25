@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.6.2-timeoff-detail-timeline-image-fix">
+<meta name="app-release" content="v13.8.0-approval-flow-sync">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -4082,7 +4082,7 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v13.6.3-timeoff-detail-reference-plain-layout';
+var RH_HTML_RELEASE = 'v13.8.0-approval-flow-sync';
 var RH_DISPLAY_VERSION = 'v13.6.3';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
@@ -6863,6 +6863,30 @@ function renderCutiList(q) {
   hydrateFaces();
 }
 
+function approvalCurrentEmployeeId() {
+  return String(S.user && (S.user.nik || S.user.employee_id || S.user.employeeId) || '').trim().toUpperCase();
+}
+function approvalAssignedManagerId(row, kind) {
+  row = row || {};
+  var keys = kind === 'absensi'
+    ? ['atasanId','atasan_id','managerEmployeeId','manager_employee_id']
+    : ['approvalLineId','approval_line_id','approvalLineID','atasanId','manager_employee_id'];
+  for (var i = 0; i < keys.length; i++) {
+    var v = row[keys[i]];
+    if (v !== undefined && v !== null && String(v).trim()) return String(v).trim().toUpperCase();
+  }
+  return '';
+}
+function isCurrentUserDirectManager(row, kind) {
+  var actor = approvalCurrentEmployeeId();
+  var manager = approvalAssignedManagerId(row, kind);
+  return !!actor && !!manager && actor === manager;
+}
+function canActAsDirectManager(role, row, kind) {
+  role = String(role || '').toUpperCase();
+  return (role === 'KARYAWAN' || role === 'SUPERADMIN') && isCurrentUserDirectManager(row, kind);
+}
+
 function openCutiDetail(id, fromAppr) {
   _backTo = fromAppr ? 's-appr' : 's-cuti';
   var x = null;
@@ -6870,8 +6894,13 @@ function openCutiDetail(id, fromAppr) {
   if (!x) x = DATA.cutiList.find(function(c) { return c.id === id; });
   if (!x) { toast('Data not found.'); return; }
   var actorRole = String(S.user.role || '').toUpperCase();
-  var isAppr = !!fromAppr && !!S.approver && ((actorRole === 'KARYAWAN' && x.statusAtasan === 'PENDING') || (actorRole === 'SUPERADMIN' && x.statusAtasan === 'DISETUJUI' && x.statusHR === 'PENDING'));
-  var waitingForManager = !!fromAppr && x.statusAtasan === 'PENDING' && (actorRole === 'SUPERADMIN' || actorRole === 'ADMIN');
+  var managerPending = /^(PENDING)$/i.test(String(x.statusAtasan || 'PENDING'));
+  var managerApproved = /^(DISETUJUI|APPROVED)$/i.test(String(x.statusAtasan || ''));
+  var finalPending = /^(PENDING)$/i.test(String(x.statusHR || 'PENDING'));
+  var canApproveAsManager = !!fromAppr && !!S.approver && managerPending && canActAsDirectManager(actorRole, x, 'cuti');
+  var canApproveAsSuperadmin = !!fromAppr && actorRole === 'SUPERADMIN' && managerApproved && finalPending;
+  var isAppr = canApproveAsManager || canApproveAsSuperadmin;
+  var waitingForManager = !!fromAppr && managerPending && (actorRole === 'SUPERADMIN' || actorRole === 'ADMIN') && !canApproveAsManager;
   var html = '<div class="det-hero"><img src="' + (x.dokumenUrl ? driveThumb(x.dokumenUrl) : '') + '" onerror="this.parentNode.style.display=\'none\'" alt=""><div class="det-pill">' + statusPill(x.statusHR === 'PENDING' && x.statusAtasan === 'DISETUJUI' ? 'PENDING_HR' : (x.statusAtasan === 'PENDING' ? 'PENDING_ATASAN' : (x.statusAtasan === 'DITOLAK' || x.statusHR === 'DITOLAK' ? 'DITOLAK' : 'DISETUJUI'))) + '</div></div><div class="det-body"><div class="req-item" style="padding:0 0 14px;border:none"><div class="req-ava"' + faceWrap(x.nik, x.nama, faceVerOf(x.nik)) + '>' + avaInner(x.nik, x.nama, faceVerOf(x.nik)) + '</div><div class="req-body"><b style="font-size:17px">' + esc(x.nama) + '</b><div class="sub">' + esc(x.waktuPengajuan || '') + '</div></div></div><div class="det-row"><small>Requested time off</small><div><b>' + esc(x.keterangan) + '</b></div><div style="color:#555">' + esc(tglID(x.tanggalMulai)) + ' to ' + esc(tglID(x.tanggalSelesai)) + ' (' + x.totalHari + ' hr)</div></div><div class="det-row"><small>Reason</small><div>' + esc(x.alasan) + '</div></div>' + (x.delegateTo ? '<div class="det-row"><small>Delegate to</small><div>' + esc(x.delegateToName || x.delegateTo) + '</div></div>' : '<div class="det-row"><small>Delegate to</small><div>No delegate</div></div>') + '<div class="det-row"><small>Request status</small><div class="tl">' + tlItem('base', 'Submitted by ' + esc(x.nama), x.waktuPengajuan || '') + (x.statusAtasan === 'PENDING' ? tlItem('wait', 'Pending Manager Approval', '') : x.statusAtasan === 'DISETUJUI' ? tlItem('ok', 'Approved by manager', '') : tlItem('no', 'Rejected by manager', x.alasanAtasan || '')) + (x.statusAtasan === 'DISETUJUI' ? (x.statusHR === 'PENDING' ? tlItem('wait', 'Pending Superadmin Approval', '') : x.statusHR === 'DISETUJUI' ? tlItem('ok', 'Approved by Superadmin', '') : tlItem('no', 'Rejected by Superadmin', x.alasanHR || '')) : '') + '</div></div>' + (waitingForManager ? '<div class="warn-banner" style="margin:0 0 14px;border-radius:10px"><span>Waiting for direct manager approval. You can review this request, but Approve/Reject will become available only after the manager updates its status.</span></div>' : '') + '<div class="field" id="cdNoteWrap" style="' + (isAppr ? '' : 'display:none') + '"><label>Note</label><input id="cdNote" placeholder="Optional"></div>' + (isAppr ? '<div class="det-actions"><button class="btn btn-blue" onclick="actCuti(\'' + x.id + '\',true)">Approve</button><button class="btn btn-ghost" onclick="actCuti(\'' + x.id + '\',false)">Reject</button></div>' : '') + '</div>';
   $('cdetBody').innerHTML = html;
   go('s-cdet');
@@ -6886,6 +6915,12 @@ function tlItem(cls, title, sub) {
 
 function actCuti(id, approve) {
   if (isAdminReadOnly()) { toast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
+  var target = ((DATA.appr && DATA.appr.cuti) || []).find(function(row) { return String(row.id) === String(id); });
+  if (!target) { toast('Request is no longer in the approval queue. Refresh and try again.'); return; }
+  var role = String(S.user && S.user.role || '').toUpperCase();
+  var managerStage = /^PENDING$/i.test(String(target.statusAtasan || 'PENDING')) && canActAsDirectManager(role, target, 'cuti');
+  var finalStage = role === 'SUPERADMIN' && /^(DISETUJUI|APPROVED)$/i.test(String(target.statusAtasan || '')) && /^PENDING$/i.test(String(target.statusHR || 'PENDING'));
+  if (!managerStage && !finalStage) { toast('You are not authorized for this approval stage.'); return; }
   var note = ($('cdNote') ? $('cdNote').value.trim() : '');
   if (!approve && !note) {
     note = prompt('Rejection reason:') || '';
@@ -6895,10 +6930,10 @@ function actCuti(id, approve) {
   api('processCutiApproval', [S.user.role, S.user.nik, id, approve ? 'APPROVE' : 'REJECT', note]).then(function(r) {
     toast(r.message);
     logNotif(approve ? '✅ You approved the time-off request' : '❌ You rejected the time-off request');
-    refreshPending();
-    go('s-inbox');
-    switchInboxTab(1);
-    loadInbox();
+    refreshPending().then(function() {
+      go('s-inbox');
+      switchInboxTab(1);
+    });
   }).catch(function(e) {
     if (e && e.message === 'STALE') return;
     toast(e.message);
@@ -7742,7 +7777,7 @@ async function openAbsenDetail(id, fromAppr) {
 function renderAbsenDetail(a, fromAppr) {
   normalizeAbsensiEvidence(a);
   var approvalRole = String(S.user.role || '').toUpperCase();
-  var canAct = !!fromAppr && ((approvalRole === 'KARYAWAN' && a.statusApproval === 'PENDING_ATASAN') || (approvalRole === 'SUPERADMIN' && a.statusApproval === 'PENDING_HR'));
+  var canAct = !!fromAppr && ((a.statusApproval === 'PENDING_ATASAN' && canActAsDirectManager(approvalRole, a, 'absensi')) || (approvalRole === 'SUPERADMIN' && a.statusApproval === 'PENDING_HR'));
   var alasan = alasanOf(a);
   var hero;
   if ((a._fotoDisplayUrl || a.fotoUrl) && a.latitude) {
@@ -7769,6 +7804,13 @@ function renderAbsenDetail(a, fromAppr) {
 }
 
 function actAbsen(id, approve) {
+  var target = ((DATA.appr && DATA.appr.absensi) || []).find(function(row) { return String(row.id) === String(id); });
+  if (!target) { toast('Attendance request is no longer in the approval queue. Refresh and try again.'); return; }
+  var role = String(S.user && S.user.role || '').toUpperCase();
+  var managerStage = String(target.statusApproval || '').toUpperCase() === 'PENDING_ATASAN' && canActAsDirectManager(role, target, 'absensi');
+  var finalStage = role === 'SUPERADMIN' && String(target.statusApproval || '').toUpperCase() === 'PENDING_HR';
+  if (isAdminReadOnly() || (!managerStage && !finalStage)) { toast(isAdminReadOnly() ? 'Administrator role is view-only. Contact Superadmin for changes.' : 'You are not authorized for this approval stage.'); return; }
+  var returnToApproval = _backTo === 's-appr';
   var note = ($('adNote') ? $('adNote').value.trim() : '');
   if (!approve && !note) {
     note = prompt('Rejection reason:') || '';
@@ -7778,8 +7820,10 @@ function actAbsen(id, approve) {
   api('processApproval', [S.user.role, S.user.nik, id, approve ? 'APPROVE' : 'REJECT', note]).then(function(r) {
     toast(r.message);
     logNotif(approve ? '✅ You approved the attendance request' : '❌ You rejected the attendance request');
-    refreshPending();
-    if (_backTo === 's-appr') { openApprList('absensi'); } else { go('s-home'); }
+    refreshPending().then(function() {
+      if (returnToApproval) { go('s-inbox'); switchInboxTab(1); openApprList('absensi'); }
+      else { go('s-home'); }
+    });
   }).catch(function(e) {
     if (e && e.message === 'STALE') return;
     toast(e.message);
@@ -11356,6 +11400,21 @@ function showHrPlaceholder(title, group, description) {
     });
   }
 
+  function desktopCanActApprovalRow(kind, row) {
+    if (!row || !S.user) return false;
+    var role = String(S.user.role || '').toUpperCase();
+    if (role === 'ADMIN') return false;
+    if (kind === 'cuti') {
+      var managerStatus = String(row.statusAtasan || row.status_atasan || 'PENDING').toUpperCase();
+      var finalStatus = String(row.statusHR || row.status_hr || 'PENDING').toUpperCase();
+      if (managerStatus === 'PENDING' && canActAsDirectManager(role, row, 'cuti')) return true;
+      return role === 'SUPERADMIN' && /^(DISETUJUI|APPROVED)$/.test(managerStatus) && finalStatus === 'PENDING';
+    }
+    var attendanceStatus = String(row.statusApproval || row.status_approval || '').toUpperCase();
+    if (attendanceStatus === 'PENDING_ATASAN') return canActAsDirectManager(role, row, 'absensi');
+    return role === 'SUPERADMIN' && attendanceStatus === 'PENDING_HR';
+  }
+
   function aprItem(x, kind) {
     var id = x.id || x.absensiId || x.cutiId || x.requestId || '';
     var anchorId = 'rkApproval_' + String(kind + '_' + id).replace(/[^A-Za-z0-9_-]/g, '_');
@@ -11367,10 +11426,11 @@ function showHrPlaceholder(title, group, description) {
     var alasan = x.alasan || x.catatan || '';
     var _av = x.faceVer || (DATA.faceVer || {})[nik] || 0;
     var ava = nik ? '<span class="rk-ava"' + faceWrap(nik, nama, _av) + '>' + avaHtml(nik, nama, _av) + '</span>' : '';
-    var actionButtons = S.user && String(S.user.role || '').toUpperCase() !== 'ADMIN'
+    var canAct = desktopCanActApprovalRow(kind, x);
+    var actionButtons = canAct
       ? '<button class="rk-mini primary" onclick="RHDeskApi.approve(\'' + kind + '\',\'' + escH(id) + '\')">Approve</button>' +
         '<button class="rk-mini danger" onclick="RHDeskApi.reject(\'' + kind + '\',\'' + escH(id) + '\')">Reject</button>'
-      : '<span class="rk-muted">View only</span>';
+      : '<span class="rk-muted">' + (String(S.user && S.user.role || '').toUpperCase() === 'ADMIN' ? 'View only' : 'Not assigned to this approval stage') + '</span>';
     return '<div class="rk-appr-item" id="' + anchorId + '">' + ava +
       '<div class="b"><b>' + escH(nama) + '</b> <span style="color:#5E6E63;font-size:12px">(' + escH(nik) + ')</span>' +
       '<div class="s">' + escH(sub1) + (alasan ? ' — ' + escH(alasan) : '') + '</div></div>' + actionButtons +
@@ -11379,17 +11439,35 @@ function showHrPlaceholder(title, group, description) {
 
   function aprAct(kind, id, action) {
     if (window.isAdminReadOnly && window.isAdminReadOnly()) { rkToast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
-    var alasan = '';
-    if (action === 'REJECT') {
-      alasan = prompt('Rejection reason (required):') || '';
-      if (!alasan.trim()) return;
-    }
-    var fn = kind === 'cuti' ? 'processCutiApproval' : 'processApproval';
-    api(fn, [null, null, id, action, alasan], 25000).then(function (r) {
+    if (action !== 'APPROVE' && action !== 'REJECT') { rkToast('Invalid approval action.'); return; }
+    // Re-read the queue before writing so a stale desktop list cannot authorize an old stage.
+    api('getPendingApprovalsFull', [], 25000).then(function (queue) {
+      queue = queue || {};
+      var rows = kind === 'cuti' ? (queue.cuti || []) : (queue.absensi || []);
+      var target = rows.find(function (row) { return String(row.id || row.cutiId || row.absensiId || row.requestId || '') === String(id); });
+      if (!target || !desktopCanActApprovalRow(kind, target)) {
+        throw new Error('You are not assigned to this approval stage, or the request status has changed. Refresh the list.');
+      }
+      var alasan = '';
+      if (action === 'REJECT') {
+        alasan = prompt('Rejection reason (required):') || '';
+        if (!alasan.trim()) return { cancelled: true };
+      }
+      var fn = kind === 'cuti' ? 'processCutiApproval' : 'processApproval';
+      return api(fn, [null, null, id, action, alasan], 25000).then(function (r) { return { result: r }; });
+    }).then(function (out) {
+      if (!out || out.cancelled) return;
+      var r = out.result;
       rkToast((r && r.message) || (action === 'APPROVE' ? 'Approved.' : 'Rejected.'));
       aprCache.at = 0;
       renderAprPage(true);
       refreshBadge();
+      if (kind === 'cuti') {
+        cutiUI.data = null;
+        loadCutiData(true).then(function () { renderDeskNotifications(); }).catch(function () { renderDeskNotifications(); });
+      } else {
+        renderDeskNotifications();
+      }
     }).catch(function (e) { rkToast('❌ ' + (e && e.message || e)); });
   }
 
@@ -11971,7 +12049,8 @@ function showHrPlaceholder(title, group, description) {
       statusHR: String(cutiRowValue(row,['statusHR','status_hr','superadmin_status','hr_status']) || 'PENDING').toUpperCase(),
       alasanAtasan: String(cutiRowValue(row,['alasanAtasan','alasan_atasan']) || ''),
       alasanHR: String(cutiRowValue(row,['alasanHR','alasan_hr']) || ''),
-      namaAtasan: String(cutiRowValue(row,['namaAtasan','approval_line_name','manager_name','managerName']) || ''),
+      namaAtasan: String(cutiRowValue(row,['namaAtasan','approvalLineName','approval_line_name','manager_name','managerName']) || ''),
+      approvalLineId: String(cutiRowValue(row,['approvalLineId','approval_line_id','approvalLineID','atasanId','manager_employee_id']) || '').trim(),
       approvedByManager: String(cutiRowValue(row,['approvedByManager','approved_by_atasan','manager_approver_name']) || ''),
       approvedByHR: String(cutiRowValue(row,['approvedByHR','approved_by_hr','hr_approver_name','superadmin_name']) || ''),
       delegateTo: String(cutiRowValue(row,['delegateTo','delegate_to']) || ''),
@@ -12105,9 +12184,24 @@ function showHrPlaceholder(title, group, description) {
     var cls = name === 'Approved' ? 'ok' : name === 'Rejected' ? 'no' : 'warn';
     return '<span class="rk-pill ' + cls + '">' + name + '</span>';
   }
+  function desktopCutiActionStage(x) {
+    if (!x || !S.user) return '';
+    var role = String(S.user.role || '').toUpperCase();
+    if (role === 'ADMIN') return '';
+    var a = String(x.statusAtasan || 'PENDING').toUpperCase();
+    var h = String(x.statusHR || 'PENDING').toUpperCase();
+    var actorId = String(S.user.nik || S.user.employee_id || S.user.employeeId || '').trim().toUpperCase();
+    var managerId = String(x.approvalLineId || x.approval_line_id || x.approvalLineID || x.atasanId || '').trim().toUpperCase();
+    if (!managerId && x.nik && typeof empFind === 'function') {
+      var requester = empFind(x.nik);
+      managerId = String(requester && requester.atasanId || '').trim().toUpperCase();
+    }
+    if (a === 'PENDING' && actorId && managerId && actorId === managerId && (role === 'KARYAWAN' || role === 'SUPERADMIN')) return 'manager';
+    if (/^(DISETUJUI|APPROVED)$/.test(a) && h === 'PENDING' && role === 'SUPERADMIN') return 'superadmin';
+    return '';
+  }
   function desktopCutiCanSuperadminAct(x) {
-    var a=String(x.statusAtasan||'PENDING').toUpperCase(), h=String(x.statusHR||'PENDING').toUpperCase();
-    return !!(S.user && String(S.user.role || '').toUpperCase() === 'SUPERADMIN' && /DISETUJUI|APPROVED/.test(a) && !/DISETUJUI|APPROVED|DITOLAK|REJECTED/.test(h));
+    return !!desktopCutiActionStage(x);
   }
   function desktopCutiStageTime(v) {
     if (cutiIsPlaceholder(v)) return '';
@@ -12167,7 +12261,8 @@ function showHrPlaceholder(title, group, description) {
     var nik=String(x.nik||'').trim(), person=empFind(nik)||empNormalize({employee_id:nik,nama:x.nama||''});
     var file=cutiAttachmentValue(x);
     var mime=String(cutiRowValue(x,['mime','document_mime','dokumenMime','file_mime','mime_type','content_type'])||'').toLowerCase();
-    var canAct=desktopCutiCanSuperadminAct(x);
+    var actionStage=desktopCutiActionStage(x);
+    var canAct=!!actionStage;
     var managerStatus=String(x.statusAtasan||'PENDING').toUpperCase();
     var hrStatus=String(x.statusHR||'PENDING').toUpperCase();
     var managerApproved=/DISETUJUI|APPROVED/.test(managerStatus);
@@ -12213,7 +12308,7 @@ function showHrPlaceholder(title, group, description) {
           '</div>' +
           '<div class="rk-cuti-detail-block rk-cuti-reason"><label>Reason</label><p>'+escH(x.alasan||'—')+'</p></div>' +
           '<div class="rk-cuti-detail-block rk-cuti-status-block"><label>Request status</label>'+timeline+'</div>' +
-          (canAct ? '<div class="rk-cuti-approval-box rk-cuti-approval-inline"><div class="rk-cuti-approval-input"><label for="rkCutiSuperadminNote">Catatan</label><textarea id="rkCutiSuperadminNote" class="rk-in rk-cuti-note" rows="2" placeholder="Tulis catatan keputusan…"></textarea></div><div class="rk-cuti-detail-actions"><button type="button" class="rk-btn" data-cuti-detail-action="APPROVE">Approved</button><button type="button" class="rk-btn danger" data-cuti-detail-action="REJECT">Rejected</button></div></div>' : '<div class="rk-cuti-detail-wait">'+(managerRejected ? 'Pengajuan ditolak oleh atasan langsung.' : (!managerApproved ? 'Menunggu pembaruan status oleh atasan langsung. Detail dapat dilihat, tetapi keputusan belum dapat diberikan.' : (hrApproved||hrRejected ? 'Pengajuan telah diproses oleh Superadmin.' : 'Menunggu keputusan Superadmin.')))+'</div>') +
+          (canAct ? '<div class="rk-cuti-approval-box rk-cuti-approval-inline"><div class="rk-cuti-approval-input"><label for="rkCutiSuperadminNote">Catatan keputusan (opsional saat menyetujui)</label><textarea id="rkCutiSuperadminNote" class="rk-in rk-cuti-note" rows="2" placeholder="Tulis catatan keputusan…"></textarea></div><div class="rk-cuti-detail-actions"><button type="button" class="rk-btn" data-cuti-detail-action="APPROVE">Approve</button><button type="button" class="rk-btn danger" data-cuti-detail-action="REJECT">Reject</button></div></div>' : '<div class="rk-cuti-detail-wait">'+(managerRejected ? 'Pengajuan ditolak oleh atasan langsung.' : (!managerApproved ? 'Menunggu keputusan atasan langsung. Hanya atasan yang ditetapkan pada data karyawan dapat menyetujui tahap ini.' : (hrApproved||hrRejected ? 'Pengajuan telah diproses oleh Superadmin.' : 'Menunggu keputusan Superadmin.')))+'</div>') +
         '</section>' +
       '</div>';
     document.getElementById('rkCutiDetailContent').innerHTML=html;
@@ -12273,15 +12368,28 @@ function showHrPlaceholder(title, group, description) {
   }
   function submitDesktopCutiAction(id,action) {
     if (window.isAdminReadOnly && window.isAdminReadOnly()) { rkToast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
-    var x=(cutiUI.data||[]).find(function(row){return String(row.id)===String(id);});if(!x||!desktopCutiCanSuperadminAct(x)){rkToast('This request is not at the Superadmin stage.');return;}
+    var x=(cutiUI.data||[]).find(function(row){return String(row.id)===String(id);});
+    var stage=x ? desktopCutiActionStage(x) : '';
+    if(!x || !stage){rkToast('You are not authorized for the current approval stage. Refresh the request and try again.');return;}
     var note=(document.getElementById('rkCutiSuperadminNote')||{}).value||'';
-    if(action==='REJECT'&&!note.trim()){rkToast('Please enter a reason before rejecting this request.');return;}
+    if(action==='REJECT'&&!note.trim()){rkToast('Please enter a rejection reason before rejecting this request.');return;}
+    if(action!=='APPROVE' && action!=='REJECT'){rkToast('Invalid approval action.');return;}
     if(!confirm((action==='APPROVE'?'Approve':'Reject')+' this time-off request?'))return;
+    var shade=document.getElementById('rkCutiDetailShade');
+    if(shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-cuti-detail-action]'),function(btn){btn.disabled=true;});
     api('processCutiApproval',[S.user.role,S.user.nik,id,action,note.trim()],25000).then(function(r){
-      var shade=document.getElementById('rkCutiDetailShade');if(shade)shade.classList.remove('on');
       rkToast((r&&r.message)||(action==='APPROVE'?'Time-off request approved.':'Time-off request rejected.'));
-      aprCache.at=0;refreshBadge();cutiUI.data=null;loadCutiData(true);renderDeskNotifications();
-    }).catch(function(e){rkToast('Unable to update request: '+(e&&e.message||e));});
+      aprCache.at=0;refreshBadge();cutiUI.data=null;
+      return loadCutiData(true).then(function(){
+        renderDeskNotifications();
+        var latest=(cutiUI.data||[]).find(function(row){return String(row.id)===String(id);});
+        if(latest) openDesktopCutiDetail(id);
+        else if(shade) shade.classList.remove('on');
+      });
+    }).catch(function(e){
+      if(shade) Array.prototype.forEach.call(shade.querySelectorAll('[data-cuti-detail-action]'),function(btn){btn.disabled=false;});
+      rkToast('Unable to update request: '+(e&&e.message||e));
+    });
   }
   function cutiApprovalText(x, stage) {
     var isManager = stage === 'manager';
@@ -14378,4 +14486,34 @@ body.rh-desk-on .rk-cuti-inline-preview.rk-cuti-preview-loaded { background:#F4F
 }
 </style>
 
+
+<style id="rh-v13-8-approval-actions">
+/* One approval vocabulary and color meaning across mobile and desktop. */
+.det-actions button.btn-blue,
+.det-actions button.btn-blue:hover,
+body.rh-desk-on .rk-cuti-detail-actions .rk-btn:not(.danger),
+body.rh-desk-on .rk-cuti-detail-actions .rk-btn:not(.danger):hover {
+  background: #087A4B !important;
+  border: 1px solid #087A4B !important;
+  color: #FFFFFF !important;
+}
+.det-actions button.btn-ghost,
+.det-actions button.btn-ghost:hover,
+body.rh-desk-on .rk-cuti-detail-actions .rk-btn.danger,
+body.rh-desk-on .rk-cuti-detail-actions .rk-btn.danger:hover {
+  background: #B43C35 !important;
+  border: 1px solid #B43C35 !important;
+  color: #FFFFFF !important;
+}
+body.rh-desk-on .rk-cuti-detail-actions button:disabled {
+  opacity: .62;
+  cursor: not-allowed;
+}
+@media (max-width: 1023px) {
+  .det-actions { display:flex; gap:10px; flex-wrap:wrap; }
+  .det-actions button { min-width:104px; min-height:40px; border-radius:6px; font-weight:600; }
+}
+</style>
+
 </body></html>
+
