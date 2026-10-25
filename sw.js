@@ -1,10 +1,10 @@
-/* ReHolz HRIS Service Worker v20. Deploy alongside index_reholz_dashboard_employee_record_v13_1.html. */
+/* ReHolz HRIS Service Worker v21. Deploy with the matching v13.2 HTML. */
 'use strict';
-const RH_SW_RELEASE = 'v20-reholz-20261025-sequenced-approval-tap-photo';
-const RH_EXPECTED_HTML_RELEASE = 'v13.1.0-sequenced-approval-tap-photo';
-const RH_SHELL_CACHE = 'rehholz-app-shell-v20';
+const RH_SW_RELEASE = 'v21-reholz-office-location-flex-branch-casefold';
+const RH_EXPECTED_HTML_RELEASE = 'v13.2.0-office-location-flex-branch-casefold';
+const RH_SHELL_CACHE = 'rehholz-app-shell-v21';
 const RH_SCOPE_URL = new URL(self.registration.scope);
-const RH_CANONICAL_APP_URL = new URL('index_reholz_dashboard_employee_record_v13_1.html', RH_SCOPE_URL);
+const RH_CANONICAL_APP_URL = new URL('index_reholz_dashboard_employee_record_v13_2.html', RH_SCOPE_URL);
 
 function isAppNavigation(urlValue) {
   try {
@@ -34,39 +34,22 @@ async function fetchFreshShell(urlValue) {
 
 async function cacheFreshShell() {
   const cache = await caches.open(RH_SHELL_CACHE);
-  const candidates = [RH_CANONICAL_APP_URL.href, RH_SCOPE_URL.href];
+  const response = await fetchFreshShell(RH_CANONICAL_APP_URL.href);
+  if (!response) return false;
   try {
-    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const client of clients) {
-      if (!isAppNavigation(client.url)) continue;
-      const u = new URL(client.url); u.search = ''; u.hash = '';
-      if (!candidates.includes(u.href)) candidates.push(u.href);
-    }
-  } catch (_) {}
-  let canonicalReady = false;
-  for (const url of candidates) {
-    const response = await fetchFreshShell(url);
-    if (!response) continue;
-    try {
-      await cache.put(url, response.clone());
-      if (url === RH_CANONICAL_APP_URL.href) {
-        await cache.put(RH_SCOPE_URL.href, response.clone());
-        canonicalReady = true;
-      }
-    } catch (e) {
-      console.warn('[ReHolz SW] Could not cache shell:', e && e.message || e);
-    }
+    await cache.put(RH_CANONICAL_APP_URL.href, response.clone());
+    await cache.put(RH_SCOPE_URL.href, response.clone());
+    return true;
+  } catch (e) {
+    console.warn('[ReHolz SW] Could not cache canonical shell:', e && e.message || e);
+    return false;
   }
-  return canonicalReady;
 }
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
-    try {
-      await cacheFreshShell();
-    } catch (e) {
-      console.warn('[ReHolz SW] Initial shell preparation failed:', e && e.message || e);
-    }
+    try { await cacheFreshShell(); }
+    catch (e) { console.warn('[ReHolz SW] Initial shell preparation failed:', e && e.message || e); }
     await self.skipWaiting();
   })());
 });
@@ -76,7 +59,7 @@ self.addEventListener('activate', event => {
     const hasCurrentShell = await cacheFreshShell().catch(() => false);
     await self.clients.claim();
     if (!hasCurrentShell) {
-      console.warn('[ReHolz SW] Canonical shell is not reachable; previous caches are retained and clients are not forced to navigate.');
+      console.warn('[ReHolz SW] The expected v13.2 HTML is not live at its canonical URL. Old caches are retained and open pages are not forced to navigate.');
       return;
     }
     const names = await caches.keys();
@@ -102,20 +85,16 @@ self.addEventListener('message', event => {
   if (data.type === 'SKIP_WAITING') self.skipWaiting();
   if (data.type === 'CLIENT_RELEASE') {
     try {
-      event.source && event.source.postMessage({
-        type: 'REHOLZ_SW_ACK',
-        release: RH_SW_RELEASE,
-        clientRelease: data.release || ''
-      });
+      event.source && event.source.postMessage({ type: 'REHOLZ_SW_ACK', release: RH_SW_RELEASE, clientRelease: data.release || '' });
     } catch (_) {}
   }
 });
 
 async function findCachedShell(requestUrl) {
-  const exact = new URL(requestUrl); exact.search = ''; exact.hash = '';
-  const keys = [exact.href, RH_CANONICAL_APP_URL.href, RH_SCOPE_URL.href];
-  const names = await caches.keys();
-  for (const name of names.filter(n => n.startsWith('rehholz-app-shell-')).reverse()) {
+  const requested = new URL(requestUrl); requested.search = ''; requested.hash = '';
+  const keys = [requested.href, RH_CANONICAL_APP_URL.href, RH_SCOPE_URL.href];
+  const names = (await caches.keys()).filter(n => n.startsWith('rehholz-app-shell-')).reverse();
+  for (const name of names) {
     const cache = await caches.open(name);
     for (const key of keys) {
       const hit = await cache.match(key);
@@ -128,34 +107,30 @@ async function findCachedShell(requestUrl) {
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET' || request.mode !== 'navigate' || !isAppNavigation(request.url)) return;
-
   event.respondWith((async () => {
-    const requested = new URL(request.url);
     const offlinePage = new Response(
-      '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>ReHolz HRIS update required</title><body style="font-family:system-ui;padding:24px"><h2>ReHolz HRIS</h2><p>The latest app release is not available at its expected address yet. Reconnect, confirm the v13.1 HTML file is published beside sw.js, and reopen the app. The previous cached shell has been retained.</p></body>',
+      '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>ReHolz HRIS update required</title><body style="font-family:system-ui;padding:24px"><h2>ReHolz HRIS</h2><p>The v13.2 app release is not available at its expected address yet. Confirm that index_reholz_dashboard_employee_record_v13_2.html and sw.js are both published in the same directory, then reopen the app. Previous cached shells have been retained.</p></body>',
       { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, status: 503 }
     );
-
+    const requested = new URL(request.url);
     if (requested.pathname !== RH_CANONICAL_APP_URL.pathname) {
-      const freshCanonical = await fetchFreshShell(RH_CANONICAL_APP_URL.href);
-      if (freshCanonical) {
+      const fresh = await fetchFreshShell(RH_CANONICAL_APP_URL.href);
+      if (fresh) {
         try {
           const cache = await caches.open(RH_SHELL_CACHE);
-          await cache.put(RH_CANONICAL_APP_URL.href, freshCanonical.clone());
-          await cache.put(RH_SCOPE_URL.href, freshCanonical.clone());
+          await cache.put(RH_CANONICAL_APP_URL.href, fresh.clone());
+          await cache.put(RH_SCOPE_URL.href, fresh.clone());
         } catch (_) {}
         const target = new URL(RH_CANONICAL_APP_URL.href);
         requested.searchParams.forEach((value, key) => target.searchParams.set(key, value));
         return Response.redirect(target.href, 302);
       }
       try {
-        const legacyResponse = await fetch(request, { cache: 'no-store' });
-        if (legacyResponse && legacyResponse.ok && legacyResponse.type !== 'opaque') return legacyResponse;
+        const legacy = await fetch(request, { cache: 'no-store' });
+        if (legacy && legacy.ok && legacy.type !== 'opaque') return legacy;
       } catch (_) {}
-      const legacyCached = await findCachedShell(request.url);
-      return legacyCached || offlinePage;
+      return (await findCachedShell(request.url)) || offlinePage;
     }
-
     try {
       const response = await fetch(request, { cache: 'no-store' });
       if (response && response.ok && response.type !== 'opaque') {
@@ -171,13 +146,9 @@ self.addEventListener('fetch', event => {
           return response;
         }
       }
-      const cached = await findCachedShell(request.url);
-      if (cached) return cached;
-      return offlinePage;
+      return (await findCachedShell(request.url)) || offlinePage;
     } catch (_) {
-      const cached = await findCachedShell(request.url);
-      if (cached) return cached;
-      return offlinePage;
+      return (await findCachedShell(request.url)) || offlinePage;
     }
   })());
 });
