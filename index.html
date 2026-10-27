@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.8.3.5-remaining-flow-fixes">
+<meta name="app-release" content="v13.8.3.6-desktop-timeoff-form-centered-actions">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -2660,7 +2660,7 @@ input, select, textarea {
   body.rh-desk-on .rk-employee-directory .rk-emp-name-with-photo small { display:block; margin-top:4px; color:#718579; font-size:10px; }
   body.rh-desk-on .rk-emp-actions { display:grid; grid-template-columns:repeat(2,minmax(66px,1fr)); align-items:center; gap:5px; min-width:155px; }
   body.rh-desk-on .rk-emp-actions .rk-mini { min-width:0; padding:6px 7px; white-space:nowrap; text-align:center; }
-  body.rh-desk-on #rkEmpAdd { display:none; }
+  body.rh-desk-on #rkEmpAdd { display:inline-flex; align-items:center; justify-content:center; }
   body.rh-desk-on .rk-mitra-modal { width:min(1400px,98vw); height:min(850px,96vh); max-height:96vh; min-height:0; padding:0; border-radius:3px; background:#fff; overflow:hidden; display:flex; flex-direction:column; }
   body.rh-desk-on .rk-mitra-profile-layout { display:grid; grid-template-columns:240px minmax(0,1fr); width:100%; height:100%; min-height:0; overflow:hidden; background:#fff; color:#242A31; font-family:Arial,Helvetica,sans-serif; }
   body.rh-desk-on .rk-mitra-profile-sidebar { min-width:0; background:#F1F4F8; border-right:1px solid #E1E5EA; padding:18px 12px; overflow:auto; text-align:center; }
@@ -2752,6 +2752,50 @@ input, select, textarea {
   body.rk-printing-pfile #rkPfPrintSheet .rk-mitra-profile-nav button, body.rk-printing-pfile #rkPfPrintSheet .rk-mitra-subtabs button { font-size:7pt!important; }
 }
 </style>
+
+<style id="rh-v13-8-3-6-centered-approval-button-labels">
+/* Keep Approve/Reject placement intact; center only the label within each button. */
+.det-actions button,
+body.rh-desk-on .rk-cuti-detail-actions .rk-btn,
+body.rh-desk-on .rk-att-actions button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1.25;
+  white-space: normal;
+}
+</style>
+
+
+<style id="rh-v13-8-3-6-desktop-timeoff-request-form">
+@media (min-width:1024px) {
+  body.rh-desk-on #rkp-timeoffRequest { max-width:1120px; }
+  body.rh-desk-on .rk-tor-page { width:100%; max-width:920px; margin:0 auto; padding:10px 0 28px; }
+  body.rh-desk-on .rk-tor-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; margin:0 0 18px; }
+  body.rh-desk-on .rk-tor-eyebrow { color:#61806D; font-size:10px; font-weight:800; letter-spacing:.12em; margin-bottom:5px; }
+  body.rh-desk-on .rk-tor-heading h2 { margin:0; color:#214632; font-size:23px; line-height:1.25; font-weight:700; }
+  body.rh-desk-on .rk-tor-code-pill { flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center; min-width:58px; padding:8px 12px; border-radius:22px; background:#E8F3EB; border:1px solid #C7E0CE; color:#17613E; font-size:11px; font-weight:800; }
+  body.rh-desk-on .rk-tor-card { background:#fff; border:1px solid #DCE7DF; border-radius:12px; box-shadow:0 4px 16px rgba(24,67,43,.045); padding:24px; }
+  body.rh-desk-on .rk-tor-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 20px; }
+  body.rh-desk-on .rk-tor-field { display:flex; flex-direction:column; gap:7px; min-width:0; }
+  body.rh-desk-on .rk-tor-field label { color:#344C3D; font-size:12px; font-weight:700; }
+  body.rh-desk-on .rk-tor-field .rk-in { width:100%; min-height:40px; box-sizing:border-box; font-size:13px; }
+  body.rh-desk-on .rk-tor-field textarea.rk-in { min-height:112px; resize:vertical; padding:10px 12px; }
+  body.rh-desk-on .rk-tor-full { grid-column:1 / -1; }
+  body.rh-desk-on .rk-tor-remaining { grid-column:1 / -1; padding:12px 14px; border-radius:8px; background:#F0F7F1; color:#28583C; font-size:13px; }
+  body.rh-desk-on .rk-tor-h7 { margin-top:4px; padding:10px 12px; border-radius:7px; background:#FFF4E5; color:#8A4B08; font-size:11px; line-height:1.45; }
+  body.rh-desk-on .rk-tor-footer { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:22px; padding-top:18px; border-top:1px solid #E7EEE9; }
+  body.rh-desk-on .rk-tor-footnote { color:#74877A; font-size:11px; }
+  body.rh-desk-on #rkTorSubmit { min-width:150px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; text-align:center; background:#087A4B; color:#fff; border:1px solid #087A4B; }
+  body.rh-desk-on #rkTorSubmit:disabled { opacity:.65; cursor:wait; }
+}
+@media (max-width:1199px) and (min-width:1024px) {
+  body.rh-desk-on .rk-tor-card { padding:18px; }
+  body.rh-desk-on .rk-tor-form-grid { gap:14px; }
+}
+</style>
+
 </head>
 <body>
 <div id="rhLimitedAccess" role="status" aria-live="polite">Limited access</div>
@@ -6994,18 +7038,21 @@ function loadDelegateOptions(force) {
   }).then(function(){ DELEGATE_OPTIONS.loading = false; });
 }
 function renderDelegateOptions() {
-  var sel = $('ctDelegate'); if (!sel) return;
-  var current = sel.value || '';
-  sel.innerHTML = '<option value="">No delegate</option>';
-  (DELEGATE_OPTIONS.rows || []).forEach(function(x) {
-    var id = String(x.employee_id || x.employeeId || x.nik || '').trim();
-    var name = String(x.nama || x.name || x.full_name || id).trim();
-    if (!id) return;
-    var o = document.createElement('option'); o.value = id;
-    o.textContent = name + ' (' + id + ')' + (x.branch ? ' · ' + x.branch : '');
-    sel.appendChild(o);
+  var selects = [$('ctDelegate'), document.getElementById('rkTorDelegate')].filter(Boolean);
+  if (!selects.length) return;
+  selects.forEach(function(sel) {
+    var current = sel.value || '';
+    sel.innerHTML = '<option value="">' + (sel.id === 'ctDelegate' ? 'No delegate' : 'Tidak ada delegasi') + '</option>';
+    (DELEGATE_OPTIONS.rows || []).forEach(function(x) {
+      var id = String(x.employee_id || x.employeeId || x.nik || '').trim();
+      var name = String(x.nama || x.name || x.full_name || id).trim();
+      if (!id) return;
+      var o = document.createElement('option'); o.value = id;
+      o.textContent = name + ' (' + id + ')' + (x.branch ? ' · ' + x.branch : '');
+      sel.appendChild(o);
+    });
+    if (Array.from(sel.options).some(function(o){return o.value === current;})) sel.value = current;
   });
-  if (Array.from(sel.options).some(function(o){return o.value === current;})) sel.value = current;
 }
 function prewarmTimeoffReferenceData() {
   var masterTask = RHMediaCache.kvGet('masterCuti').then(function(c) {
@@ -8779,12 +8826,15 @@ Object.assign(window, {
 
 /* Ekspor tambahan untuk Desktop HR Console & RHMediaCache (tidak mengubah perilaku) */
 Object.assign(window, {
-  S: S, DATA: DATA, api: api, esc: esc, initials: initials, toast: toast,
+  S: S, DATA: DATA, CACHE: CACHE, api: api, esc: esc, initials: initials, toast: toast,
   tglID: tglID, todayISO: todayISO, getToken: getToken, getSb: getSb,
   hydrateFaces: hydrateFaces, faceWrap: faceWrap, avaInner: avaInner,
   loadMyRequests: loadMyRequests, RHMediaCache: RHMediaCache,
-  // Module-scoped helper is explicitly exported for the classic-script desktop approval console.
-  canActAsDirectManager: canActAsDirectManager
+  // Module-scoped helpers shared with the classic-script desktop console.
+  canActAsDirectManager: canActAsDirectManager,
+  isH7Timeoff: isH7Timeoff, jakartaTodayISO: jakartaTodayISO, daysBetweenISO: daysBetweenISO,
+  loadDelegateOptions: loadDelegateOptions, renderDelegateOptions: renderDelegateOptions,
+  refreshPending: refreshPending
 });
 
 
@@ -11009,7 +11059,7 @@ function showHrPlaceholder(title, group, description) {
       document.getElementById('rkEmpQ').addEventListener('input', function () { empUI.q = this.value; paintEmpRows(); });
       document.getElementById('rkEmpOrg').addEventListener('change', function () { empUI.org = this.value; paintEmpRows(); });
       document.getElementById('rkEmpSt').addEventListener('change', function () { empUI.st = this.value; paintEmpRows(); });
-      document.getElementById('rkEmpAdd').style.display = isSuperAdminRole() ? '' : 'none';
+      document.getElementById('rkEmpAdd').style.display = isSuperAdminRole() ? 'inline-flex' : 'none';
       document.getElementById('rkEmpAdd').addEventListener('click', function () {
         if (!isSuperAdminRole()) { rkToast('Akses lihat saja. Hanya Superadmin dapat menambah karyawan.'); return; }
         ensureKar(false).then(function () { try { empOpenEditor('', 'add'); } catch (e) { rkToast(e.message); } }).catch(function(e){ rkToast(e && e.message || 'Gagal memuat pilihan karyawan.'); });
@@ -11106,7 +11156,7 @@ function showHrPlaceholder(title, group, description) {
     var summary = document.getElementById('rkEmpSummary');
     if (summary) { summary.innerHTML = ''; summary.style.display = 'none'; summary.setAttribute('aria-hidden', 'true'); }
     var addButton = document.getElementById('rkEmpAdd');
-    if (addButton) addButton.style.display = isSuperAdminRole() ? '' : 'none';
+    if (addButton) addButton.style.display = isSuperAdminRole() ? 'inline-flex' : 'none';
     if (!list.length) {
       body.innerHTML = '<tr><td colspan="8"><div class="rk-empty">Tidak ada data karyawan yang sesuai.</div></td></tr>';
     } else {
@@ -12656,86 +12706,175 @@ function showHrPlaceholder(title, group, description) {
     }
     loadCutiData(false);
   }
+  var desktopTimeOffMasterPromise = null;
+  function desktopTimeOffCode(row) {
+    return String(cutiRowValue(row, ['kode','code','time_off_code','policy_code']) || '').trim().toUpperCase();
+  }
+  function renderDesktopTimeOffTypeOptions() {
+    var sel = document.getElementById('rkTorKode');
+    if (!sel) return;
+    var previous = String(sel.value || '').toUpperCase();
+    var rows = Array.isArray(CACHE.masterCuti) ? CACHE.masterCuti : [];
+    if (!rows.length) {
+      var mobileSel = document.getElementById('ctKode');
+      if (mobileSel && mobileSel.options.length > 1) {
+        rows = Array.prototype.slice.call(mobileSel.options).filter(function (o) { return !!o.value; }).map(function (o) {
+          return { kode:o.value, keterangan:String(o.textContent || '').replace(/^\s*[A-Z0-9]+\s*-\s*/, ''), wajibDokumen:o.getAttribute('data-wajib') === '1' };
+        });
+      }
+    }
+    var filtered = rows.filter(function (row) {
+      var code = desktopTimeOffCode(row);
+      if (!code) return false;
+      return timeOffRequestGroup === 'cuti' ? code === 'CT' : code !== 'CT';
+    });
+    sel.innerHTML = '<option value="">Pilih jenis ' + (timeOffRequestGroup === 'cuti' ? 'cuti' : 'izin') + '…</option>';
+    filtered.forEach(function (row) {
+      var code = desktopTimeOffCode(row);
+      var label = String(cutiRowValue(row, ['keterangan','description','name','label','type_name']) || '').trim();
+      var opt = document.createElement('option');
+      opt.value = code;
+      opt.textContent = code + (label ? ' — ' + label : '');
+      opt.setAttribute('data-wajib', row.wajibDokumen || row.wajib_dokumen ? '1' : '');
+      sel.appendChild(opt);
+    });
+    if (Array.prototype.some.call(sel.options, function (o) { return o.value === previous; })) sel.value = previous;
+    else sel.value = '';
+    if (!filtered.length) {
+      var optEmpty = document.createElement('option');
+      optEmpty.value = '';
+      optEmpty.textContent = 'Jenis belum tersedia';
+      optEmpty.disabled = true;
+      sel.appendChild(optEmpty);
+    }
+    updateDesktopTimeOffFormMeta();
+  }
+  function ensureDesktopTimeOffMasters(force) {
+    var now = Date.now();
+    if (Array.isArray(CACHE.masterCuti) && CACHE.masterCuti.length) renderDesktopTimeOffTypeOptions();
+    if (!force && Array.isArray(CACHE.masterCuti) && CACHE.masterCuti.length && now - (CACHE.masterCutiAt || 0) < 6 * 3600 * 1000) return Promise.resolve(CACHE.masterCuti);
+    if (desktopTimeOffMasterPromise) return desktopTimeOffMasterPromise;
+    desktopTimeOffMasterPromise = Promise.resolve(RHMediaCache && RHMediaCache.kvGet ? RHMediaCache.kvGet('masterCuti') : null).catch(function () { return null; }).then(function (cached) {
+      if ((!Array.isArray(CACHE.masterCuti) || !CACHE.masterCuti.length) && cached && Array.isArray(cached.list)) {
+        CACHE.masterCuti = cached.list;
+        CACHE.masterCutiAt = cached.at || 0;
+        renderDesktopTimeOffTypeOptions();
+      }
+      if (!force && Array.isArray(CACHE.masterCuti) && CACHE.masterCuti.length && Date.now() - (CACHE.masterCutiAt || 0) < 6 * 3600 * 1000) return CACHE.masterCuti;
+      return api('getMasterCuti', [], 20000).then(function (rows) {
+        CACHE.masterCuti = Array.isArray(rows) ? rows : [];
+        CACHE.masterCutiAt = Date.now();
+        if (RHMediaCache && RHMediaCache.kvSet) RHMediaCache.kvSet('masterCuti', { list:CACHE.masterCuti, at:CACHE.masterCutiAt, release:(document.querySelector('meta[name="app-release"]') || {}).content || '' }).catch(function () {});
+        renderDesktopTimeOffTypeOptions();
+        return CACHE.masterCuti;
+      });
+    }).catch(function (e) {
+      console.warn('[ReHolz] Desktop Time Off types could not be refreshed:', e && e.message || e);
+      renderDesktopTimeOffTypeOptions();
+      return CACHE.masterCuti || [];
+    }).then(function (rows) {
+      desktopTimeOffMasterPromise = null;
+      return rows;
+    }, function (e) {
+      desktopTimeOffMasterPromise = null;
+      throw e;
+    });
+    return desktopTimeOffMasterPromise;
+  }
+  function updateDesktopTimeOffFormMeta() {
+    var sel = document.getElementById('rkTorKode');
+    var notice = document.getElementById('rkTorH7Notice');
+    var remaining = document.getElementById('rkTorRemaining');
+    var btn = document.getElementById('rkTorSubmit');
+    var code = String(sel && sel.value || '').toUpperCase();
+    if (notice) notice.style.display = code && isH7Timeoff(code) ? 'block' : 'none';
+    if (remaining) {
+      remaining.style.display = code === 'CT' ? 'block' : 'none';
+      if (code === 'CT') remaining.innerHTML = 'Sisa cuti tahunan Anda: <b>' + escH(S.sisaCT != null ? S.sisaCT : '—') + ' hari</b>';
+    }
+    if (btn) btn.textContent = timeOffRequestGroup === 'cuti' ? 'Ajukan Cuti' : 'Ajukan Izin';
+  }
+  function resetDesktopTimeOffForm() {
+    ['rkTorKode','rkTorStart','rkTorEnd','rkTorReason','rkTorDelegate','rkTorFile'].forEach(function (id) {
+      var el = document.getElementById(id); if (el) el.value = '';
+    });
+    updateDesktopTimeOffFormMeta();
+  }
+  function submitDesktopTimeOffRequest() {
+    if (isAdminReadOnly()) { toast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
+    if (!S.user || !S.user.nik) { toast('Sesi pengguna tidak tersedia. Silakan login kembali.'); return; }
+    var codeEl = document.getElementById('rkTorKode');
+    var startEl = document.getElementById('rkTorStart');
+    var endEl = document.getElementById('rkTorEnd');
+    var reasonEl = document.getElementById('rkTorReason');
+    var delegateEl = document.getElementById('rkTorDelegate');
+    var fileEl = document.getElementById('rkTorFile');
+    var btn = document.getElementById('rkTorSubmit');
+    var kode = String(codeEl && codeEl.value || '').trim().toUpperCase();
+    var mulai = String(startEl && startEl.value || '').trim();
+    var selesai = String(endEl && endEl.value || '').trim();
+    var alasan = String(reasonEl && reasonEl.value || '').trim();
+    if (!kode || (timeOffRequestGroup === 'cuti' ? kode !== 'CT' : kode === 'CT')) { toast('Pilih jenis pengajuan sesuai menu yang dibuka.'); return; }
+    if (!mulai || !selesai || !alasan) { toast('Lengkapi jenis, tanggal mulai, tanggal selesai, dan alasan.'); return; }
+    if (selesai < mulai) { toast('Tanggal selesai tidak boleh lebih awal dari tanggal mulai.'); return; }
+    if (isH7Timeoff(kode) && daysBetweenISO(mulai, jakartaTodayISO()) < 7) { toast('Jenis pengajuan ini harus diajukan minimal 7 hari sebelumnya.'); return; }
+    var file = fileEl && fileEl.files && fileEl.files[0] ? fileEl.files[0] : null;
+    var oldText = btn ? btn.textContent : '';
+    function send(doc) {
+      if (btn) { btn.disabled = true; btn.textContent = 'Mengirim…'; }
+      return api('submitCuti', [{ nik:S.user.nik, kode:kode, tanggalMulai:mulai, tanggalSelesai:selesai, alasan:alasan, dokumen:doc, delegateTo:delegateEl ? (delegateEl.value || '') : '' }], 40000).then(function (r) {
+        toast((r && r.message) || 'Pengajuan berhasil dikirim.');
+        resetDesktopTimeOffForm();
+        if (S.approver && typeof refreshPending === 'function') refreshPending();
+        if (typeof refreshBadge === 'function') refreshBadge();
+        return r;
+      }).catch(function (e) {
+        if (!(e && e.message === 'STALE')) toast((e && e.message) || 'Pengajuan gagal dikirim. Silakan coba kembali.');
+        throw e;
+      }).finally(function () {
+        if (btn) { btn.disabled = false; btn.textContent = oldText || (timeOffRequestGroup === 'cuti' ? 'Ajukan Cuti' : 'Ajukan Izin'); }
+      });
+    }
+    if (!file) { send(null).catch(function () {}); return; }
+    var reader = new FileReader();
+    reader.onload = function (ev) { send(ev && ev.target ? ev.target.result : null).catch(function () {}); };
+    reader.onerror = function () { toast('Lampiran gagal dibaca. Coba pilih ulang file atau lanjut tanpa lampiran.'); };
+    reader.readAsDataURL(file);
+  }
   function renderTimeOffRequestPage(group) {
     if (group === 'cuti' || group === 'izin') timeOffRequestGroup = group;
     var el = document.getElementById('rkp-timeoffRequest');
     if (!el) return;
-    if (!el.dataset.built) {
-      el.dataset.built = '1';
+    if (el.dataset.formBuilt !== '1') {
+      el.dataset.formBuilt = '1';
       el.innerHTML =
-        '<div class="rk-toolbar rk-timeoff-toolbar">' +
-          '<select class="rk-in" id="rkTimeReqYear" aria-label="Tahun"></select>' +
-          '<select class="rk-in" id="rkTimeReqStatus" aria-label="Filter status"><option value="">Semua status</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Pending">Pending</option></select>' +
-          '<input class="rk-in" id="rkTimeReqQ" placeholder="Cari nama karyawan / NIK..." aria-label="Cari nama karyawan atau NIK" style="width:230px">' +
-          '<span style="flex:1"></span>' +
-          '<button class="rk-btn ghost" id="rkTimeReqReload" type="button">↻ Muat Ulang</button>' +
-        '</div>' +
-        '<div class="rk-card rk-cuti-recap-card"><div class="rk-card-sub" id="rkTimeReqSub">Memuat pengajuan...</div>' +
-        '<div class="rk-table-wrap"><table class="rk-table rk-timeoff-table"><thead><tr>' +
-          '<th>Employee name</th><th>Request ID</th><th>Requested date</th><th>Policy</th><th>Time off date</th><th>Status</th><th>Actions</th>' +
-        '</tr></thead><tbody id="rkTimeReqBody"><tr><td colspan="7"><div class="rk-loading">Memuat pengajuan...</div></td></tr></tbody></table></div></div>';
-      yearOptions('rkTimeReqYear', cutiUI.y);
-      document.getElementById('rkTimeReqYear').addEventListener('change', function () {
-        cutiUI.y = +this.value; cutiUI.data = null; cutiUI.dataYear = 0; loadCutiData(true);
-      });
-      document.getElementById('rkTimeReqStatus').addEventListener('change', function () { timeOffRequestUI.status = this.value; paintTimeOffRequestPage(); });
-      document.getElementById('rkTimeReqQ').addEventListener('input', function () { timeOffRequestUI.q = this.value; paintTimeOffRequestPage(); });
-      document.getElementById('rkTimeReqReload').addEventListener('click', function () { cutiUI.data = null; loadCutiData(true); });
-      document.getElementById('rkTimeReqBody').addEventListener('click', function (ev) {
-        var action = ev.target.closest ? ev.target.closest('[data-tor-open-detail]') : null;
-        if (action) { ev.preventDefault(); openDesktopCutiDetail(action.getAttribute('data-tor-open-detail')); return; }
-        var attachment = ev.target.closest ? ev.target.closest('[data-tor-open-attachment]') : null;
-        if (attachment) { ev.preventDefault(); openDesktopCutiDetail(attachment.getAttribute('data-tor-open-attachment')); }
-      });
+        '<div class="rk-tor-page">' +
+          '<div class="rk-tor-heading"><div><div class="rk-tor-eyebrow">TIME OFF REQUEST</div><h2 id="rkTorHeading">Pengajuan Cuti Karyawan</h2></div><span class="rk-tor-code-pill" id="rkTorCategoryPill">CT</span></div>' +
+          '<div class="rk-tor-card"><div class="rk-tor-form-grid">' +
+            '<div class="rk-tor-field"><label for="rkTorKode">Jenis pengajuan *</label><select class="rk-in" id="rkTorKode" required><option value="">Memuat jenis pengajuan…</option></select><div id="rkTorH7Notice" class="rk-tor-h7" style="display:none">Pengajuan jenis ini harus diajukan minimal 7 hari sebelumnya.</div></div>' +
+            '<div class="rk-tor-field"><label for="rkTorDelegate">Delegate to (opsional)</label><select class="rk-in" id="rkTorDelegate"><option value="">Tidak ada delegasi</option></select></div>' +
+            '<div class="rk-tor-remaining" id="rkTorRemaining" style="display:none"></div>' +
+            '<div class="rk-tor-field"><label for="rkTorStart">Tanggal mulai *</label><input class="rk-in" id="rkTorStart" type="date" required></div>' +
+            '<div class="rk-tor-field"><label for="rkTorEnd">Tanggal selesai *</label><input class="rk-in" id="rkTorEnd" type="date" required></div>' +
+            '<div class="rk-tor-field rk-tor-full"><label for="rkTorReason">Alasan *</label><textarea class="rk-in" id="rkTorReason" rows="4" required></textarea></div>' +
+            '<div class="rk-tor-field rk-tor-full"><label for="rkTorFile">Lampiran (opsional)</label><input class="rk-in" id="rkTorFile" type="file" accept="image/*,.pdf,application/pdf"></div>' +
+          '</div><div class="rk-tor-footer"><span class="rk-tor-footnote">Kolom bertanda * wajib diisi.</span><button class="rk-btn" id="rkTorSubmit" type="button">Ajukan Cuti</button></div></div>' +
+        '</div>';
+      document.getElementById('rkTorKode').addEventListener('change', updateDesktopTimeOffFormMeta);
+      document.getElementById('rkTorSubmit').addEventListener('click', submitDesktopTimeOffRequest);
     }
-    var heading = el.querySelector('#rkTimeReqSub');
-    if (heading) heading.textContent = timeOffRequestGroup === 'izin'
-      ? 'Jenis izin: ITB, SSD, STD, DLKA1, DLKA2, DLKA3, dan DLKA4.'
-      : 'Semua jenis pengajuan selain ITB, SSD, STD, dan DLKA1–DLKA4.';
-    var year = document.getElementById('rkTimeReqYear'); if (year) year.value = String(cutiUI.y);
-    var status = document.getElementById('rkTimeReqStatus'); if (status) status.value = timeOffRequestUI.status;
-    var q = document.getElementById('rkTimeReqQ'); if (q) q.value = timeOffRequestUI.q;
-    paintTimeOffRequestPage();
-    loadCutiData(false);
-  }
-
-  function paintTimeOffRequestPage() {
-    var body = document.getElementById('rkTimeReqBody');
-    if (!body) return;
-    var q = String(timeOffRequestUI.q || '').toLowerCase().trim();
-    var list = (cutiUI.data || []).filter(function (x) {
-      if (timeOffCategory(x) !== timeOffRequestGroup) return false;
-      if (timeOffRequestUI.status && desktopCutiStatusName(x) !== timeOffRequestUI.status) return false;
-      if (q && String(x.nama || '').toLowerCase().indexOf(q) < 0 && String(x.nik || '').toLowerCase().indexOf(q) < 0) return false;
-      return true;
-    });
-    if (!list.length) {
-      var msg = cutiUI.data && cutiUI.data.length ? 'Tidak ada pengajuan yang sesuai dengan kategori atau filter ini.' : 'Memuat atau belum ada data pengajuan.';
-      body.innerHTML = '<tr><td colspan="7"><div class="rk-empty">' + escH(msg) + '</div></td></tr>';
-      return;
-    }
-    body.innerHTML = list.map(function (x) {
-      var nik = String(x.nik || '').trim();
-      var person = empFind(nik) || empNormalize({ employee_id: nik, nama: x.nama || '', organization: '' });
-      var subtitle = [nik, person.job_position || person.posisi || ''].filter(Boolean).join(' | ');
-      var policy = String(x.keterangan || x.kode || '—');
-      var status = desktopCutiOverallStatus(x);
-      var requested = desktopCutiRequestedDate(x.waktuPengajuan);
-      var dateText = empDateText(x.tanggalMulai) || '—';
-      if (x.tanggalSelesai && x.tanggalSelesai !== x.tanggalMulai) dateText += ' – ' + (empDateText(x.tanggalSelesai) || '—');
-      var daysText = x.totalHari != null ? (x.totalHari + (Number(x.totalHari) === 1 ? ' day' : ' days')) : '';
-      var attachment = cutiAttachmentValue(x) ? '<small class="rk-timeoff-attachment"><button type="button" class="rk-cuti-file-link" data-tor-open-attachment="' + escH(x.id) + '">View attachment</button></small>' : '';
-      return '<tr>' +
-        '<td><div class="rk-cuti-person">' + empAvatarMarkup(person, false) + '<span><b>' + escH(x.nama || person.nama || '—') + '</b><small>' + escH(subtitle || '—') + '</small></span></div></td>' +
-        '<td class="rk-timeoff-request-id">' + escH(x.id || '—') + '</td>' +
-        '<td>' + escH(requested || '—') + '</td>' +
-        '<td><span>' + escH(policy) + '</span>' + (x.kode && x.kode !== policy ? '<small class="rk-timeoff-subline">' + escH(x.kode) + '</small>' : '') + '</td>' +
-        '<td><span>' + escH(dateText) + '</span>' + (daysText ? '<small class="rk-timeoff-subline">' + escH(daysText) + '</small>' : '') + attachment + '</td>' +
-        '<td>' + status + '</td>' +
-        '<td><button type="button" class="rk-btn ghost rk-timeoff-actions" data-tor-open-detail="' + escH(x.id) + '">Actions <span aria-hidden="true">▾</span></button></td>' +
-      '</tr>';
-    }).join('');
-    try { hydrateDesktopEmployeeFaces(body); } catch (_) {}
+    var heading = document.getElementById('rkTorHeading');
+    var pill = document.getElementById('rkTorCategoryPill');
+    if (heading) heading.textContent = timeOffRequestGroup === 'cuti' ? 'Pengajuan Cuti Karyawan' : 'Pengajuan Izin Karyawan';
+    if (pill) pill.textContent = timeOffRequestGroup === 'cuti' ? 'CT' : 'IZIN';
+    renderDesktopTimeOffTypeOptions();
+    updateDesktopTimeOffFormMeta();
+    ensureDesktopTimeOffMasters(false);
+    if (typeof loadDelegateOptions === 'function') loadDelegateOptions(false);
+    else if (typeof renderDelegateOptions === 'function') renderDelegateOptions();
+    var existingCode = document.getElementById('rkTorKode');
+    if (existingCode && existingCode.value && (timeOffRequestGroup === 'cuti' ? existingCode.value !== 'CT' : existingCode.value === 'CT')) existingCode.value = '';
+    updateDesktopTimeOffFormMeta();
   }
 
   function cutiRowValue(row, keys) {
@@ -12848,7 +12987,7 @@ function showHrPlaceholder(title, group, description) {
   function loadCutiData(force) {
     var body = document.getElementById('rkCutiBody');
     if (!force && cutiUI.data && cutiUI.dataYear === cutiUI.y) {
-      paintCuti(); paintTimeOffRequestPage(); return Promise.resolve(cutiUI.data);
+      paintCuti(); return Promise.resolve(cutiUI.data);
     }
     if (body) body.innerHTML = '<tr><td colspan="7"><div class="rk-loading">Memuat data time off…</div></td></tr>';
     var req = Promise.all([
@@ -12861,15 +13000,12 @@ function showHrPlaceholder(title, group, description) {
       cutiUI.dataYear = cutiUI.y; cutiUI.fallback = !baseRows;
       if (!baseRows && !queue.length) {
         if (body) body.innerHTML = '<tr><td colspan="7"><div class="rk-empty">Data Time Off belum dapat dimuat. Periksa akses daftar HR dan antrean persetujuan.</div></td></tr>';
-        paintTimeOffRequestPage();
         return cutiUI.data;
       }
-      paintCuti(); paintTimeOffRequestPage();
+      paintCuti();
       return cutiUI.data;
     }).catch(function(e){
       if (body) body.innerHTML = '<tr><td colspan="7"><div class="rk-empty">Gagal memuat data: ' + escH(e && e.message || e) + '</div></td></tr>';
-      var torBody = document.getElementById('rkTimeReqBody');
-      if (torBody) torBody.innerHTML = '<tr><td colspan="7"><div class="rk-empty">Gagal memuat data: ' + escH(e && e.message || e) + '</div></td></tr>';
       return cutiUI.data || [];
     });
     return req;
