@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.8.3.6-desktop-timeoff-form-centered-actions">
+<meta name="app-release" content="v13.8.3.9-employee-directory-job-code-sort">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -2640,8 +2640,9 @@ input, select, textarea {
 </style>
 
 <style id="rh-v11-grid-styles">
-#rhDesk .rk-att-monitor-table th[data-att-sort],#rhDesk .rk-att-summary-table th[data-summary-sort]{cursor:pointer;user-select:none;white-space:nowrap;}
+#rhDesk .rk-att-monitor-table th[data-att-sort],#rhDesk .rk-att-summary-table th[data-summary-sort],#rhDesk .rk-employee-directory th[data-emp-sort]{cursor:pointer;user-select:none;white-space:nowrap;}
 #rhDesk .rk-att-monitor-table th[data-att-sort]:hover,#rhDesk .rk-att-summary-table th[data-summary-sort]:hover{background:#e8f3ec;}
+#rhDesk .rk-employee-directory th[data-emp-sort]:hover{background:#e8f3ec !important;}
 #rhDesk .rk-att-monitor-table .rk-att-outside{display:inline-block;margin-top:3px;padding:2px 5px;border-radius:5px;background:#fff2dc;color:#8a4b08;font-size:10px;font-weight:700;}
 #rhDesk .rk-readonly-admin-note{margin:8px 0;padding:10px 12px;border-radius:10px;background:#f3f6f4;color:#516258;font-size:12px;}
 </style>
@@ -7788,10 +7789,15 @@ function renderKarList(q) {
     var btns = x.akun === 'AKTIF'
       ? '<button class="btn btn-ghost" style="padding:6px 10px;font-size:11px;color:#8F4232;border-color:#F5E5E2" onclick="karDeactivate(\'' + esc(x.nik) + '\')">Deactivate</button>'
       : '<button class="btn btn-blue" style="padding:6px 10px;font-size:11px" onclick="karReactivate(\'' + esc(x.nik) + '\')">Activate</button>';
-    var actionsHtml = isAdminReadOnly() ? '' : '<div class="admin-actions" style="margin-top:8px"><button class="btn btn-blue" style="padding:6px 10px;font-size:11px" onclick="karOpenEdit(\'' + esc(x.nik) + '\')">✏️ Edit</button>' + btns + '<button class="btn btn-ghost" style="padding:6px 10px;font-size:11px" onclick="karResetPin(\'' + esc(x.nik) + '\')">🔑 Reset PIN</button></div>';
+    var canUploadEmployeePhoto = !!(S.user && String(S.user.role || '').toUpperCase() === 'SUPERADMIN' && x.akun === 'AKTIF');
+    var photoAction = canUploadEmployeePhoto ? '<button type="button" class="btn btn-ghost" style="padding:6px 10px;font-size:11px" data-managed-photo-nik="' + esc(x.nik) + '" data-managed-photo-name="' + esc(x.nama) + '">📷 Upload / Ganti Foto</button>' : '';
+    var actionsHtml = isAdminReadOnly() ? '' : '<div class="admin-actions" style="margin-top:8px"><button class="btn btn-blue" style="padding:6px 10px;font-size:11px" onclick="karOpenEdit(\'' + esc(x.nik) + '\')">✏️ Edit</button>' + photoAction + btns + '<button class="btn btn-ghost" style="padding:6px 10px;font-size:11px" onclick="karResetPin(\'' + esc(x.nik) + '\')">🔑 Reset PIN</button></div>';
     html += '<div class="req-item"><div class="req-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaInner(x.nik, x.nama, x.faceVer) + '</div><div class="req-body"><b role="button" tabindex="0" style="cursor:pointer" onclick="karOpenDetail(\'' + esc(x.nik) + '\')" onkeydown="if(event.key==&quot;Enter&quot;||event.key==&quot; &quot;)karOpenDetail(\'' + esc(x.nik) + '\')">' + esc(x.nama) + '</b><div class="sub">' + esc(x.nik) + ' • ' + esc(x.org || '-') + '</div><div style="font-size:12.5px;color:var(--txt-muted)">' + esc(x.posisi || '-') + ' • ' + esc(x.branch || '-') + '</div>' + pill + actionsHtml + '</div></div>';
   });
   $('karList').innerHTML = html;
+  Array.prototype.forEach.call($('karList').querySelectorAll('[data-managed-photo-nik]'), function (button) {
+    button.addEventListener('click', function () { pickManagedEmployeePhoto(button.getAttribute('data-managed-photo-nik'), button.getAttribute('data-managed-photo-name')); });
+  });
   hydrateFaces();
 }
 
@@ -8793,6 +8799,93 @@ async function changeProfileFaceByUpload(input) {
     if (currentScr() === 's-att') updateFaceState();
   }
 }
+
+var RH_MANAGED_PHOTO_TARGET = null;
+var RH_MANAGED_PHOTO_BUSY = false;
+function pickManagedEmployeePhoto(nik, nama) {
+  if (!S.user || String(S.user.role || '').toUpperCase() !== 'SUPERADMIN') {
+    toast('Hanya Superadmin yang dapat mengubah foto karyawan.'); return;
+  }
+  if (!navigator.onLine) { toast('Koneksi internet diperlukan untuk mengubah foto karyawan.'); return; }
+  if (!String(nik || '').trim()) { toast('ID karyawan tidak valid.'); return; }
+  var input = document.getElementById('rhManagedEmployeePhotoInput');
+  if (!input) {
+    input = document.createElement('input');
+    input.type = 'file'; input.id = 'rhManagedEmployeePhotoInput';
+    input.accept = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp'; input.hidden = true;
+    input.addEventListener('change', function () {
+      if (!input.files || !input.files.length) { RH_MANAGED_PHOTO_TARGET = null; return; }
+      saveManagedEmployeePhoto(input);
+    });
+    document.body.appendChild(input);
+  }
+  RH_MANAGED_PHOTO_TARGET = { nik: String(nik).trim(), nama: String(nama || nik).trim() };
+  input.value = '';
+  input.click();
+}
+async function saveManagedEmployeePhoto(input) {
+  var file = input && input.files && input.files[0];
+  var target = RH_MANAGED_PHOTO_TARGET;
+  if (input) input.value = '';
+  if (!file || !target) { RH_MANAGED_PHOTO_TARGET = null; return; }
+  if (!S.user || String(S.user.role || '').toUpperCase() !== 'SUPERADMIN') {
+    RH_MANAGED_PHOTO_TARGET = null; toast('Hanya Superadmin yang dapat mengubah foto karyawan.'); return;
+  }
+  if (RH_MANAGED_PHOTO_BUSY) { RH_MANAGED_PHOTO_TARGET = null; toast('Pengunggahan foto lain masih berlangsung.'); return; }
+  if (!navigator.onLine) { RH_MANAGED_PHOTO_TARGET = null; toast('Koneksi internet diperlukan. Foto belum disimpan.'); return; }
+  if (!/^image\/(jpeg|png|webp)$/i.test(file.type || '')) { RH_MANAGED_PHOTO_TARGET = null; toast('Gunakan foto JPG, PNG, atau WebP.'); return; }
+  if (file.size > 8 * 1024 * 1024) { RH_MANAGED_PHOTO_TARGET = null; toast('Ukuran foto maksimal 8 MB.'); return; }
+  RH_MANAGED_PHOTO_BUSY = true;
+  try {
+    if (!confirm('Simpan atau ganti foto profil/Face ID untuk ' + target.nama + '? Foto referensi lama akan diganti. Ini tidak otomatis memberikan izin Face ID.')) return;
+    toast('Memeriksa foto karyawan…');
+    await ensureNets();
+    var source = await new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(String(reader.result || '')); };
+      reader.onerror = function () { reject(new Error('Foto tidak dapat dibaca.')); };
+      reader.readAsDataURL(file);
+    });
+    var img = await new Promise(function (resolve, reject) {
+      var im = new Image();
+      im.onload = function () { resolve(im); };
+      im.onerror = function () { reject(new Error('File foto tidak dapat dibuka.')); };
+      im.src = source;
+    });
+    if ((img.naturalWidth || img.width) < 160 || (img.naturalHeight || img.height) < 160) throw new Error('Resolusi foto terlalu rendah. Gunakan foto yang lebih jelas.');
+    var detected = await faceapi.detectAllFaces(img, new faceapi.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 })).withFaceLandmarks().withFaceDescriptors();
+    if (!detected || detected.length !== 1) throw new Error(detected && detected.length > 1 ? 'Foto harus berisi tepat satu wajah.' : 'Wajah tidak terdeteksi. Gunakan foto wajah yang jelas dan menghadap kamera.');
+    var descriptor = Array.from(detected[0].descriptor || []);
+    if (descriptor.length !== 128) throw new Error('Data pengenal wajah tidak valid.');
+    // Compress like the existing profile-photo flow before sending it to the existing API.
+    var scale = Math.min(1, 480 / Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height));
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+    canvas.height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+    var ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Browser tidak dapat memproses gambar.');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    var photo = canvas.toDataURL('image/jpeg', 0.76);
+    var saved = await api('hrSaveFaceReference', [{ nik: target.nik, descriptor: descriptor, photo: photo }], 45000);
+    if (saved && (saved.ok === false || saved.success === false)) throw new Error(saved.message || 'Server tidak menyimpan foto.');
+    try { await RHMediaCache.invalidate(target.nik); } catch (e) {}
+    try { if (DATA && DATA.faceVer) delete DATA.faceVer[target.nik]; } catch (e) {}
+    try {
+      if (window.RHDeskApi && typeof window.RHDeskApi.refreshEmployeePhoto === 'function') await window.RHDeskApi.refreshEmployeePhoto();
+    } catch (e) {}
+    try {
+      if (typeof currentScr === 'function' && currentScr() === 's-kar' && typeof loadKaryawanMgr === 'function') await loadKaryawanMgr(true);
+    } catch (e) {}
+    toast((saved && saved.message) || 'Foto karyawan berhasil diperbarui.');
+  } catch (e) {
+    if (e && e.message === 'STALE') return;
+    toast('❌ ' + (e && e.message || 'Foto karyawan gagal disimpan.'));
+  } finally {
+    RH_MANAGED_PHOTO_BUSY = false;
+    RH_MANAGED_PHOTO_TARGET = null;
+  }
+}
+window.pickManagedEmployeePhoto = pickManagedEmployeePhoto;
 
 function showReleaseGate(message) {
   var gate = document.getElementById('rhReleaseGate');
@@ -10185,7 +10278,7 @@ function showHrPlaceholder(title, group, description) {
     changepin: ['Ubah PIN', 'Perbarui PIN akun']
   };
   var cur = 'dash';
-  var empUI = { q: '', org: '', st: '', fullList: [], directoryError: '', selected: null, detailTab: 'personal', personalTab: 'basic', relationTab: 'approval', detailExtraByNik: Object.create(null), detailExtraLoadedByNik: Object.create(null), detailExtraLoadingByNik: Object.create(null), cacheAt: 0, loading: false };
+  var empUI = { q: '', org: '', st: '', sortKey: '', sortDir: 'asc', fullList: [], directoryError: '', selected: null, detailTab: 'personal', personalTab: 'basic', relationTab: 'approval', detailExtraByNik: Object.create(null), detailExtraLoadedByNik: Object.create(null), detailExtraLoadingByNik: Object.create(null), cacheAt: 0, loading: false };
   var attUI = { nik: '', y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
   var dashCache = { at: 0, employeeList: null };
   var aprCache = { at: 0, absensi: [], cuti: [] };
@@ -11053,9 +11146,27 @@ function showHrPlaceholder(title, group, description) {
         '<div id="rkEmpNotice" style="display:none;margin:0 0 12px"></div>' +
         '<div class="rk-chipbar" id="rkEmpSummary" style="display:none" aria-hidden="true"></div>' +
         '<div class="rk-table-wrap rk-employee-directory-wrap"><table class="rk-table rk-employee-directory"><thead><tr>' +
-          '<th>Nama Karyawan</th><th>NIK</th><th>Organisasi</th><th>Jabatan</th><th>Cabang</th><th>Status</th><th>Face ID</th><th style="min-width:170px">Aksi</th>' +
-        '</tr></thead><tbody id="rkEmpBody"><tr><td colspan="8"><div class="rk-loading">Memuat data karyawan...</div></td></tr></tbody></table></div>' +
+          '<th data-emp-sort="nama" data-sort-label="Nama Karyawan" title="Urutkan berdasarkan Nama Karyawan">Nama Karyawan ↕</th>' +
+          '<th data-emp-sort="nik" data-sort-label="NIK" title="Urutkan berdasarkan NIK">NIK ↕</th>' +
+          '<th data-emp-sort="organization" data-sort-label="Organisasi" title="Urutkan berdasarkan Organisasi">Organisasi ↕</th>' +
+          '<th data-emp-sort="job_position" data-sort-label="Jabatan" title="Urutkan berdasarkan Jabatan">Jabatan ↕</th>' +
+          '<th data-emp-sort="job_code" data-sort-label="Job Code" title="Urutkan berdasarkan Job Code">Job Code ↕</th>' +
+          '<th data-emp-sort="branch" data-sort-label="Cabang" title="Urutkan berdasarkan Cabang">Cabang ↕</th>' +
+          '<th data-emp-sort="status" data-sort-label="Status" title="Urutkan berdasarkan Status">Status ↕</th>' +
+          '<th data-emp-sort="face" data-sort-label="Face ID" title="Urutkan berdasarkan Face ID">Face ID ↕</th>' +
+          '<th style="min-width:170px">Aksi</th>' +
+        '</tr></thead><tbody id="rkEmpBody"><tr><td colspan="9"><div class="rk-loading">Memuat data karyawan...</div></td></tr></tbody></table></div>' +
         '<div class="rk-pager rk-emp-count" id="rkEmpPager" style="display:none" aria-hidden="true"></div>';
+      paintEmpSortHeaders();
+      var empHead = el.querySelector('.rk-employee-directory thead');
+      if (empHead) empHead.addEventListener('click', function (ev) {
+        var th = ev.target.closest ? ev.target.closest('th[data-emp-sort]') : null;
+        if (!th) return;
+        var key = th.getAttribute('data-emp-sort');
+        if (empUI.sortKey === key) empUI.sortDir = empUI.sortDir === 'asc' ? 'desc' : 'asc';
+        else { empUI.sortKey = key; empUI.sortDir = 'asc'; }
+        paintEmpRows();
+      });
       document.getElementById('rkEmpQ').addEventListener('input', function () { empUI.q = this.value; paintEmpRows(); });
       document.getElementById('rkEmpOrg').addEventListener('change', function () { empUI.org = this.value; paintEmpRows(); });
       document.getElementById('rkEmpSt').addEventListener('change', function () { empUI.st = this.value; paintEmpRows(); });
@@ -11098,7 +11209,7 @@ function showHrPlaceholder(title, group, description) {
       empUI.loading = true;
       if (!empUI.fullList.length) {
         var b0 = document.getElementById('rkEmpBody');
-        if (b0) b0.innerHTML = '<tr><td colspan="8"><div class="rk-loading">Memuat data karyawan...</div></td></tr>';
+        if (b0) b0.innerHTML = '<tr><td colspan="9"><div class="rk-loading">Memuat data karyawan...</div></td></tr>';
       }
     }
     return Promise.resolve(ensureKar(!!force)).then(function () {
@@ -11144,9 +11255,47 @@ function showHrPlaceholder(title, group, description) {
       return fields.some(function(v){ return String(v == null ? '' : v).toLowerCase().indexOf(q) >= 0; });
     });
   }
+  function empSortValue(raw, key) {
+    var x = empNormalize(raw);
+    if (key === 'nama') return x.nama;
+    if (key === 'nik') return x.nik;
+    if (key === 'organization') return x.department || x.org;
+    if (key === 'job_position') return x.job_position || x.posisi;
+    if (key === 'job_code') return x.job_code || x.jobCode;
+    if (key === 'branch') return x.branch;
+    if (key === 'status') {
+      var account = String(x.akun || x.status_akun || 'AKTIF').toUpperCase();
+      return /NON|TIDAK|INACTIVE/.test(account) ? 'Tidak Aktif' : 'Aktif';
+    }
+    if (key === 'face') {
+      var faceValue = String(x.face || x.face_registered || x.faceRegistered || '').toUpperCase();
+      var faceReady = faceValue === 'YES' || faceValue === 'TRUE' || faceValue === 'REGISTERED' || x.face_registered === true || x.faceRegistered === true;
+      return faceReady ? 'Terdaftar' : 'Belum';
+    }
+    return '';
+  }
+  function paintEmpSortHeaders() {
+    var heads = document.querySelectorAll('#rkp-emp .rk-employee-directory th[data-emp-sort]');
+    Array.prototype.forEach.call(heads, function (th) {
+      var key = th.getAttribute('data-emp-sort');
+      var label = th.getAttribute('data-sort-label') || th.textContent.replace(/[▲▼↕]/g, '').trim();
+      th.textContent = label + (empUI.sortKey === key ? (empUI.sortDir === 'asc' ? ' ▲' : ' ▼') : ' ↕');
+      th.setAttribute('aria-sort', empUI.sortKey === key ? (empUI.sortDir === 'asc' ? 'ascending' : 'descending') : 'none');
+    });
+  }
   function paintEmpRows() {
     var body = document.getElementById('rkEmpBody'); if (!body) return;
     var list = empFiltered();
+    if (empUI.sortKey) {
+      var sortKey = empUI.sortKey, sortDir = empUI.sortDir === 'desc' ? -1 : 1;
+      list = list.slice().sort(function (a, b) {
+        var av = String(empSortValue(a, sortKey) == null ? '' : empSortValue(a, sortKey)).trim();
+        var bv = String(empSortValue(b, sortKey) == null ? '' : empSortValue(b, sortKey)).trim();
+        var cmp = av.localeCompare(bv, undefined, { numeric: true, sensitivity: 'base' });
+        if (!cmp && sortKey !== 'nama') cmp = String(empSortValue(a, 'nama') || '').localeCompare(String(empSortValue(b, 'nama') || ''), undefined, { sensitivity: 'base' });
+        return cmp * sortDir;
+      });
+    }
     var notice = document.getElementById('rkEmpNotice');
     if (notice) {
       notice.style.display = empUI.directoryError ? '' : 'none';
@@ -11158,7 +11307,7 @@ function showHrPlaceholder(title, group, description) {
     var addButton = document.getElementById('rkEmpAdd');
     if (addButton) addButton.style.display = isSuperAdminRole() ? 'inline-flex' : 'none';
     if (!list.length) {
-      body.innerHTML = '<tr><td colspan="8"><div class="rk-empty">Tidak ada data karyawan yang sesuai.</div></td></tr>';
+      body.innerHTML = '<tr><td colspan="9"><div class="rk-empty">Tidak ada data karyawan yang sesuai.</div></td></tr>';
     } else {
       body.innerHTML = list.map(function (raw) {
         var x = empNormalize(raw), nik = x.nik;
@@ -11180,10 +11329,11 @@ function showHrPlaceholder(title, group, description) {
         var joinText = x.joinDate ? 'Bergabung ' + empDateTextID(x.joinDate) : 'Tanggal bergabung belum tersedia';
         var name = '<td><div class="rk-emp-name rk-emp-name-with-photo">' + empAvatarMarkup(x, false) + '<span><b>' + escH(x.nama || '—') + '</b><small>' + escH(joinText) + '</small></span></div></td>';
         return '<tr class="rk-emp-row" tabindex="0" role="button" data-emp-nik="' + escH(nik) + '" aria-label="Buka detail ' + escH(x.nama) + '">' +
-          name + empCell(nik) + empCell(x.department || x.org || '—') + empCell(x.job_position || x.posisi || '—') + empCell(x.branch || '—') +
+          name + empCell(nik) + empCell(x.department || x.org || '—') + empCell(x.job_position || x.posisi || '—') + empCell(x.job_code || x.jobCode || '—') + empCell(x.branch || '—') +
           '<td>' + statusHtml + '</td><td>' + faceHtml + '</td><td>' + actions + '</td></tr>';
       }).join('');
     }
+    paintEmpSortHeaders();
     try { hydrateDesktopEmployeeFaces(body); } catch (e) {}
     var pg = document.getElementById('rkEmpPager');
     if (pg) { pg.innerHTML = ''; pg.style.display = 'none'; pg.setAttribute('aria-hidden', 'true'); }
@@ -11548,6 +11698,49 @@ function showHrPlaceholder(title, group, description) {
     if (type === 'textarea') return '<div class="rk-emp-edit-field ' + (extra || '') + '"><label for="' + id + '">' + escH(label) + '</label><textarea id="' + id + '" rows="2">' + escH(v) + '</textarea></div>';
     return '<div class="rk-emp-edit-field ' + (extra || '') + '"><label for="' + id + '">' + escH(label) + '</label><input id="' + id + '" type="' + (type || 'text') + '" value="' + escH(type === 'date' ? empDateISO(v) : v) + '"></div>';
   }
+  function empGenderKey(value) {
+    var v = String(value || '').trim().toLowerCase();
+    if (!v) return 'empty';
+    if (/^(belum diisi|not set|n\/a|-)$/i.test(v)) return 'notset';
+    if (v === 'l' || v === 'm' || v === 'male' || v === 'man' || /laki|pria/.test(v)) return 'male';
+    if (v === 'p' || v === 'f' || v === 'female' || v === 'woman' || /perempuan|wanita/.test(v)) return 'female';
+    if (/other|non.?binary|lainnya|lain-lain/.test(v)) return 'other';
+    return 'unknown';
+  }
+  function empGenderSelect(value) {
+    var raw = String(value == null ? '' : value).trim(), key = empGenderKey(raw);
+    var html = '<div class="rk-emp-edit-field"><label for="edGender">Gender</label><select id="edGender">';
+    html += '<option value="' + escH(key === 'notset' ? raw : '') + '"' + ((key === 'empty' || key === 'notset') ? ' selected' : '') + '>' + (key === 'notset' ? escH(raw) : '— Select gender —') + '</option>';
+    [{key:'male',label:'Male',value:'Male'},{key:'female',label:'Female',value:'Female'},{key:'other',label:'Other',value:'Other'}].forEach(function (o) {
+      var selected = key === o.key, optionValue = selected && raw ? raw : o.value;
+      html += '<option value="' + escH(optionValue) + '"' + (selected ? ' selected' : '') + '>' + o.label + '</option>';
+    });
+    if (key === 'unknown') html += '<option value="' + escH(raw) + '" selected>' + escH(raw) + ' (current value)</option>';
+    return html + '</select></div>';
+  }
+  function empEmploymentKey(value) {
+    var v = String(value || '').trim().toLowerCase();
+    if (!v) return 'empty';
+    if (/permanent|permanen|tetap|pkwtt/.test(v)) return 'permanent';
+    if (/contract|kontrak|pkwt/.test(v)) return 'contract';
+    if (/outsourc|alih daya/.test(v)) return 'outsourcing';
+    if (/intern|magang|trainee/.test(v)) return 'intern';
+    return 'unknown';
+  }
+  function empEmploymentStatusSelect(value) {
+    var raw = String(value == null ? '' : value).trim(), key = empEmploymentKey(raw);
+    var options = [{key:'contract',label:'Contract',value:'Contract'},{key:'permanent',label:'Permanent',value:'Permanent'},{key:'outsourcing',label:'Outsourcing',value:'Outsourcing'},{key:'intern',label:'Intern',value:'Intern'}];
+    var html = '<div class="rk-emp-edit-field"><label for="edEmploymentStatus">Employment Status</label><select id="edEmploymentStatus">';
+    html += '<option value=""' + (key === 'empty' ? ' selected' : '') + '>— Select employment status —</option>';
+    options.forEach(function (o) {
+      var selected = key === o.key, optionValue = selected && raw ? raw : o.value;
+      var label = o.label;
+      if (selected && raw && raw.toLowerCase() !== o.value.toLowerCase()) label += ' (' + raw + ')';
+      html += '<option value="' + escH(optionValue) + '"' + (selected ? ' selected' : '') + '>' + escH(label) + '</option>';
+    });
+    if (key === 'unknown') html += '<option value="' + escH(raw) + '" selected>' + escH(raw) + ' (current value)</option>';
+    return html + '</select></div>';
+  }
   function empOpenEditor(nik, mode) {
     if (!isSuperAdminRole()) { rkToast('Akses lihat saja. Hanya Superadmin dapat mengubah data karyawan.'); return; }
     var isAdd = mode === 'add';
@@ -11560,18 +11753,32 @@ function showHrPlaceholder(title, group, description) {
     var roleField = isAdd ? '<div class="rk-emp-edit-field"><label for="edRole">System Role</label><select id="edRole"><option value="KARYAWAN" selected>Employee</option><option value="ADMIN">Administrator</option><option value="SUPERADMIN">Superadmin</option></select></div>' : '';
     shade.innerHTML = '<section class="rk-emp-modal rk-emp-editor-modal" role="dialog" aria-modal="true" aria-labelledby="rkEmpEditorTitle"><header class="rk-emp-modal-head"><div><h2 id="rkEmpEditorTitle">' + (isAdd ? 'Add Employee' : 'Edit Employee Profile') + '</h2><p>' + (isAdd ? 'Create an employee record' : escH(x.nama) + ' · ' + escH(x.nik)) + '</p></div><button class="rk-emp-modal-close" type="button" data-emp-edit-close aria-label="Close">×</button></header><div class="rk-emp-modal-content">' +
       '<div class="rk-emp-form-section"><h3>Employment Information</h3><div class="rk-emp-edit-grid">' +
-      empEditorField('Employee ID (NIK)','edNik',x.nik,'text','') + empEditorField('Full Name','edName',x.nama,'text','') + empEditorField('Department','edDepartment',x.department,'text','') + '<div class="rk-emp-edit-field"><label for="edBranch">Branch (attendance schedule)</label><select id="edBranch">'+(isAdd?'<option value="" selected>Select branch</option>':'')+profileBranchOptions(x.branch,false)+'</select></div>' +
+      empEditorField('Employee ID (NIK)','edNik',x.nik,'text','') + empEditorField('Full Name','edName',x.nama,'text','') + empEditorField('Department','edDepartment',x.department,'text','') + '<div class="rk-emp-edit-field"><label for="edBranch">Branch (attendance schedule)</label><select id="edBranch">'+(isAdd?'<option value="" selected>Select branch</option>':'')+profileBranchOptions(x.branch,false,true)+'</select></div>' +
       empEditorField('Job Level','edJobLevel',x.job_level,'text','') + empEditorField('Job Position','edJobPosition',x.job_position,'text','') + empEditorField('Job Code','edJobCode',x.jobCode,'text','') + empEditorField('Grade','edGrade',x.grade,'text','') + empEditorField('Class','edClass',x.class,'text','') +
-      '<div class="rk-emp-edit-field"><label for="edEmploymentStatus">Employment Status</label><select id="edEmploymentStatus">' + ['Contract','Permanent','Outsourcing','Intern'].map(function(v){return '<option'+(String(x.employment_status).toLowerCase()===v.toLowerCase()?' selected':'')+'>'+v+'</option>';}).join('') + '</select></div>' + roleField +
+      empEmploymentStatusSelect(x.employment_status) + roleField +
       '<div class="rk-emp-edit-field"><label for="edManager">Manager / Approval Line</label><select id="edManager">' + managerOptions + '</select></div>' +
       empEditorField('Join Date','edJoinDate',x.joinDate,'date','') + empEditorField('Transfer Date','edTransferDate',x.transferDate,'date','') + empEditorField('Contract Start Date','edContractStart',x.contractStartDate,'date','') + empEditorField('Contract End Date','edContractEnd',x.contractEndDate,'date','') +
-      '</div></div><div class="rk-emp-form-section"><h3>Personal Information</h3><div class="rk-emp-edit-grid">' +
+      '</div></div>' + (!isAdd && String(x.akun || '').toUpperCase() === 'AKTIF' ? '<div class="rk-emp-form-section"><h3>Employee Photo</h3><div class="rk-emp-photo-editor"><div data-emp-photo-preview>' + empAvatarMarkup(x, true) + '</div><div><p>Upload foto baru atau ganti foto saat ini. Gunakan satu wajah yang terlihat jelas, seperti alur foto profil.</p><button type="button" class="rk-btn ghost" data-emp-photo-pick>📷 Upload / Replace Photo</button></div></div></div>' : '') + '<div class="rk-emp-form-section"><h3>Personal Information</h3><div class="rk-emp-edit-grid">' +
       empEditorField('National ID Number (KTP)','edKtp',x.ktpNumber,'text','') + empEditorField('Place of Birth','edBirthPlace',x.placeOfBirth,'text','') + empEditorField('Date of Birth','edBirthDate',x.birthDate,'date','') + empEditorField('Phone Number','edPhone',x.phone,'text','') + empEditorField('Email','edEmail',x.email,'email','') +
-      empEditorField('Education','edEducation',x.education,'text','') + empEditorField('Gender','edGender',x.gender,'text','') + empEditorField('Religion','edReligion',x.religion,'text','') + empEditorField('Marital Status','edMaritalStatus',x.maritalStatus,'text','') +
+      empEditorField('Education','edEducation',x.education,'text','') + empGenderSelect(x.gender) + empEditorField('Religion','edReligion',x.religion,'text','') + empEditorField('Marital Status','edMaritalStatus',x.maritalStatus,'text','') +
       empEditorField('Address','edAddress',x.address,'textarea','full') + empEditorField('NPWP','edNpwp',x.npwp,'text','') + empEditorField('BPJS Kesehatan','edBpjsHealth',x.bpjsKesehatan,'text','') + empEditorField('BPJS Ketenagakerjaan','edBpjsWork',x.bpjsKetenagakerjaan,'text','') + empEditorField('Bank Name','edBankName',x.bankName,'text','') + empEditorField('Bank Account','edBankAccount',x.bankAccount,'text','') +
       '</div></div><div class="rk-emp-editor-actions"><button type="button" class="rk-btn ghost" data-emp-edit-close>Cancel</button><button type="button" class="rk-btn" data-emp-edit-save>' + (isAdd ? 'Create Employee' : 'Save Changes') + '</button></div><div id="rkEmpEditMsg" class="rk-emp-edit-message"></div></div></section>';
     var idInput = document.getElementById('edNik'); if (idInput) idInput.readOnly = !isAdd;
     shade.classList.add('on'); shade.dataset.employeeId=x.nik; shade.dataset.mode = isAdd ? 'add' : 'edit'; shade.dataset.created = '0';
+    var photoPick = shade.querySelector('[data-emp-photo-pick]');
+    if (photoPick) photoPick.addEventListener('click', function () {
+      if (!isSuperAdminRole()) { rkToast('Akses ditolak. Hanya Superadmin dapat mengubah foto.'); return; }
+      if (window.pickManagedEmployeePhoto) window.pickManagedEmployeePhoto(x.nik, x.nama);
+    });
+    // Load live branch/location values on open, retaining the user's current selection.
+    api('getLokasiKantor', [], 20000).then(function (r) {
+      var rows = r && Array.isArray(r.list) ? r.list : null;
+      if (!rows || !shade.classList.contains('on') || shade.dataset.employeeId !== String(x.nik || '') || (shade.dataset.mode || '') !== (isAdd ? 'add' : 'edit')) return;
+      RK_DESK_BRANCH_CACHE = rows.filter(function (row) { return row && row.branch && String(row.status || 'AKTIF').toUpperCase() === 'AKTIF'; }).map(function (row) { return String(row.branch).trim(); }).filter(Boolean);
+      RK_DESK_BRANCH_CACHE_LOADED = true;
+      var branchSelect = shade.querySelector('#edBranch');
+      if (branchSelect) { var keep = branchSelect.value; branchSelect.innerHTML = (isAdd ? '<option value="">Select branch</option>' : '') + profileBranchOptions(keep, false, true); branchSelect.value = keep; }
+    }).catch(function () {});
   }
   function empSaveEditor() {
     if (!isSuperAdminRole()) { rkToast('Akses lihat saja. Hanya Superadmin dapat mengubah data karyawan.'); return; }
@@ -12298,6 +12505,8 @@ function showHrPlaceholder(title, group, description) {
     document.getElementById('rkLocAdd').addEventListener('click', function () { locModal(null); });
     api('getLokasiKantor', [], 20000).then(function (r) {
       var list = (r && r.list) || [];
+      RK_DESK_BRANCH_CACHE = list.filter(function (row) { return row && row.branch && String(row.status || 'AKTIF').toUpperCase() === 'AKTIF'; }).map(function (row) { return String(row.branch).trim(); }).filter(Boolean);
+      RK_DESK_BRANCH_CACHE_LOADED = true;
       var body = document.getElementById('rkLocBody');
       if (!body) return;
       if (!list.length) { body.innerHTML = '<tr><td colspan="7"><div class="rk-empty">No locations yet.</div></td></tr>'; return; }
@@ -12318,6 +12527,8 @@ function showHrPlaceholder(title, group, description) {
   }
 
   var RK_DESK_LOC_MAP = null, RK_DESK_LOC_MARKER = null, RK_DESK_LOC_CIRCLE = null;
+  var RK_DESK_BRANCH_CACHE = [];
+  var RK_DESK_BRANCH_CACHE_LOADED = false;
   function locModal(x) {
     var old = document.getElementById('rkLocShade');
     if (old) old.remove();
@@ -12336,7 +12547,15 @@ function showHrPlaceholder(title, group, description) {
       '<div class="f"><label>Status</label><select id="rklStatus"><option value="AKTIF"' + (!x || x.status === 'AKTIF' ? ' selected' : '') + '>Active</option><option value="NONAKTIF"' + (x && x.status !== 'AKTIF' ? ' selected' : '') + '>Inactive</option></select></div>' +
       '<div class="acts"><button class="rk-btn" id="rklSave">💾 Save</button><button class="rk-btn ghost" id="rklCancel">Cancel</button></div><div id="rklMapError" class="rk-note" style="display:none"></div></div>';
     document.body.appendChild(shade);
-    shade.addEventListener('click', function (e) { if (e.target === shade) closeDeskLocModal(); });
+    // Backdrop only closes when pointer interaction starts and ends on the backdrop.
+    // This prevents drag-selecting/editing text inside a field from closing the modal.
+    shade.dataset.backdropPointerStarted = '0';
+    shade.addEventListener('pointerdown', function (e) { shade.dataset.backdropPointerStarted = e.target === shade ? '1' : '0'; });
+    shade.addEventListener('click', function (e) {
+      var startedOnBackdrop = shade.dataset.backdropPointerStarted === '1';
+      shade.dataset.backdropPointerStarted = '0';
+      if (e.target === shade && startedOnBackdrop) closeDeskLocModal();
+    });
     document.getElementById('rklCancel').addEventListener('click', closeDeskLocModal);
     document.getElementById('rklSearchBtn').addEventListener('click', deskLocSearch);
     document.getElementById('rklSearchQ').addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); deskLocSearch(); } });
@@ -12477,10 +12696,13 @@ function showHrPlaceholder(title, group, description) {
   var attendanceRulesUi = { records: [], loaded: false, branch: 'Pasuruan' };
   var workingCalendarUi = { records: [], from: '', to: '', branch: '*', loaded: false };
   var ISO_DAYS = [{v:1,t:'Monday'},{v:2,t:'Tuesday'},{v:3,t:'Wednesday'},{v:4,t:'Thursday'},{v:5,t:'Friday'},{v:6,t:'Saturday'},{v:7,t:'Sunday'}];
-  function profileBranchOptions(selected, includeGlobal) {
+  function profileBranchOptions(selected, includeGlobal, liveEmployeeBranchMode) {
     var set=Object.create(null), values=[];
-    ['Pasuruan','Surabaya','Pusat'].forEach(function(b){set[b.toLowerCase()]=b;});
-    try { (empCurrentList()||[]).forEach(function(x){var b=String(x.branch||x.cabang||'').trim();if(b&&!set[b.toLowerCase()])set[b.toLowerCase()]=b;}); } catch(e) {}
+    if (!liveEmployeeBranchMode || !RK_DESK_BRANCH_CACHE_LOADED) ['Pasuruan','Surabaya','Pusat'].forEach(function(b){set[b.toLowerCase()]=b;});
+    try { (RK_DESK_BRANCH_CACHE||[]).forEach(function(b){b=String(b||'').trim();if(b&&!set[b.toLowerCase()])set[b.toLowerCase()]=b;}); } catch(e) {}
+    if (!liveEmployeeBranchMode) {
+      try { (empCurrentList()||[]).forEach(function(x){var b=String(x.branch||x.cabang||'').trim();if(b&&!set[b.toLowerCase()])set[b.toLowerCase()]=b;}); } catch(e) {}
+    }
     values=Object.keys(set).map(function(k){return set[k];}).sort();
     if(selected&&selected!=='*'&&!set[String(selected).toLowerCase()])values.unshift(selected);
     var h=includeGlobal?'<option value="*"'+(selected==='*'?' selected':'')+'>All branches (global)</option>':'';
@@ -13580,16 +13802,16 @@ function showHrPlaceholder(title, group, description) {
           '<button class="rk-btn ghost" id="rkUsersReload">↻ Reload</button>' +
         '</div>' +
         '<div class="rk-card"><h3>User Accounts</h3>' +
-        '<div class="rk-card-sub">Manage access roles (Employee / Administrator / Superadmin), account status, and PIN resets</div>' +
+        '<div class="rk-card-sub">Manage access roles (Employee / Administrator / Superadmin), account status, and employee PIN.</div>' +
         '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
-          '<th>Employees</th><th>Employee ID (NIK)</th><th>Role</th><th>Account Status</th><th>Face ID</th><th style="width:280px">Actions</th>' +
-        '</tr></thead><tbody id="rkUsersBody"><tr><td colspan="6"><div class="rk-loading">Loading...</div></td></tr></tbody></table></div></div>';
+          '<th>Employees</th><th>Employee ID (NIK)</th><th>Role</th><th>PIN</th><th>Account Status</th><th>Face ID</th><th style="width:280px">Actions</th>' +
+        '</tr></thead><tbody id="rkUsersBody"><tr><td colspan="7"><div class="rk-loading">Loading...</div></td></tr></tbody></table></div></div>';
       document.getElementById('rkUsersQ').addEventListener('input', function () { usersUI.q = this.value; paintUsers(); });
       document.getElementById('rkUsersReload').addEventListener('click', function () { ensureKar(true).then(paintUsers); });
     }
     ensureKar(false).then(paintUsers).catch(function (e) {
       var b = document.getElementById('rkUsersBody');
-      if (b) b.innerHTML = '<tr><td colspan="6"><div class="rk-empty">Failed to load: ' + escH(e && e.message || e) + '</div></td></tr>';
+      if (b) b.innerHTML = '<tr><td colspan="7"><div class="rk-empty">Failed to load: ' + escH(e && e.message || e) + '</div></td></tr>';
     });
   }
   function paintUsers() {
@@ -13599,17 +13821,22 @@ function showHrPlaceholder(title, group, description) {
     var list = (DATA.karList || []).filter(function (x) {
       return !q || (x.nama || '').toLowerCase().indexOf(q) >= 0 || (x.nik || '').toLowerCase().indexOf(q) >= 0;
     });
-    if (!list.length) { body.innerHTML = '<tr><td colspan="6"><div class="rk-empty">No data.</div></td></tr>'; return; }
+    if (!list.length) { body.innerHTML = '<tr><td colspan="7"><div class="rk-empty">No data.</div></td></tr>'; return; }
     var isAdmin = S.user && S.user.role === 'ADMIN';
     var canManageUsers = isSuperAdminRole();
     body.innerHTML = list.map(function (x) {
       var ava = '<span class="rk-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>';
       var roleSel = '<select class="rk-role" data-role-for="' + escH(x.nik) + '"' + (canManageUsers ? '' : ' disabled') + '>' +
         ['KARYAWAN', 'ADMIN', 'SUPERADMIN'].map(function (r) { var roleLabel = r === 'KARYAWAN' ? 'Employee' : (r === 'ADMIN' ? 'Administrator' : 'Superadmin'); return '<option value="' + r + '"' + (x.role === r ? ' selected' : '') + '>' + roleLabel + '</option>'; }).join('') + '</select>';
+      var activePin = empVal(x, ['pin','PIN','pin_aktif','pinAktif','pin_value','pinValue']);
+      var pinCell = activePin !== '' && activePin !== null && activePin !== undefined
+        ? '<code class="rk-user-pin-value">' + escH(String(activePin)) + '</code>'
+        : '<span aria-label="PIN tidak dikirim oleh backend">—</span>';
       return '<tr>' +
         '<td><div style="display:flex;align-items:center;gap:10px">' + ava + '<b>' + escH(x.nama) + '</b></div></td>' +
         '<td>' + escH(x.nik) + '</td>' +
         '<td>' + roleSel + '</td>' +
+        '<td>' + pinCell + '</td>' +
         '<td>' + pillSt(x.akun) + '</td>' +
         '<td>' + (x.face === 'YES' ? '<span class="rk-pill ok">Registered</span>' : '<span class="rk-pill warn">Not yet</span>') + '</td>' +
         '<td><div style="display:flex;gap:6px;flex-wrap:wrap">' +
@@ -14331,6 +14558,17 @@ function showHrPlaceholder(title, group, description) {
     empDeactivate: function (nik) { try { karDeactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
     empReactivate: function (nik) { try { karReactivate(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
     empResetPin: function (nik) { try { karResetPin(nik); } catch (e) { rkToast(e.message); } setTimeout(function () { if (cur === 'emp') syncEmpDirectory(true); }, 1200); },
+    refreshEmployeePhoto: function () {
+      if (cur === 'emp') return syncEmpDirectory(true).then(function () {
+        var shade = document.getElementById('rkEmpEditShade');
+        if (!shade || !shade.classList.contains('on')) return;
+        var nik = String(shade.dataset.employeeId || ''), current = empFind(nik);
+        var preview = shade.querySelector('[data-emp-photo-preview]');
+        if (preview && current) { preview.innerHTML = empAvatarMarkup(current, true); hydrateDesktopEmployeeFaces(preview); }
+      });
+      if (cur === 'users') return ensureKar(true).then(paintUsers);
+      return Promise.resolve();
+    },
     approve: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
     reject: function (kind, id) { aprAct(kind, id, 'REJECT'); },
     approvalDetail: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
@@ -15542,6 +15780,21 @@ body.rh-desk-on .rk-cuti-detail-actions button:disabled {
 .det-actions .btn-att-approve{background:#16804A!important;border-color:#16804A!important;color:#fff!important}
 .det-actions .btn-att-reject{background:#C93636!important;border-color:#C93636!important;color:#fff!important}
 .det-actions .btn-att-approve:disabled,.det-actions .btn-att-reject:disabled{opacity:.62;cursor:wait}
+</style>
+
+
+<style id="rh-hris-complaint-fixes-v1">
+@media (min-width:1024px) {
+  body.rh-desk-on .rk-emp-photo-editor { display:flex; align-items:center; gap:16px; padding:12px; border:1px solid #DCE7DE; border-radius:12px; background:#F8FBF9; }
+  body.rh-desk-on .rk-emp-photo-editor .rk-emp-related-avatar.large { width:72px; height:72px; flex:0 0 72px; }
+  body.rh-desk-on .rk-emp-photo-editor > div { min-width:0; }
+  body.rh-desk-on .rk-emp-photo-editor p { margin:0 0 10px; color:#5E6E63; font-size:12px; line-height:1.5; }
+  body.rh-desk-on .rk-emp-photo-note { margin-top:6px; color:#73857B; font-size:11px; }
+  body.rh-desk-on .rk-user-pin-value { display:inline-block; padding:4px 7px; border-radius:6px; background:#F1F6F2; color:#173D2A; font-weight:700; letter-spacing:1px; }
+}
+@media (max-width:1023px) {
+  #karList [data-managed-photo-nik] { flex:1 1 100%; }
+}
 </style>
 
 </body></html>
