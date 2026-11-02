@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.8.3.9-employee-directory-job-code-sort">
+<meta name="app-release" content="v13.8.5.0-signatories-dayoff-attendance-correction">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -2797,6 +2797,124 @@ body.rh-desk-on .rk-att-actions button {
 }
 </style>
 
+
+<style id="rh-incentive-factor-matrix-minor-fix">
+@media (min-width:1024px) {
+  body.rh-desk-on .rk-incentive-factor-table { min-width: 1900px; table-layout: auto; font-size: 11px; }
+  body.rh-desk-on .rk-incentive-factor-table thead th { text-align: center; vertical-align: middle; white-space: normal; line-height: 1.25; padding: 8px 7px; }
+  body.rh-desk-on .rk-incentive-factor-table tbody td { white-space: nowrap; text-align: right; padding: 8px 7px; }
+  body.rh-desk-on .rk-incentive-factor-table tbody td:first-child, body.rh-desk-on .rk-incentive-factor-table tbody td:nth-child(2) { text-align: left; }
+  body.rh-desk-on .rk-incentive-factor-table tbody td:first-child { min-width: 190px; white-space: normal; }
+}
+/* Incentive print uses the same A4 portrait print flow as Personal File. */
+body.rk-printing-incentive .rk-incentive-print-page { page: auto !important; }
+body.rk-printing-incentive .rk-incentive-factor-table { width: 100% !important; min-width: 0 !important; table-layout: fixed !important; font-size: 6.2pt !important; }
+body.rk-printing-incentive .rk-incentive-factor-table th, body.rk-printing-incentive .rk-incentive-factor-table td { padding: 2.3px 2px !important; overflow-wrap: anywhere; }
+body.rk-printing-incentive .rk-incentive-factor-table th { text-align: center !important; vertical-align: middle !important; line-height: 1.12; }
+body.rk-printing-incentive .rk-incentive-factor-table td { text-align: right; white-space: normal; }
+body.rk-printing-incentive .rk-incentive-factor-table td:first-child, body.rk-printing-incentive .rk-incentive-factor-table td:nth-child(2) { text-align: left; }
+body.rk-printing-incentive .rk-incentive-print-page h2 { margin: 7px 0 4px; }
+</style>
+
+<style id="rh-incentive-personalfile-revision-css">
+/* Only desktop HR console styles are touched here. */
+@media (min-width:1024px) {
+  body.rh-desk-on .rk-employee-directory-wrap {
+    height: min(calc(100vh - 300px), 680px);
+    max-height: min(68vh, 680px);
+    min-height: 320px;
+    overflow: auto;
+  }
+  body.rh-desk-on .rk-employee-directory thead th[data-emp-sort] { cursor:pointer; user-select:none; position:sticky; top:0; z-index:4; outline-offset:-3px; }
+  body.rh-desk-on .rk-employee-directory thead th[data-emp-sort]:hover { background:#E5F2EA; color:#00583B; }
+  body.rh-desk-on .rk-employee-directory thead th[data-emp-sort]:focus-visible { outline:2px solid #007850; }
+  body.rh-desk-on .rk-employee-directory tbody tr { min-height:52px; }
+  body.rh-desk-on .rk-incentive-toolbar { align-items:end; }
+  body.rh-desk-on .rk-incentive-grid { display:grid; grid-template-columns:repeat(3,minmax(160px,1fr)); gap:12px; }
+  body.rh-desk-on .rk-incentive-grid label { display:flex; flex-direction:column; gap:6px; font-size:12px; color:#577064; }
+  body.rh-desk-on .rk-incentive-grid label.rk-formula-check { flex-direction:row; align-items:center; gap:8px; padding:7px 0; }
+  body.rh-desk-on .rk-formula-check input { flex:0 0 auto; width:16px; height:16px; }
+  body.rh-desk-on .rk-incentive-grid .rk-in { width:100%; }
+  body.rh-desk-on .rk-incentive-table { width:100%; border-collapse:collapse; }
+  body.rh-desk-on .rk-incentive-table th, body.rh-desk-on .rk-incentive-table td { padding:9px 10px; border-bottom:1px solid #E2EAE4; text-align:left; vertical-align:top; }
+  body.rh-desk-on .rk-incentive-table th { background:#F1F7F3; white-space:nowrap; }
+  body.rh-desk-on .rk-incentive-note { background:#FFF8E9; border-left:3px solid #B77932; padding:10px 12px; color:#75521A; font-size:12px; border-radius:5px; }
+}
+.rk-incentive-print-host { display:none; }
+@media print {
+  body.rk-printing-incentive > :not(#rkIncentivePrintHost) { display:none!important; }
+  body.rk-printing-incentive #rkIncentivePrintHost { display:block!important; position:static!important; width:100%!important; margin:0!important; padding:0!important; color:#1e3027!important; background:#fff!important; font-family:Arial,Helvetica,sans-serif!important; }
+  body.rk-printing-incentive .rk-incentive-print-page { display:block; width:100%; box-sizing:border-box; min-height:0; padding:6mm; page-break-after:always; break-after:page; }
+  body.rk-printing-incentive .rk-incentive-print-page:last-child { page-break-after:auto; break-after:auto; }
+  body.rk-printing-incentive .rk-incentive-print-head { display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:2px solid #007850; padding-bottom:10px; margin-bottom:14px; }
+  body.rk-printing-incentive .rk-incentive-print-head img { max-width:42mm; max-height:17mm; object-fit:contain; }
+  body.rk-printing-incentive .rk-incentive-print-page h1 { font-size:15pt; margin:0 0 4px; }
+  body.rk-printing-incentive .rk-incentive-print-page h2 { font-size:10pt; margin:14px 0 6px; background:#EDF5EF; padding:5px 7px; }
+  body.rk-printing-incentive .rk-incentive-print-page table { width:100%; border-collapse:collapse; font-size:8.5pt; }
+  body.rk-printing-incentive .rk-incentive-print-page th, body.rk-printing-incentive .rk-incentive-print-page td { border:1px solid #BFCFC4; padding:5px 6px; vertical-align:top; }
+  body.rk-printing-incentive .rk-incentive-print-page th { background:#EEF5F0; }
+  body.rk-printing-incentive .rk-incentive-print-meta { display:grid; grid-template-columns:1fr 1fr; gap:5px 16px; font-size:9pt; margin:10px 0; }
+  body.rk-printing-incentive .rk-incentive-signatures { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin-top:28mm; text-align:center; font-size:9pt; }
+  body.rk-printing-incentive .rk-incentive-signatures > div { min-height:26mm; }
+  body.rk-printing-incentive .rk-incentive-signatures b { display:block; margin-top:20mm; border-top:1px solid #60776B; padding-top:5px; }
+  @page { size:A4 portrait; margin:10mm; }
+}
+
+@media print { body.rk-printing-pfile #rkPfBody .rk-pfile-paper { page-break-after:always; break-after:page; } body.rk-printing-pfile #rkPfBody .rk-pfile-paper:last-child { page-break-after:auto; break-after:auto; } }
+</style>
+
+
+<style id="rh-v13-8-5-0-correction-css">
+/* Personal File: all-employee preview is the same document, stacked in a scroll region. */
+body.rh-desk-on #rkPfBody.rk-pfile-all-scroll{max-height:calc(100vh - 265px);overflow:auto;display:flex;flex-direction:column;gap:18px;padding:12px;overscroll-behavior:contain}
+body.rh-desk-on #rkPfBody.rk-pfile-all-scroll .rk-pfile-paper{width:100%;max-width:100%;margin:0 auto;flex:0 0 auto}
+/* Incentive signature settings and formula controls. */
+body.rh-desk-on .rk-sig-intro,body.rh-desk-on .rk-formula-intro{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding:22px 24px;margin:0 0 16px;border:1px solid #dcebe1;border-radius:18px;background:linear-gradient(120deg,#f0f8f2,#ffffff)}
+body.rh-desk-on .rk-sig-intro h2,body.rh-desk-on .rk-formula-intro h2{font-size:22px;color:#174b34;margin:5px 0 7px}
+body.rh-desk-on .rk-sig-intro p,body.rh-desk-on .rk-formula-intro p{color:#5e7167;font-size:13px;line-height:1.6;margin:0;max-width:760px}
+body.rh-desk-on .rk-sig-kicker{font-size:10px;font-weight:800;letter-spacing:.13em;color:#13865a}
+body.rh-desk-on .rk-sig-flow{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:16px;color:#1c6847;font-size:11px;font-weight:800}
+body.rh-desk-on .rk-sig-flow span{padding:7px 10px;border-radius:999px;background:#e2f2e8;border:1px solid #cfe7d7}
+body.rh-desk-on .rk-sig-lock,body.rh-desk-on .rk-formula-role-pill{flex:0 0 auto;padding:8px 11px;border-radius:999px;background:#e4f3e9;color:#176b47;font-size:10px;font-weight:800;letter-spacing:.04em}
+body.rh-desk-on .rk-sig-card,body.rh-desk-on .rk-sig-person-card,body.rh-desk-on .rk-formula-card{border:1px solid #e1ebe4;box-shadow:0 5px 18px rgba(20,75,48,.045)}
+body.rh-desk-on .rk-sig-section-head,body.rh-desk-on .rk-formula-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px}
+body.rh-desk-on .rk-sig-section-head h3,body.rh-desk-on .rk-formula-card-head h3,body.rh-desk-on .rk-sig-person-card h3{margin:0 0 5px;color:#204b36;font-size:15px}
+body.rh-desk-on .rk-sig-section-head p,body.rh-desk-on .rk-formula-card-head p,body.rh-desk-on .rk-sig-person-card p{margin:0;color:#718178;font-size:12px;line-height:1.55}
+body.rh-desk-on .rk-sig-grid,body.rh-desk-on .rk-formula-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+body.rh-desk-on .rk-sig-person-card{position:relative;min-width:0;padding-top:22px}
+body.rh-desk-on .rk-sig-person-card label{display:block;margin-top:16px;color:#52675b;font-size:11px;font-weight:700}
+body.rh-desk-on .rk-sig-person-card small{display:block;margin-top:8px;color:#158052;font-size:10px}
+body.rh-desk-on .rk-sig-number{display:grid;place-items:center;width:30px;height:30px;margin-bottom:12px;border-radius:10px;background:#e8f5ec;color:#138254;font-size:12px;font-weight:900}
+body.rh-desk-on .rk-sig-hint{align-self:end;padding:12px 14px;border-radius:12px;background:#f5f8f6;color:#68796f;font-size:11px;line-height:1.5}
+body.rh-desk-on .rk-sig-signature-note{border-left:4px solid #9ccbad;background:#fbfdfb}
+body.rh-desk-on .rk-sig-signature-note h3{margin:0 0 6px;color:#204b36;font-size:14px}
+body.rh-desk-on .rk-sig-signature-note p{margin:0;color:#68796f;font-size:12px;line-height:1.6}
+body.rh-desk-on .rk-sig-actions{align-items:center;padding:12px 0}
+body.rh-desk-on .rk-formula-intro{align-items:center}
+body.rh-desk-on .rk-formula-guide{padding:17px 20px;margin-bottom:14px;border:1px solid #e1ebe4;border-radius:15px;background:#fff}
+body.rh-desk-on .rk-formula-guide>strong{display:block;color:#204b36;font-size:13px;margin-bottom:12px}
+body.rh-desk-on .rk-formula-guide-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+body.rh-desk-on .rk-formula-guide-grid>div{display:flex;flex-direction:column;gap:5px;padding:10px 12px;border-radius:11px;background:#f5f9f6}
+body.rh-desk-on .rk-formula-guide-grid b{font-size:11px;color:#236342}
+body.rh-desk-on .rk-formula-guide-grid span{font-size:10.5px;line-height:1.5;color:#718178}
+body.rh-desk-on .rk-formula-card{margin-bottom:14px}
+body.rh-desk-on .rk-formula-card-head{align-items:center}
+body.rh-desk-on .rk-formula-card-head p{margin-top:3px}
+body.rh-desk-on .rk-formula-tag{padding:6px 9px;border-radius:999px;background:#eaf5ed;color:#16764d;font-size:9px;font-weight:800;white-space:nowrap}
+body.rh-desk-on .rk-formula-tag.muted{background:#f2f3f2;color:#7b847e}
+body.rh-desk-on .rk-formula-explain{margin-top:15px;padding:12px 14px;border-radius:12px;background:#f4f9f5;display:flex;flex-direction:column;gap:5px}
+body.rh-desk-on .rk-formula-explain b{font-size:11px;color:#236342}
+body.rh-desk-on .rk-formula-explain span{font-size:11px;line-height:1.55;color:#65766c}
+body.rh-desk-on .rk-formula-check-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+body.rh-desk-on .rk-formula-check-list .rk-formula-check{display:flex;align-items:flex-start;gap:9px;padding:11px 12px;border:1px solid #e5ede7;border-radius:11px;background:#fbfdfb;color:#395b47;font-size:11px;line-height:1.45}
+body.rh-desk-on .rk-formula-check-list input{flex:0 0 auto;margin-top:2px;accent-color:#138254}
+body.rh-desk-on .rk-formula-rate-table td{vertical-align:middle}
+body.rh-desk-on .rk-formula-rate-table label{display:block;margin:0;font-size:10px}
+body.rh-desk-on .rk-formula-footer{position:sticky;bottom:0;z-index:4;padding:12px 0 8px;background:linear-gradient(180deg,rgba(247,250,248,0),#f7faf8 18%)}
+@media (max-width:1200px){body.rh-desk-on .rk-sig-grid,body.rh-desk-on .rk-formula-grid{grid-template-columns:1fr}body.rh-desk-on .rk-formula-guide-grid{grid-template-columns:1fr}}
+@media (max-width:760px){body.rh-desk-on .rk-sig-intro,body.rh-desk-on .rk-formula-intro{display:block;padding:16px}body.rh-desk-on .rk-sig-lock,body.rh-desk-on .rk-formula-role-pill{display:inline-flex;margin-top:12px}body.rh-desk-on .rk-formula-check-list{grid-template-columns:1fr}}
+</style>
+
 </head>
 <body>
 <div id="rhLimitedAccess" role="status" aria-live="polite">Limited access</div>
@@ -3998,7 +4116,7 @@ window.__APP_PREPARING_ASSETS = true;
     <h3 style="justify-content:center" id="outTitle">You are outside the geofence</h3>
     <p style="font-size:14px;color:#3E4F43;margin:6px 0 14px" id="outBody">Select your area and add a note before clocking in.</p>
     <p id="outNoteRequiredMsg" style="font-size:13px;font-weight:700;color:#9C382A;margin:0 0 8px">A note is required before clocking in outside the office location.</p>
-    <div class="field"><label for="outArea">Area *</label><select id="outArea"><option value="">Select area...</option><option value="Area 1">Area 1</option><option value="Area 2">Area 2</option><option value="Area 3">Area 3</option><option value="Area 4">Area 4</option><option value="Area lainnya">Area lainnya</option></select></div>
+    <div class="field"><label id="outAreaLabel" for="outArea">Area *</label><select id="outArea"><option value="">Select area...</option><option value="Area 1">Area 1</option><option value="Area 2">Area 2</option><option value="Area 3">Area 3</option><option value="Area 4">Area 4</option><option value="Area lainnya">Area lainnya</option></select></div>
     <div class="field"><label for="outNote">Note *</label><input id="outNote" placeholder="Enter a note" maxlength="120"></div>
     <button class="btn btn-blue" id="outPrimary" onclick="outsideProceed()">Continue to Clock In</button>
     <button class="btn btn-ghost" style="margin-top:10px" onclick="outsideRecheck()">Check location again</button>
@@ -4127,8 +4245,8 @@ window.__APP_PREPARING_ASSETS = true;
 
 <!-- Application Core Logic (Inlined for 100% Standalone Export) -->
 <script type="module">
-var SUPABASE_URL = 'https://viynlhmupknbsvmysvdr.supabase.co';
-var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpeW5saG11cGtuYnN2bXlzdmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE0OTgzMzQsImV4cCI6MjEwNzA3NDMzNH0.gCptzMDirS5DGPDs51nVAT1UPlzgwD0pwMc-c-DwaF8';
+var SUPABASE_URL = 'https://gkpaaabmzusqzrstbivp.supabase.co';
+var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrcGFhYWJtenVzcXpyc3RiaXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MjEzNTQsImV4cCI6MjEwOTA5NzM1NH0.Asv7bcSPWWeTuCWHfncEtJVOiVZ7b_TpyZbvheyH2rE';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
 var RH_HTML_RELEASE = 'v13.8.3.4-face-cache-refresh';
 var RH_DISPLAY_VERSION = 'v13.8.3.3';
@@ -4334,7 +4452,7 @@ var CAM = { stream: null, run: false, desc: null, descAt: 0, state: 'detecting',
 var FACE_REFERENCE_UPDATING = false;
 var FACE_PROFILE_PREPARING = false;
 var NETS = { ready: false, promise: null };
-var ATT = { type: 'MASUK', submitting: false, outside: false, outsideOk: false, area: '', lastOutsideAt: 0, recheckingOutside: false, outsideDialogShown: false, outsideAwaitContinue: false };
+var ATT = { type: 'MASUK', submitting: false, outside: false, outsideOk: false, area: '', lastOutsideAt: 0, recheckingOutside: false, outsideDialogShown: false, outsideAwaitContinue: false, dayOffChoice: null, dayOffChoiceDate: '', dayOffChecking: false };
 var LOGM = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
 var CACHE = { masterCuti: null, masterCutiAt: 0 };
 var DATA = { cutiList: [], empList: [], appr: null, myReq: null, faceList: [], team: [], faceVer: {}, locList: [], karList: [], karOpts: null };
@@ -5468,10 +5586,16 @@ async function api(fn, args, timeoutMs) {
       if (!Number.isFinite(n)) throw new Error('The face descriptor contains an invalid number.');
       return String(n);
     }).join(',') + '}' : null;
-    return rpc('submit_attendance_with_photo', {
+    var attendanceParams = {
       p_token: getToken(), p_tipe: p.tipe, p_lat: p.latitude, p_lon: p.longitude, p_acc: p.accuracy,
       p_descriptor: descStr, p_catatan: p.catatan || '', p_address: p.address || '', p_foto_base64: null
-    });
+    };
+    if (p.attendanceMode) {
+      attendanceParams.p_attendance_mode = String(p.attendanceMode).toUpperCase();
+      // The backend must hard-code direct-supervisor + SUPERADMIN approval; client parameters cannot authorize approvers.
+      return rpc('submit_dayoff_attendance_with_photo', attendanceParams);
+    }
+    return rpc('submit_attendance_with_photo', attendanceParams);
   }
   if (fn === 'submitCuti') {
     var c = args[0] || {};
@@ -5782,8 +5906,8 @@ function greetByHour() {
 
 function renderShiftStatus() {
   var st = S.status || {};
-  $('btnCI').disabled = !!st.masuk;
-  $('btnCO').disabled = !st.masuk || !!st.pulang;
+  $('btnCI').disabled = !!st.masuk || !!st.pulang;
+  $('btnCO').disabled = !!st.pulang;
   var n = $('shiftNote');
   if (st.masuk && st.pulang) {
     n.textContent = 'You successfully clocked out at ' + (st.jamPulang || '').slice(0, 5);
@@ -5791,6 +5915,9 @@ function renderShiftStatus() {
   } else if (st.masuk) {
     n.textContent = 'You successfully clocked in at ' + (st.jamMasuk || '').slice(0, 5);
     n.className = 'shift-note ok';
+  } else if (st.pulang) {
+    n.textContent = 'Clock Out recorded at ' + (st.jamPulang || '').slice(0, 5) + ' · Belum Clock In (status H)';
+    n.className = 'shift-note';
   } else {
     n.textContent = 'No activity today';
     n.className = 'shift-note';
@@ -6339,10 +6466,71 @@ function ensureNets() {
   return NETS.promise;
 }
 
+function rhTodayLocalIso() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+async function rhReadRpcForDayOff(fn, params) {
+  try {
+    if (typeof window.getSb !== 'function' || typeof window.getToken !== 'function') return null;
+    var client = await Promise.resolve(window.getSb());
+    if (!client || typeof client.rpc !== 'function') return null;
+    var args = Object.assign({ p_token: String(window.getToken() || '') }, params || {});
+    var result = await client.rpc(fn, args);
+    if (!result || result.error) { console.warn('[ReHolz] Day-off context unavailable:', fn, result && result.error && result.error.message); return null; }
+    return result.data;
+  } catch (e) { console.warn('[ReHolz] Day-off context unavailable:', fn, e && e.message || e); return null; }
+}
+function rhRowsFromCalendarResult(r) { return Array.isArray(r) ? r : (r && (r.records || r.rows || r.list || r.data)) || []; }
+async function rhDetectDayOffToday() {
+  var r = await rhReadRpcForDayOff('hr_get_my_attendance_dayoff_context', {});
+  if (!r || r.verified !== true || r.ok === false || typeof r.is_off !== 'boolean') return null;
+  return {
+    isOff: r.is_off,
+    date: String(r.date || rhTodayLocalIso()).slice(0,10),
+    branch: String(r.branch || ''),
+    label: String(r.day_type || (r.is_off ? 'Hari libur' : 'Hari kerja'))
+  };
+}
+
+function rhShowDayOffClockInChoice(info) {
+  var id = 'rhDayOffChoiceShade';
+  var shade = document.getElementById(id);
+  if (!shade) {
+    shade = document.createElement('div'); shade.id = id;
+    shade.style.cssText = 'position:fixed;inset:0;z-index:100500;background:rgba(8,25,18,.62);display:flex;align-items:center;justify-content:center;padding:18px;font-family:inherit;';
+    shade.innerHTML = '<section role="dialog" aria-modal="true" aria-labelledby="rhDayOffChoiceTitle" style="width:min(100%,420px);background:#fff;border-radius:18px;padding:22px;box-shadow:0 18px 60px #0004;color:#183b2b"><h2 id="rhDayOffChoiceTitle" style="font-size:19px;margin:0 0 8px">Clock In pada Hari Libur</h2><p id="rhDayOffChoiceMeta" style="font-size:13px;color:#5b7166;line-height:1.5;margin:0 0 14px"></p><p style="font-size:13px;margin:0 0 16px">Pilih jenis kehadiran. Standby dan Piket memerlukan persetujuan atasan langsung serta Superadmin.</p><button type="button" data-rh-dayoff-choice="STANDBY" style="width:100%;padding:13px;border-radius:10px;border:0;background:#007850;color:white;font-weight:700;margin-bottom:8px">Standby</button><button type="button" data-rh-dayoff-choice="PIKET" style="width:100%;padding:13px;border-radius:10px;border:1px solid #007850;background:#fff;color:#007850;font-weight:700;margin-bottom:8px">Piket</button><button type="button" data-rh-dayoff-choice="CANCEL" style="width:100%;padding:11px;border-radius:10px;border:0;background:#edf2ee;color:#355246">Batal</button><p style="font-size:11px;color:#8a5d19;margin:12px 0 0">Clock In Piket/Standby akan divalidasi backend dan memerlukan persetujuan atasan langsung serta Superadmin.</p></section>';
+    document.body.appendChild(shade);
+    shade.addEventListener('click', function(ev){
+      var b = ev.target.closest ? ev.target.closest('[data-rh-dayoff-choice]') : null;
+      if (!b) return;
+      ev.preventDefault();
+      var val = b.getAttribute('data-rh-dayoff-choice');
+      shade.style.display='none';
+      if (val === 'CANCEL') { ATT.dayOffChoice=null; ATT.dayOffChoiceDate=''; return; }
+      ATT.dayOffChoice = val; ATT.dayOffChoiceDate = rhTodayLocalIso();
+      startAttendance('MASUK');
+    });
+  }
+  var meta = document.getElementById('rhDayOffChoiceMeta');
+  if (meta) meta.textContent = (info && info.label ? info.label + ' · ' : '') + (info && info.date ? info.date : rhTodayLocalIso()) + (info && info.branch ? ' · ' + info.branch : '');
+  shade.style.display='flex';
+}
+async function rhMaybePromptDayOffChoice(type) {
+  if (type !== 'MASUK') return false;
+  var today = rhTodayLocalIso();
+  if (ATT.dayOffChoice && ATT.dayOffChoiceDate === today) return false;
+  ATT.dayOffChoice = null; ATT.dayOffChoiceDate = '';
+  var ctx = await rhDetectDayOffToday();
+  if (!ctx) { toast('Kalender kerja belum dapat diverifikasi. Clock In dihentikan sementara; periksa koneksi lalu coba lagi.'); return true; }
+  if (ctx.isOff) { rhShowDayOffClockInChoice(ctx); return true; }
+  return false;
+}
+
 function nextAttType() {
   var st = S.status || {};
-  // If clock-in exists, never offer another clock-in from the quick action.
-  return st.masuk ? 'PULANG' : 'MASUK';
+  // Preserve the no-repeat guard and let startAttendance show the message after Clock Out is already recorded.
+  return st.pulang ? 'PULANG' : (st.masuk ? 'PULANG' : 'MASUK');
 }
 
 function startAttMapEarly() {
@@ -6366,9 +6554,18 @@ async function startAttendance(type) {
   if (!S.face.registered) { toast('Face ID is not registered. Tap your own profile photo in Account to add a photo or take a selfie.'); return; }
   var st = S.status || {};
   if (st.masuk && st.pulang) { toast('Clock In and Clock Out have already been recorded today.'); return; }
+  if (!st.masuk && st.pulang && type === 'MASUK') { toast('Clock Out has already been recorded today. No further attendance action is available today.'); return; }
   if (type === 'MASUK' && st.masuk) { toast('Clock In has already been recorded today.'); return; }
   if (type === 'PULANG' && st.pulang) { toast('Clock Out has already been recorded today.'); return; }
-  if (type === 'PULANG' && !st.masuk) { toast('You have not clocked in yet.'); return; }
+  if (ATT.dayOffChoiceDate && ATT.dayOffChoiceDate !== rhTodayLocalIso()) { ATT.dayOffChoice = null; ATT.dayOffChoiceDate = ''; }
+  if (type === 'MASUK' && !ATT.dayOffChoice) {
+    if (ATT.dayOffChecking) return;
+    ATT.dayOffChecking = true;
+    var dayOffHandled = false;
+    try { dayOffHandled = await rhMaybePromptDayOffChoice(type); }
+    finally { ATT.dayOffChecking = false; }
+    if (dayOffHandled) return;
+  }
   ATT.type = type;
   ATT.submitting = false;
   ATT.outside = false;
@@ -6470,6 +6667,29 @@ function renderGpsUi() {
 function openOutside() {
   if (ATT.recheckingOutside || ATT.outsideDialogShown) return;
   ATT.outsideDialogShown = true;
+  var area=$('outArea'),title=$('outTitle'),body=$('outBody'),msg=$('outNoteRequiredMsg'),note=$('outNote'),label=$('outAreaLabel');
+  if (ATT.dayOffChoice === 'STANDBY') {
+    if(title)title.textContent='Standby · Dinas Luar pada Hari Libur';
+    if(body)body.textContent='Pilih area penugasan Standby dan isi keterangan kegiatan. Kode laporan menggunakan SDL1–SDL5.';
+    if(msg)msg.textContent='Keterangan dan area wajib diisi untuk Standby di luar lokasi.';
+    if(label)label.textContent='Area Standby *';
+    if(note)note.placeholder='Keterangan Standby *';
+    if(area)area.innerHTML='<option value="">Pilih area...</option><option value="Area 1">Area 1</option><option value="Area 2">Area 2</option><option value="Area 3">Area 3</option><option value="Area 4">Area 4</option><option value="Area lainnya">Area lainnya (SDL5)</option>';
+  } else if (ATT.dayOffChoice === 'PIKET') {
+    if(title)title.textContent='Piket · Hari Libur';
+    if(body)body.textContent='Pilih lokasi Piket dan isi keterangan. Piket di kantor menggunakan kode P; area dinas luar menggunakan P1–P5.';
+    if(msg)msg.textContent='Keterangan dan lokasi Piket wajib diisi.';
+    if(label)label.textContent='Lokasi Piket *';
+    if(note)note.placeholder='Keterangan Piket *';
+    if(area)area.innerHTML='<option value="">Pilih lokasi...</option><option value="Area 1">Area 1</option><option value="Area 2">Area 2</option><option value="Area 3">Area 3</option><option value="Area 4">Area 4</option><option value="Area lainnya">Area lainnya (P5)</option><option value="Kantor">Kantor (P)</option>';
+  } else {
+    if(title)title.textContent='You are outside the geofence';
+    if(body)body.textContent='Select your area and add a note before clocking in.';
+    if(msg)msg.textContent='A note is required before clocking in outside the office location.';
+    if(label)label.textContent='Area *';
+    if(note)note.placeholder='Enter a note';
+    if(area)area.innerHTML='<option value="">Select area...</option><option value="Area 1">Area 1</option><option value="Area 2">Area 2</option><option value="Area 3">Area 3</option><option value="Area 4">Area 4</option><option value="Area lainnya">Area lainnya</option>';
+  }
   $('outNote').value = '';
   $('outArea').value = '';
   $('ovOutside').classList.add('on');
@@ -6478,8 +6698,8 @@ function openOutside() {
 function outsideProceed() {
   var note = $('outNote').value.trim();
   var area = $('outArea').value;
-  if (!note) { toast('A note is required before clocking in outside the office location.'); $('outNote').focus(); return; }
-  if (!area) { toast('Select an Area before clocking in outside the office location.'); $('outArea').focus(); return; }
+  if (!note) { toast('Keterangan wajib diisi sebelum Clock In di luar lokasi kantor.'); $('outNote').focus(); return; }
+  if (!area) { toast('Pilih area/lokasi sebelum melanjutkan Clock In.'); $('outArea').focus(); return; }
   ATT.area = area;
   ATT.outsideOk = true;
   $('attNote').value = note;
@@ -6658,19 +6878,51 @@ function attStep2() {
 
 function cancelAttendance() {
   camStop();
+  ATT.dayOffChoice = null; ATT.dayOffChoiceDate = ''; ATT.dayOffChecking = false;
   go('s-home');
 }
 
 function finishAttendance() {
   camStop();
+  ATT.dayOffChoice = null; ATT.dayOffChoiceDate = ''; ATT.dayOffChecking = false;
   loadBootstrap();
   go('s-home');
+}
+
+function rhAttendanceAreaIndex(area) {
+  var v=String(area||'').trim().toUpperCase();
+  if(v==='KANTOR'||v==='OFFICE')return 0;
+  if(/AREA\s*1/.test(v))return 1;if(/AREA\s*2/.test(v))return 2;if(/AREA\s*3/.test(v))return 3;if(/AREA\s*4/.test(v))return 4;
+  if(/AREA\s*(LAIN|LAINNYA|OTHER)/.test(v))return 5;
+  return null;
+}
+function rhAttendanceAreaMarker(area) {
+  var n=rhAttendanceAreaIndex(area);
+  return n===0?'OFFICE':(n===5?'AX':(n?'A'+n:''));
+}
+function rhAttendanceCode(mode,area) {
+  var n=rhAttendanceAreaIndex(area);if(n===null)return '';
+  mode=String(mode||'').toUpperCase();
+  if(mode==='STANDBY')return n>=1&&n<=5?'SDL'+n:'';
+  if(mode==='PIKET')return n===0?'P':'P'+n;
+  return 'DL'+(n===0?5:n);
 }
 
 async function submitAttendance() {
   if (isAdminReadOnly()) { toast('Administrator role is view-only. Contact Superadmin for changes.'); return; }
   if (FACE_REFERENCE_UPDATING || FACE_PROFILE_PREPARING || CAM.refLoading) { toast('Face ID is still being refreshed. Please wait before Clock In/Out.'); return; }
   if (ATT.submitting) return;
+  if (ATT.type === 'MASUK') {
+    var timeoffGuard = await rhReadRpcForDayOff('hr_get_my_timeoff_clockin_guard', {});
+    if (!timeoffGuard || timeoffGuard.ok !== true) {
+      toast('Status Time Off belum dapat diverifikasi. Clock In dihentikan sementara; coba lagi setelah koneksi pulih.');
+      return;
+    }
+    if (timeoffGuard.blocked === true) {
+      toast('Selamat Menjalankan Time Off Anda');
+      return;
+    }
+  }
   var currentRef = getRefDescriptor();
   if (!currentRef) { toast('The latest Face ID reference is not ready. Please wait for it to load before Clock In/Out.'); return; }
   var desc = (CAM.desc && Date.now() - CAM.descAt < FACE_UI_CONFIG.freshSubmitMs) ? CAM.desc : null;
@@ -6682,10 +6934,15 @@ async function submitAttendance() {
   var chkNow = inOfficeCheck();
   if (chkNow.inOffice) { ATT.outside = false; }
   else if (chkNow.clearlyOutside) { ATT.outside = true; }
+  if (ATT.type === 'MASUK' && ATT.dayOffChoice === 'STANDBY' && chkNow.inOffice) {
+    toast('Standby hanya berlaku untuk dinas luar Area 1–5. Untuk piket di kantor, pilih Piket.');
+    return;
+  }
   if (ATT.outside && ATT.type === 'MASUK') {
-    if (!catatan || !ATT.area) { toast('A note is required before clocking in outside the office location.'); openOutside(); return; }
-    var areaCode = ATT.area === 'Area 1' ? 'A1' : ATT.area === 'Area 2' ? 'A2' : ATT.area === 'Area 3' ? 'A3' : ATT.area === 'Area 4' ? 'A4' : 'AX';
-    catatan = catatan.slice(0, 120).trim() + ' [[RHAREA=' + areaCode + ']]';
+    if (!catatan || !ATT.area) { toast('Keterangan dan area wajib diisi sebelum Clock In di luar lokasi kantor.'); openOutside(); return; }
+    var areaCode = rhAttendanceAreaMarker(ATT.area);
+    // RHAREA is only a location hint; canonical P/SDL codes are generated by the backend.
+    catatan = catatan.slice(0, 105).trim() + (areaCode && areaCode !== 'OFFICE' ? ' [[RHAREA=' + areaCode + ']]' : '');
   }
   ATT.submitting = true;
   var b = $('btnKirim');
@@ -6704,7 +6961,7 @@ async function submitAttendance() {
     }
     var payload = {
       nik: S.user.nik, tipe: ATT.type, latitude: p.latitude, longitude: p.longitude, accuracy: p.accuracy,
-      address: '', faceDescriptor: desc, catatan: catatan, fotoBase64: fotoBase64
+      address: '', faceDescriptor: desc, catatan: catatan, fotoBase64: fotoBase64, attendanceMode: ATT.dayOffChoice || null
     };
     var res = await api('simpanAbsensi', [payload], 40000);
     var attendanceId = res && (res.id || res.absensiId || res.absensi_id || res.attendance_id);
@@ -8886,6 +9143,7 @@ async function saveManagedEmployeePhoto(input) {
   }
 }
 window.pickManagedEmployeePhoto = pickManagedEmployeePhoto;
+window.RHManagedEmployeePhotoPick = pickManagedEmployeePhoto;
 
 function showReleaseGate(message) {
   var gate = document.getElementById('rhReleaseGate');
@@ -10135,6 +10393,12 @@ function showHrPlaceholder(title, group, description) {
       </div>
 
       <div class="rk-group">
+        <button type="button" class="rk-parent" onclick="RHDeskApi.rkToggleGroup(this)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-7"/><path d="M17 6h2v2"/></svg>Insentif<span class="rk-chev">▾</span></button>
+        <div class="rk-sub">
+          <button data-p="incentive-employee"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 2.5-5 6-5s6 2 6 5M17 8h4M19 6v4M17 15h4M17 19h4"/></svg>Rekap Insentif</button>
+        </div>
+      </div>
+      <div class="rk-group">
         <button type="button" class="rk-parent" onclick="RHDeskApi.rkToggleGroup(this)"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Sistem &amp; Laporan<span class="rk-chev">▾</span></button>
         <div class="rk-sub">
           <button data-p="loc"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Lokasi Kantor</button>
@@ -10143,6 +10407,8 @@ function showHrPlaceholder(title, group, description) {
           <button data-p="log"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l2.5 2.5"/><circle cx="12" cy="12" r="9"/></svg>Log Aktivitas</button>
           <button data-p="attset"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-1.7 2.94-.08-.02a1.7 1.7 0 0 0-1.78.47l-.06.06h-3.4l-.06-.08a1.7 1.7 0 0 0-1.78-.47l-.08.02-1.7-2.94.06-.06A1.7 1.7 0 0 0 9.6 15l-.02-.08V11.5l.08-.06a1.7 1.7 0 0 0 .47-1.78l-.02-.08 2.94-1.7.06.06a1.7 1.7 0 0 0 1.88.34l.08-.02h3.4l.06.08a1.7 1.7 0 0 0 1.78.47l.08-.02 1.7 2.94-.06.06A1.7 1.7 0 0 0 21.7 13l.02.08V15z"/></svg>Aturan Kehadiran</button>
           <button data-p="calendar"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M8 14h.01M12 14h.01M16 14h.01"/></svg>Kalender Kerja</button>
+          <button data-p="incentive-signatories"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M6 16l9-9 3 3-9 9H6z"/><path d="M14 8l3 3"/></svg>Penandatangan Insentif</button>
+          <button data-p="incentive-formula"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#007850" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 8l3 3-3 3M13 15h3"/></svg>Formula Insentif</button>
         </div>
       </div>
     </nav>
@@ -10216,6 +10482,9 @@ function showHrPlaceholder(title, group, description) {
     <section class="rk-page" id="rkp-log"></section>
     <section class="rk-page" id="rkp-myprofile"></section>
     <section class="rk-page" id="rkp-changepin"></section>
+    <section class="rk-page" id="rkp-incentive-signatories"></section>
+    <section class="rk-page" id="rkp-incentive-employee"></section>
+    <section class="rk-page" id="rkp-incentive-formula"></section>
   </main>
 </div>
 
@@ -10275,7 +10544,10 @@ function showHrPlaceholder(title, group, description) {
     users: ['Manajemen User', 'Role, status akun, dan keamanan akses'],
     log: ['Log Aktivitas', 'Riwayat aktivitas pengguna sistem'],
     myprofile: ['Info Saya', 'Informasi akun pribadi'],
-    changepin: ['Ubah PIN', 'Perbarui PIN akun']
+    changepin: ['Ubah PIN', 'Perbarui PIN akun'],
+    'incentive-signatories': ['Penandatangan Insentif', 'Atur pengaju, penyetuju, dan penerima untuk dokumen insentif'],
+    'incentive-employee': ['Rekap Insentif', 'Rincian insentif dan absensi per karyawan'],
+    'incentive-formula': ['Formula Insentif', 'Atur tarif, ambang batas, dan faktor perhitungan']
   };
   var cur = 'dash';
   var empUI = { q: '', org: '', st: '', sortKey: '', sortDir: 'asc', fullList: [], directoryError: '', selected: null, detailTab: 'personal', personalTab: 'basic', relationTab: 'approval', detailExtraByNik: Object.create(null), detailExtraLoadedByNik: Object.create(null), detailExtraLoadingByNik: Object.create(null), cacheAt: 0, loading: false };
@@ -10367,7 +10639,10 @@ function showHrPlaceholder(title, group, description) {
       pfile: ['Personal File Karyawan', ''],
       att: ['Rekap Absensi', 'Rekap kehadiran Karyawan'],
       cuti: ['Rekap Time Off', 'Rekap Ketidakhadiran Karyawan'],
-      rekap: ['Laporan Absensi', '']
+      rekap: ['Laporan Absensi', ''],
+      'incentive-signatories': ['Penandatangan Insentif', 'Pengaturan penandatangan dokumen insentif'],
+      'incentive-employee': ['Rekap Insentif', 'Rincian nominal, perhitungan harian, dan persetujuan'],
+      'incentive-formula': ['Formula Insentif', 'Hanya Superadmin dapat menyimpan perubahan formula']
     };
     var heading = headerTitles[p] || null;
     if (pageHeading) pageHeading.style.display = heading ? 'flex' : 'none';
@@ -10389,6 +10664,10 @@ function showHrPlaceholder(title, group, description) {
     if (p === 'log') renderLogPage();
     if (p === 'myprofile') renderMyProfilePage();
     if (p === 'changepin') renderChangePinPage();
+    if (p === 'incentive-signatories') renderIncentiveSignatoriesPage();
+    
+    if (p === 'incentive-employee') renderIncentiveEmployeePage();
+    if (p === 'incentive-formula') renderIncentiveFormulaPage();
     /* Buka otomatis grup sidebar yang memuat halaman aktif (pola HRMSMBM) */
     var actBtn = document.querySelector('#rkNav button[data-p="' + p + '"]');
     if (actBtn) { var grp = actBtn.closest('.rk-group'); if (grp) grp.classList.remove('closed'); }
@@ -11766,18 +12045,37 @@ function showHrPlaceholder(title, group, description) {
     var idInput = document.getElementById('edNik'); if (idInput) idInput.readOnly = !isAdd;
     shade.classList.add('on'); shade.dataset.employeeId=x.nik; shade.dataset.mode = isAdd ? 'add' : 'edit'; shade.dataset.created = '0';
     var photoPick = shade.querySelector('[data-emp-photo-pick]');
-    if (photoPick) photoPick.addEventListener('click', function () {
+    if (photoPick) photoPick.addEventListener('click', function (ev) {
+      if (ev && ev.preventDefault) ev.preventDefault();
+      if (ev && ev.stopPropagation) ev.stopPropagation();
       if (!isSuperAdminRole()) { rkToast('Akses ditolak. Hanya Superadmin dapat mengubah foto.'); return; }
-      if (window.pickManagedEmployeePhoto) window.pickManagedEmployeePhoto(x.nik, x.nama);
+      var picker = window.pickManagedEmployeePhoto || window.RHManagedEmployeePhotoPick;
+      if (typeof picker !== 'function') {
+        rkToast('Fitur pemilih foto belum siap. Muat ulang halaman, lalu coba lagi.');
+        console.error('[ReHolz] Employee photo picker bridge is unavailable.');
+        return;
+      }
+      try { picker.call(window, x.nik, x.nama); }
+      catch (photoError) { rkToast('Foto karyawan gagal dibuka: ' + (photoError && photoError.message || photoError)); }
     });
-    // Load live branch/location values on open, retaining the user's current selection.
+    // Enrich branch options without replacing the select node or losing its value.
+    // The selected branch remains visible even if it is no longer present in active locations.
     api('getLokasiKantor', [], 20000).then(function (r) {
       var rows = r && Array.isArray(r.list) ? r.list : null;
       if (!rows || !shade.classList.contains('on') || shade.dataset.employeeId !== String(x.nik || '') || (shade.dataset.mode || '') !== (isAdd ? 'add' : 'edit')) return;
       RK_DESK_BRANCH_CACHE = rows.filter(function (row) { return row && row.branch && String(row.status || 'AKTIF').toUpperCase() === 'AKTIF'; }).map(function (row) { return String(row.branch).trim(); }).filter(Boolean);
       RK_DESK_BRANCH_CACHE_LOADED = true;
       var branchSelect = shade.querySelector('#edBranch');
-      if (branchSelect) { var keep = branchSelect.value; branchSelect.innerHTML = (isAdd ? '<option value="">Select branch</option>' : '') + profileBranchOptions(keep, false, true); branchSelect.value = keep; }
+      if (!branchSelect) return;
+      var keep = String(branchSelect.value || x.branch || '').trim();
+      var present = Object.create(null);
+      Array.prototype.forEach.call(branchSelect.options, function (opt) { present[String(opt.value || '').toLowerCase()] = true; });
+      RK_DESK_BRANCH_CACHE.forEach(function (branch) {
+        var key = String(branch).toLowerCase();
+        if (!present[key]) { branchSelect.add(new Option(branch, branch)); present[key] = true; }
+      });
+      if (keep && !present[keep.toLowerCase()]) branchSelect.add(new Option(keep, keep));
+      branchSelect.value = keep;
     }).catch(function () {});
   }
   function empSaveEditor() {
@@ -11955,7 +12253,7 @@ function showHrPlaceholder(title, group, description) {
         '<label>Dari tanggal<input class="rk-in" id="rkAttFrom" type="date" value="'+today+'"></label>' +
         '<label>Sampai tanggal<input class="rk-in" id="rkAttTo" type="date" value="'+today+'"></label>' +
         '<button type="button" class="rk-btn" id="rkAttFetch">Tampilkan Absensi</button>' +
-      '</div><div class="rk-att-monitor-search"><button type="button" class="rk-btn ghost" id="rkAttMonitorReload">↻ Muat Ulang</button><button type="button" class="rk-btn ghost" id="rkAttCsv">Ekspor CSV</button><button type="button" class="rk-btn" id="rkAttXlsx">Ekspor Excel</button></div></div>' +
+      '</div><div class="rk-att-monitor-search"><button type="button" class="rk-btn ghost" id="rkAttMonitorReload">↻ Muat Ulang</button><button type="button" class="rk-btn" id="rkAttXlsx">Ekspor Excel</button></div></div>' +
       '<div class="rk-att-monitor-summary" id="rkAttMonitorSummary">' +
         attMonSummaryCard('ontime','On time','—','green')+attMonSummaryCard('late','Late clock in','—','amber')+attMonSummaryCard('early','Early clock out','—','blue')+attMonSummaryCard('noOut','No clock out','—','red')+attMonSummaryCard('noIn','No clock in','—','gray')+
       '</div>' +
@@ -11963,7 +12261,6 @@ function showHrPlaceholder(title, group, description) {
       '<div class="rk-table-wrap"><table class="rk-table rk-att-monitor-table"><thead><tr>'+attMonColumns.map(function(c){return '<th data-att-sort="'+c.key+'" data-sort-label="'+escH(c.label)+'" title="Urutkan berdasarkan '+escH(c.label)+'">'+escH(c.label)+'</th>';}).join('')+'</tr></thead><tbody id="rkAttMonitorBody"><tr><td colspan="19"><div class="rk-loading">Memuat data kehadiran…</div></td></tr></tbody></table></div></div>';
     document.getElementById('rkAttFetch').addEventListener('click', fetchAttendanceMonitoring);
     document.getElementById('rkAttMonitorReload').addEventListener('click', fetchAttendanceMonitoring);
-    document.getElementById('rkAttCsv').addEventListener('click', exportAttendanceMonitoringCsv);
     document.getElementById('rkAttXlsx').addEventListener('click', exportAttendanceMonitoringXlsx);
     var monitorTable=document.querySelector('.rk-att-monitor-table');
     if(monitorTable){
@@ -12179,12 +12476,6 @@ function showHrPlaceholder(title, group, description) {
       attMonFirst(x,['mobile_flag','mobileFlag','device_type','deviceType','platform']) || 'Mobile App',
       attMonStatusValue(x)
     ];
-  }
-  function exportAttendanceMonitoringCsv() {
-    var list=attMonFilteredRows(); if(!list.length){rkToast('Tidak ada data kehadiran untuk diekspor.');return;}
-    var rows=[attMonExportHeaders()]; list.forEach(function(it){rows.push(attMonExportRow(it.row||{}));});
-    csvDownload('Attendance_Monitoring_'+(attMonitorState.from||'')+'_to_'+(attMonitorState.to||'')+'.csv',rows);
-    rkToast('Ekspor CSV berhasil.');
   }
   function exportAttendanceMonitoringXlsx() {
     var list=attMonFilteredRows(); if(!list.length){rkToast('Tidak ada data kehadiran untuk diekspor.');return;}
@@ -12820,20 +13111,6 @@ function showHrPlaceholder(title, group, description) {
     if (s === 'PULANG') return '<span class="rk-pill info">Clock Out</span>';
     return '<span class="rk-pill info">' + escH(st) + '</span>';
   }
-  function csvDownload(filename, rows) {
-    var csv = rows.map(function (r) {
-      return r.map(function (c) {
-        var s = String(c == null ? '' : c);
-        return /[",\n;]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-      }).join(';');
-    }).join('\n');
-    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
-  }
   var RK_XLSX_LOAD = null;
   function ensureXlsx() {
     if (window.XLSX && window.XLSX.utils && window.XLSX.writeFile) return Promise.resolve(window.XLSX);
@@ -12905,7 +13182,7 @@ function showHrPlaceholder(title, group, description) {
           '<input class="rk-in" id="rkCutiQ" placeholder="Search by employee name / ID..." aria-label="Search by employee name or ID" style="width:230px">' +
           '<span style="flex:1"></span>' +
           '<button class="rk-btn ghost" id="rkCutiReload" type="button">↻ Refresh</button>' +
-          '<button class="rk-btn" id="rkCutiCsv" type="button">Export CSV</button>' +
+          '' +
         '</div>' +
         '<div class="rk-card rk-cuti-recap-card">' +
         '<div class="rk-table-wrap"><table class="rk-table rk-timeoff-table"><thead><tr>' +
@@ -12916,7 +13193,6 @@ function showHrPlaceholder(title, group, description) {
       document.getElementById('rkCutiStatus').addEventListener('change', function () { cutiUI.status = this.value; paintCuti(); });
       document.getElementById('rkCutiQ').addEventListener('input', function () { cutiUI.q = this.value; paintCuti(); });
       document.getElementById('rkCutiReload').addEventListener('click', function () { loadCutiData(true); });
-      document.getElementById('rkCutiCsv').addEventListener('click', exportCutiCsv);
       document.getElementById('rkCutiBody').addEventListener('click', function(ev){
         var action=ev.target.closest ? ev.target.closest('[data-cuti-open-detail]') : null;
         if(action){ev.preventDefault();openDesktopCutiDetail(action.getAttribute('data-cuti-open-detail'));return;}
@@ -13529,16 +13805,6 @@ function showHrPlaceholder(title, group, description) {
     if (!status || status === 'PENDING' || /PENDING/.test(status) || status === 'MENUNGGU') return '<span class="rk-pill warn">' + escH(isManager ? 'Pending Manager' : 'Pending Superadmin') + '</span>';
     return pillSt(status);
   }
-  function exportCutiCsv() {
-    var list = cutiFiltered();
-    if (!list.length) { rkToast('There is no data to export.'); return; }
-    var rows = [['Employee name','Employee ID','Request ID','Requested date','Policy','Start date','End date','Days','Status','Manager','Superadmin','Reason','Delegate to','Attachment']];
-    list.forEach(function (x) {
-      rows.push([x.nama,x.nik,x.id,desktopCutiRequestedDate(x.waktuPengajuan),(x.keterangan||x.kode||''),x.tanggalMulai,x.tanggalSelesai,x.totalHari,desktopCutiOverallStatus(x).replace(/<[^>]*>/g,''),cutiApprovalTextPlain(x,'manager'),cutiApprovalTextPlain(x,'superadmin'),x.alasan,x.delegateTo||'',cutiAttachmentExportValue(x)]);
-    });
-    csvDownload('Time_Off_Requests_' + cutiUI.y + '.csv', rows);
-    rkToast('Time-off CSV downloaded.');
-  }
   function cutiApprovalTextPlain(x, stage) {
     var isManager=stage==='manager', status=String((isManager?x.statusAtasan:x.statusHR)||'').toUpperCase();
     if(status==='DISETUJUI'||status==='APPROVED') return isManager ? ('Approved by '+(x.approvedByManager||x.approved_by_atasan||x.namaAtasan||x.approval_line_name||'Manager')) : ('Approved by '+(x.approvedByHR||x.approved_by_hr||x.hr_approver_name||'Superadmin'));
@@ -13568,7 +13834,7 @@ function showHrPlaceholder(title, group, description) {
           '<label>To date<input class="rk-in" id="rkSummaryTo" type="date" value="'+summaryToDefault+'"></label>'+
           '<label>Branch<select class="rk-in" id="rkSummaryBranch"><option value="">All Branches</option>'+profileBranchOptions('',false)+'</select></label>'+
           '<button class="rk-btn" id="rkSummaryFetch" type="button">Tampilkan Laporan</button>'+
-        '</div><div class="rk-att-monitor-search"><input class="rk-in" id="rkSummarySearch" type="search" placeholder="Cari karyawan, NIK, cabang, kode..." aria-label="Cari data laporan absensi"><button class="rk-btn ghost" id="rkSummaryReload" type="button">↻ Muat Ulang</button><button class="rk-btn ghost" id="rkSummaryCsv" type="button">Ekspor CSV</button><button class="rk-btn" id="rkSummaryXlsx" type="button">Ekspor Excel</button></div></div>'+
+        '</div><div class="rk-att-monitor-search"><input class="rk-in" id="rkSummarySearch" type="search" placeholder="Cari karyawan, NIK, cabang, kode..." aria-label="Cari data laporan absensi"><button class="rk-btn ghost" id="rkSummaryReload" type="button">↻ Muat Ulang</button><button class="rk-btn" id="rkSummaryXlsx" type="button">Ekspor Excel</button></div></div>'+
         '<div class="rk-card rk-att-monitor-records"><div class="rk-att-monitor-title"><span id="rkSummaryCount" class="rk-pill info">0 data</span></div>'+
         '<div class="rk-table-wrap"><table class="rk-table rk-att-summary-table"><thead><tr>'+summaryV10Headers().map(function(h,i){var k=summaryV10Keys()[i];return '<th data-summary-sort="'+k+'" data-sort-label="'+escH(h)+'" title="Sort by '+escH(h)+'">'+escH(h)+'</th>';}).join('')+'</tr></thead><tbody id="rkSummaryBody"><tr><td colspan="16"><div class="rk-loading">Loading attendance summary...</div></td></tr></tbody></table></div></div>';
       document.getElementById('rkSummaryFetch').addEventListener('click', fetchAttendanceSummaryV10);
@@ -13578,7 +13844,6 @@ function showHrPlaceholder(title, group, description) {
       var summaryTable=document.querySelector('.rk-att-summary-table');if(summaryTable){
         summaryTable.querySelector('thead').addEventListener('click',function(ev){var th=ev.target.closest&&ev.target.closest('th[data-summary-sort]');if(!th)return;var key=th.getAttribute('data-summary-sort');if(summaryV10.sortKey===key)summaryV10.sortDir=summaryV10.sortDir==='asc'?'desc':'asc';else{summaryV10.sortKey=key;summaryV10.sortDir=key==='date'?'asc':'asc';}paintAttendanceSummaryV10();});
       }
-      document.getElementById('rkSummaryCsv').addEventListener('click', exportAttendanceSummaryCsvV10);
       document.getElementById('rkSummaryXlsx').addEventListener('click', exportAttendanceSummaryXlsxV10);
     } else {
       var f=document.getElementById('rkSummaryFrom'),tEl=document.getElementById('rkSummaryTo');
@@ -13612,8 +13877,41 @@ function showHrPlaceholder(title, group, description) {
     rows.sort(function(a,b){var av=String(summaryV10Row(a)[idx]||''),bv=String(summaryV10Row(b)[idx]||'');var c=av.localeCompare(bv,undefined,{numeric:true,sensitivity:'base'});if(!c)c=String(summaryV10Value(a,['date'])||'').localeCompare(String(summaryV10Value(b,['date'])||''));return c*dir;});
     return rows;
   }
+  function summaryV10AttendanceCode(x,hasCheckIn,hasCheckOut) {
+    function first(keys){return summaryV10Value(x,keys);}
+    function clean(v){return v==null?'':String(v).trim();}
+    var timeOff=clean(first(['time_off_code','timeoff_code','leave_code','kode_cuti']));
+    if(timeOff&& !['—','-','--','N/A','NULL'].includes(timeOff.toUpperCase()))return timeOff.toUpperCase();
+    var raw=clean(first(['attendance_code','attendanceCode','kode_absensi'])).toUpperCase();
+    if(/^(H|DL[1-5]|SDL[1-5]|P[1-5]?)$/.test(raw))return raw;
+    var mode=clean(first(['attendance_mode','attendanceMode','dayoff_mode','day_off_mode','jenis_kehadiran'])).toUpperCase();
+    var note=clean(first(['catatan','note','notes','keterangan']));
+    var marker=(note.match(/\[\[RHATT=(H|DL[1-5]|SDL[1-5]|P[1-5]?)\]\]/i)||[])[1];
+    if(marker)return marker.toUpperCase();
+    var areaMarker=(note.match(/\[\[RHAREA=(A[1-4]|AX|OFFICE)\]\]/i)||[])[1];
+    var area=clean(first(['area','attendance_area','work_area','lokasi_area'])).toUpperCase();
+    var idx=null;
+    if(areaMarker==='OFFICE'||area==='KANTOR'||area==='OFFICE')idx=0;
+    else if(areaMarker==='AX'||/AREA\s*(LAIN|LAINNYA|OTHER)/.test(area))idx=5;
+    else if(areaMarker&&/^A[1-4]$/i.test(areaMarker))idx=Number(areaMarker.slice(1));
+    else {var am=area.match(/AREA\s*([1-4])/);if(am)idx=Number(am[1]);}
+    if(mode.indexOf('STANDBY')>=0&&idx!==null){if(idx>=1&&idx<=5)return 'SDL'+idx;return hasCheckIn||hasCheckOut?'H':'—';}
+    if(mode.indexOf('PIKET')>=0&&idx!==null)return idx===0?'P':'P'+idx;
+    if(areaMarker&&idx!==null&&idx>0)return 'DL'+idx;
+    if(raw)return raw;
+    // A record with only Clock Out remains H; missing event text is displayed separately below.
+    if(hasCheckIn||hasCheckOut)return 'H';
+    return '—';
+  }
   function summaryV10Row(x) {
-    return [summaryV10Value(x,['employee_id']),summaryV10Value(x,['full_name']),summaryV10Value(x,['branch']),summaryV10Value(x,['organization']),summaryV10Value(x,['job_position']),summaryV10Value(x,['date']),summaryV10Value(x,['shift']),summaryV10Value(x,['shift_code']),summaryV10Value(x,['shift_label']),summaryV10Value(x,['schedule_check_in']),summaryV10Value(x,['schedule_check_out']),summaryV10Value(x,['attendance_code']),summaryV10Value(x,['time_off_code']),summaryV10Value(x,['hourly_time_off_breakdown']),summaryV10Value(x,['check_in']),summaryV10Value(x,['check_out'])];
+    var checkIn = summaryV10Value(x,['check_in']);
+    var checkOut = summaryV10Value(x,['check_out']);
+    var hasCheckIn = !!checkIn && !['—','-','--','N/A','NULL'].includes(String(checkIn).trim().toUpperCase());
+    var hasCheckOut = !!checkOut && !['—','-','--','N/A','NULL'].includes(String(checkOut).trim().toUpperCase());
+    var code = summaryV10AttendanceCode(x,hasCheckIn,hasCheckOut);
+    if (!hasCheckIn) checkIn = 'Belum Clock In';
+    if (!hasCheckOut) checkOut = 'Belum Clock Out';
+    return [summaryV10Value(x,['employee_id']),summaryV10Value(x,['full_name']),summaryV10Value(x,['branch']),summaryV10Value(x,['organization']),summaryV10Value(x,['job_position']),summaryV10Value(x,['date']),summaryV10Value(x,['shift']),summaryV10Value(x,['shift_code']),summaryV10Value(x,['shift_label']),summaryV10Value(x,['schedule_check_in']),summaryV10Value(x,['schedule_check_out']),code,summaryV10Value(x,['time_off_code']),summaryV10Value(x,['hourly_time_off_breakdown']),checkIn,checkOut];
   }
   function paintAttendanceSummaryV10() {
     var body=document.getElementById('rkSummaryBody');if(!body)return;
@@ -13623,11 +13921,10 @@ function showHrPlaceholder(title, group, description) {
     if(!rows.length){body.innerHTML='<tr><td colspan="16"><div class="rk-empty">Tidak ada data pada periode dan filter yang dipilih.</div></td></tr>';return;}
     body.innerHTML=rows.map(function(x){var r=summaryV10Row(x);return '<tr>'+r.map(function(v,i){var text=v==null||v===''?'—':String(v);if(i===11&&v){var code=escH(v);return '<td><span class="rk-attendance-code rk-code-'+code.replace(/[^a-z0-9_-]/gi,'').toLowerCase()+'">'+code+'</span></td>';}return '<td>'+escH(text)+'</td>';}).join('')+'</tr>';}).join('');
   }
-  function exportAttendanceSummaryCsvV10(){var rows=summaryV10Filtered();if(!summaryV10.loaded||!rows.length){rkToast('There is no attendance summary data to export.');return;}var out=[summaryV10Headers()];rows.forEach(function(x){out.push(summaryV10Row(x));});csvDownload('Laporan_Absensi_'+summaryV10.from+'_sampai_'+summaryV10.to+'.csv',out);rkToast('Ekspor CSV Laporan Absensi berhasil.');}
   function exportAttendanceSummaryXlsxV10(){var rows=summaryV10Filtered();if(!summaryV10.loaded||!rows.length){rkToast('There is no attendance summary data to export.');return;}var out=[summaryV10Headers()];rows.forEach(function(x){out.push(summaryV10Row(x));});downloadXlsx('Laporan_Absensi_'+summaryV10.from+'_sampai_'+summaryV10.to+'.xlsx','Laporan Absensi',out);}
 
   /* ---------------- EMPLOYEE RECORDS: PRINTABLE PERSONAL FILE ---------------- */
-  var pfileUI = { nik: '', detailTab: 'personal', personalTab: 'basic', relationTab: 'approval', extraByNik: Object.create(null), loadedByNik: Object.create(null), loadingByNik: Object.create(null) };
+  var pfileUI = { nik: '', detailTab: 'personal', personalTab: 'basic', relationTab: 'approval', extraByNik: Object.create(null), loadedByNik: Object.create(null), loadingByNik: Object.create(null), extraPromiseByNik: Object.create(null), allRenderToken: 0 };
   function renderPfilePage() {
     var el = document.getElementById('rkp-pfile');
     if (!el) return;
@@ -13637,15 +13934,22 @@ function showHrPlaceholder(title, group, description) {
         '<select class="rk-in" id="rkPfNik" style="min-width:300px" aria-label="Pilih karyawan"></select>' +
         '<span style="flex:1"></span>' +
         '<button class="rk-btn ghost" id="rkPfReload" type="button">↻ Muat Ulang</button>' +
-        '<button class="rk-btn" id="rkPfPrint" type="button">Cetak Personal File</button>' +
+        '<button class="rk-btn" id="rkPfPrint" type="button">Cetak Personal File / PDF</button>' +
         '</div>' +
         '<div class="rk-card rk-pfile-preview-card"><div id="rkPfBody"><div class="rk-empty">Pilih karyawan untuk melihat Personal File.</div></div></div>';
       document.getElementById('rkPfNik').addEventListener('change', function () {
-        pfileUI.nik = this.value; paintPfile(); loadPfileExtra(pfileUI.nik);
+        pfileUI.nik = this.value;
+        paintPfile();
+        if (pfileUI.nik && pfileUI.nik !== '__ALL__') loadPfileExtra(pfileUI.nik);
       });
       document.getElementById('rkPfReload').addEventListener('click', function () {
-        delete pfileUI.extraByNik[pfileUI.nik]; delete pfileUI.loadedByNik[pfileUI.nik];
-        syncEmpDirectory(true).then(function(){ buildPfileEmployeeSelect(); paintPfile(); loadPfileExtra(pfileUI.nik); });
+        if (pfileUI.nik === '__ALL__') {
+          Object.keys(pfileUI.extraByNik).forEach(function(k){ delete pfileUI.extraByNik[k]; delete pfileUI.loadedByNik[k]; });
+          pfileUI.allRenderToken++;
+        } else if (pfileUI.nik) {
+          delete pfileUI.extraByNik[pfileUI.nik]; delete pfileUI.loadedByNik[pfileUI.nik];
+        }
+        syncEmpDirectory(true).then(function(){ buildPfileEmployeeSelect(); paintPfile(); if(pfileUI.nik && pfileUI.nik !== '__ALL__') loadPfileExtra(pfileUI.nik); });
       });
       document.getElementById('rkPfPrint').addEventListener('click', printEmployeeRecord);
       // Personal File is a standalone document view; employee profile tabs are not used here.
@@ -13656,10 +13960,10 @@ function showHrPlaceholder(title, group, description) {
   function buildPfileEmployeeSelect() {
     var sel = document.getElementById('rkPfNik'); if (!sel) return;
     var rows = empCurrentList().map(empNormalize).filter(function(x){ return x.nik; });
-    var previous = pfileUI.nik || sel.value;
-    sel.innerHTML = rows.map(function(x){ return '<option value="' + escH(x.nik) + '">' + escH(x.nama) + ' (' + escH(x.nik) + ')</option>'; }).join('');
-    if (previous && rows.some(function(x){return x.nik===previous;})) pfileUI.nik = previous;
-    else pfileUI.nik = rows.length ? rows[0].nik : '';
+    var previous = pfileUI.nik || sel.value || '';
+    sel.innerHTML = '<option value="">--------</option><option value="__ALL__">Semua karyawan</option>' + rows.map(function(x){ return '<option value="' + escH(x.nik) + '">' + escH(x.nama) + ' (' + escH(x.nik) + ')</option>'; }).join('');
+    var valid = !previous || previous === '__ALL__' || rows.some(function(x){return x.nik===previous;});
+    pfileUI.nik = valid ? previous : '';
     sel.value = pfileUI.nik;
   }
   function loadPfileExtra(nik) {
@@ -13672,10 +13976,11 @@ function showHrPlaceholder(title, group, description) {
     }).catch(function(){ pfileUI.loadedByNik[nik] = Date.now(); })
       .finally(function(){ delete pfileUI.loadingByNik[nik]; });
   }
-  function pfileEmployee() {
-    var base = empFind(pfileUI.nik) || empCurrentList().map(empNormalize).find(function(x){return x.nik===pfileUI.nik;});
+  function pfileEmployee(nik) {
+    var targetNik = arguments.length ? String(nik || '') : String(pfileUI.nik || '');
+    var base = empFind(targetNik) || empCurrentList().map(empNormalize).find(function(x){return x.nik===targetNik;});
     if (!base) return null;
-    var pack = pfileUI.extraByNik[pfileUI.nik] || {};
+    var pack = pfileUI.extraByNik[targetNik] || {};
     var extra = pack.profile || pack.employee || pack.karyawan || pack.personalFile || pack;
     var merged = Object.assign({}, base);
     Object.keys(extra || {}).forEach(function(k){ if (extra[k] !== null && extra[k] !== undefined && extra[k] !== '') merged[k] = extra[k]; });
@@ -13738,15 +14043,47 @@ function showHrPlaceholder(title, group, description) {
   }
   function paintPfile() {
     var body = document.getElementById('rkPfBody'); if (!body) return;
+    if (!pfileUI.nik) {
+      pfileUI.allRenderToken++;
+      body.classList.remove('rk-pfile-all-scroll');
+      body.innerHTML = '<div class="rk-empty">--------<br>Pilih karyawan untuk melihat Personal File.</div>';
+      return;
+    }
+    if (pfileUI.nik === '__ALL__') {
+      var rows = empCurrentList().map(empNormalize).filter(function(x){ return x.nik; });
+      if (!rows.length) { body.innerHTML = '<div class="rk-empty">Data karyawan belum tersedia.</div>'; return; }
+      var token = ++pfileUI.allRenderToken;
+      body.classList.add('rk-pfile-all-scroll');
+      body.innerHTML = '<div class="rk-loading">Menyiapkan tampilan Personal File semua karyawan...</div>';
+      ensurePfileExtrasBatch(rows, function(i,n,x){
+        if (pfileUI.nik === '__ALL__' && token === pfileUI.allRenderToken) {
+          body.innerHTML = '<div class="rk-loading">Menyiapkan '+i+' dari '+n+': '+escH(x.nama)+'</div>';
+        }
+      }).then(function(){
+        if (pfileUI.nik !== '__ALL__' || token !== pfileUI.allRenderToken) return;
+        body.innerHTML = rows.map(function(raw){
+          var x = pfileEmployee(raw.nik), pack = pfileUI.extraByNik[raw.nik] || {};
+          return x ? legacyPfileMarkup(x, pack) : '';
+        }).join('');
+        return hydrateDesktopEmployeeFaces(body);
+      }).catch(function(e){
+        if (pfileUI.nik === '__ALL__' && token === pfileUI.allRenderToken) {
+          body.innerHTML = '<div class="rk-note">Sebagian data Personal File belum berhasil dimuat. Tidak ada daftar parsial yang ditampilkan. '+escH(e && e.message || e)+'</div>';
+        }
+      });
+      return;
+    }
+    pfileUI.allRenderToken++;
+    body.classList.remove('rk-pfile-all-scroll');
     var x = pfileEmployee();
-    if (!x) { body.innerHTML = '<div class="rk-empty">Pilih karyawan untuk melihat Personal File.</div>'; return; }
+    if (!x) { body.innerHTML = '<div class="rk-empty">Data karyawan tidak ditemukan.</div>'; return; }
     var pack = pfileUI.extraByNik[x.nik] || {};
-    // The screen and print now use the same Employee Personal File document markup.
-    // This is intentionally separate from the interactive employee profile used in Daftar Karyawan.
     body.innerHTML = legacyPfileMarkup(x, pack);
     hydrateDesktopEmployeeFaces(body);
   }
   function printEmployeeRecord() {
+    if (pfileUI.nik === '__ALL__') { printAllEmployeeRecords(); return; }
+    if (!pfileUI.nik) { rkToast('Pilih karyawan atau Semua karyawan terlebih dahulu.'); return; }
     var sheet = document.getElementById('rkPfPrintSheet');
     var x = pfileEmployee();
     if (!sheet || !x) { rkToast('Pilih karyawan terlebih dahulu.'); return; }
@@ -13932,7 +14269,7 @@ function showHrPlaceholder(title, group, description) {
           '<select class="rk-in" id="rkLapMonth">' + mh + '</select>' +
           '<button class="rk-btn" id="rkLapApply">Show</button>' +
           '<span style="flex:1"></span>' +
-          '<button class="rk-btn ghost" id="rkLapCsv">⬇ Export CSV</button>' +
+          '' +
           '<button class="rk-btn ghost" id="rkLapPrint">🖨 Print</button>' +
         '</div>' +
         '<div id="rkLapBody"><div class="rk-empty">Select a period, then click Show.</div></div>';
@@ -13942,7 +14279,6 @@ function showHrPlaceholder(title, group, description) {
         lapUI.m = +document.getElementById('rkLapMonth').value;
         loadLap();
       });
-      document.getElementById('rkLapCsv').addEventListener('click', exportLapCsv);
       document.getElementById('rkLapPrint').addEventListener('click', function () { window.print(); });
     }
     loadLap();
@@ -14007,26 +14343,725 @@ function showHrPlaceholder(title, group, description) {
         : '<div class="rk-empty">No employee movements.</div>') + '</div>';
     body.innerHTML = h;
   }
-  function exportLapCsv() {
-    var r = lapUI.data;
-    if (!r) { rkToast('No report data yet. Click Show first.'); return; }
-    var rows = [['HR MONTHLY REPORT — ' + BULAN_ID[lapUI.m - 1] + ' ' + lapUI.y], []];
-    var rk = r.ringkasan || {};
-    rows.push(['Summary']); 
-    rows.push(['Active Employees', rk.karyawanAktif]); rows.push(['Total Attendance Records', rk.totalAbsensi]);
-    rows.push(['Contract End Date', rk.kontrakBerakhir]); rows.push(['Time Off Requests', rk.pengambilanCuti]); rows.push([]);
-    rows.push(['Attendance Summary']); rows.push(['Category', 'Count', 'Description']);
-    (r.rekap || []).forEach(function (x) { rows.push([x.kategori, x.jumlah, x.keterangan]); }); rows.push([]);
-    rows.push(['Contract End Date']); rows.push(['NIK', 'Name', 'Department', 'Date']);
-    (r.kontrak || []).forEach(function (x) { rows.push([x.nik, x.nama, x.bagian, x.tanggal || x.contractEnd]); }); rows.push([]);
-    rows.push(['Time Off Summary']); rows.push(['Name', 'Department', 'Time-Off Type', 'Start Date', 'End Date']);
-    (r.cuti || []).forEach(function (x) { rows.push([x.nama, x.departemen || x.bagian, (x.kode || '') + (x.keterangan ? ' ' + x.keterangan : ''), x.tanggalMulai, x.tanggalSelesai]); }); rows.push([]);
-    rows.push(['Employee IN/OUT']); rows.push(['Status', 'NIK', 'Name', 'Department', 'Date']);
-    (r.inout || []).forEach(function (x) { rows.push([x.status, x.nik, x.nama, x.bagian, x.tanggal]); });
-    csvDownload('HR_Report_' + lapUI.y + '_' + String(lapUI.m).padStart(2, '0') + '.csv', rows);
-    rkToast('Report CSV downloaded.');
+  /* ---------------- INSENTIF: FRONTEND DRAFT + BACKEND RPC CONTRACT ---------------- */
+  var incentiveUI = { period: '', nik: 'ALL', recap: null, total: null, employeeNik:'ALL', employeeRecap:null, signatoryConfig:null, signatures: {prepared:'',approved:'',received:''}, signatoryScope:'ALL', signatoryIds:{prepared:'',approved:''}, formula: null, formulaLoaded:false, formulaDirty:false };
+  // Classic desktop script cannot access helpers declared inside the type=module core script.
+  // Keep print dates deterministic in the company's Asia/Jakarta timezone.
+  function rhTodayLocalIso() {
+    try {
+      var parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).formatToParts(new Date());
+      var values = Object.create(null);
+      parts.forEach(function (part) { if (part.type !== 'literal') values[part.type] = part.value; });
+      return values.year + '-' + values.month + '-' + values.day;
+    } catch (e) {
+      var d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+  }
+  var INCENTIVE_DEFAULTS = {
+    meal_other:20000, meal_ob:10000,
+    transport_daily:15385, transport_cap:400000, transport_threshold:25,
+    phone_daily:3846, phone_cap:100000, phone_threshold:25,
+    outside_rates:{
+      'AREA 1':{SS:57692,SM:76923,PM:150000},
+      'AREA 2':{SS:88462,SM:107692,PM:150000},
+      'AREA 3':{SS:96154,SM:115385,PM:200000},
+      'AREA 4':{SS:115385,SM:134615,PM:200000},
+      'AREA LAIN':{MGR:150000,STAFF:100000}
+    },
+    eligibility:{meal_requires_on_time:true,meal_exclude_outside:true,transport_exclude_outside:true,phone_include_outside:true,outside_accept_either_event:false,outside_requires_clock_in:true,outside_ignore_late_early:true,standby_as_outside:true,piket_paid:true},
+    piket_hourly_rate:15000,piket_min_hours:4,piket_max_hours:8,piket_rounding:'FLOOR_HOUR',
+    extras:{family_trip:null,extra_transport:null,underpayment_last_month:null}
+  };
+  function incentiveMonthDefault(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+  function incentiveBounds(monthValue){
+    var m=String(monthValue||incentiveMonthDefault()).match(/^(\d{4})-(\d{2})$/);if(!m)return null;
+    var y=Number(m[1]),mo=Number(m[2]);if(mo<1||mo>12)return null;
+    var end=new Date(y,mo-1,5), start=new Date(y,mo-2,6);
+    function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+    return {from:iso(start),to:iso(end),month:monthValue};
+  }
+  function incentiveMoney(v){if(v===null||v===undefined||v==='')return '—';var n=Number(v);return Number.isFinite(n)?'Rp '+Math.round(n).toLocaleString('id-ID'):'—';}
+  function incentiveNum(v){if(v===null||v===undefined||v==='')return null;var n=Number(v);return Number.isFinite(n)?n:null;}
+  function incentiveRows(r){
+    if(Array.isArray(r))return r;if(!r||typeof r!=='object')return [];
+    var lists=[r.records,r.rows,r.list,r.rekap,r.data,r.employees,r.items];
+    for(var i=0;i<lists.length;i++)if(Array.isArray(lists[i]))return lists[i];
+    if(r.by_nik&&typeof r.by_nik==='object')return Object.keys(r.by_nik).map(function(k){var v=r.by_nik[k];return Object.assign({employee_id:k},v||{});});
+    if(['employee_id','nik','meal_amount','transport_amount','phone_amount','outside_amount','total_amount'].some(function(k){return r[k]!==undefined;}))return [r];
+    return [];
+  }
+  function incentiveBindPeriod(id){var el=document.getElementById(id);if(!el)return;el.addEventListener('change',function(){incentiveUI.period=this.value||incentiveMonthDefault();var p=incentiveBounds(incentiveUI.period);['rkIncFrom','rkIncFromTotal'].forEach(function(k){var x=document.getElementById(k);if(x)x.value=p?p.from:'';});['rkIncTo','rkIncToTotal'].forEach(function(k){var x=document.getElementById(k);if(x)x.value=p?p.to:'';});});}
+  function signatoryEmployeeOptions(selected, allowBlank) {
+    var rows=empCurrentList().map(empNormalize).filter(function(x){return x.nik;}).sort(function(a,b){return String(a.nama||'').localeCompare(String(b.nama||''),'id',{sensitivity:'base'});});
+    var html=allowBlank?'<option value="">Pilih karyawan...</option>':'';
+    rows.forEach(function(x){html+='<option value="'+escH(x.nik)+'"'+(selected===x.nik?' selected':'')+'>'+escH(x.nama)+' ('+escH(x.nik)+')</option>';});
+    return html;
+  }
+  function signatoryEmployeeByName(needle) {
+    var q=String(needle||'').toUpperCase();
+    return empCurrentList().map(empNormalize).find(function(x){return String(x.nama||'').toUpperCase().indexOf(q)>=0;})||null;
+  }
+  function signatoryEmployeeById(nik) {
+    return empCurrentList().map(empNormalize).find(function(x){return x.nik===String(nik||'');})||null;
+  }
+  function updateSignatoryRecipient() {
+    var scope=(document.getElementById('rkSigScope')||{}).value||'ALL';
+    var label='Otomatis mengikuti karyawan yang sedang diproses';
+    if(scope!=='ALL') { var emp=signatoryEmployeeById(scope); label=emp?emp.nama+' ('+emp.nik+')':'Karyawan terpilih'; }
+    var field=document.getElementById('rkSigReceivedBy');if(field)field.value=label;
+    incentiveUI.signatures.received=scope==='ALL'?'Sesuai nama karyawan pada rincian':label;
+  }
+  function renderIncentiveSignatoriesPage(){
+    var el=document.getElementById('rkp-incentive-signatories');if(!el)return;
+    var build=function(){
+      var rows=empCurrentList().map(empNormalize).filter(function(x){return x.nik;});
+      el.innerHTML='<div class="rk-sig-intro"><div class="rk-sig-kicker">PENGATURAN DOKUMEN INSENTIF</div><h2>Penandatangan Insentif</h2><p>Tetapkan siapa yang mengajukan dan menyetujui dokumen. Penerima mengikuti karyawan yang sedang diproses secara otomatis.</p><div class="rk-sig-flow"><span>Pengaju</span><b>→</b><span>Disetujui oleh</span><b>→</b><span>Diterima oleh</span></div></div>'+
+        '<div class="rk-card rk-sig-card"><div class="rk-sig-section-head"><div><h3>Cakupan pengaturan</h3><p>Pilih satu karyawan untuk aturan khusus, atau Semua karyawan untuk aturan standar.</p></div><span class="rk-sig-lock">'+(isSuperAdminRole()?'Superadmin':'Hanya lihat')+'</span></div><div class="rk-incentive-grid"><label>Pilih karyawan<select class="rk-in" id="rkSigScope"><option value="ALL">Semua karyawan</option>'+signatoryEmployeeOptions(incentiveUI.signatoryScope==='ALL'?'':incentiveUI.signatoryScope,true)+'</select></label><div class="rk-sig-hint">Aturan khusus seorang karyawan dapat disimpan tanpa mengganti aturan standar seluruh karyawan.</div></div></div>'+
+        '<div class="rk-sig-grid"><section class="rk-card rk-sig-person-card"><div class="rk-sig-number">01</div><h3>Pengaju</h3><p>Karyawan yang tercantum sebagai pihak pengaju pada dokumen insentif.</p><label>Nama pengaju<select class="rk-in" id="rkSigPreparedBy" '+(isSuperAdminRole()?'':'disabled')+'>'+signatoryEmployeeOptions(incentiveUI.signatoryIds.prepared,true)+'</select></label><small>Belum tersimpan. Superadmin harus memilih penandatangan yang benar.</small></section>'+
+        '<section class="rk-card rk-sig-person-card"><div class="rk-sig-number">02</div><h3>Disetujui oleh</h3><p>Karyawan yang memberikan persetujuan pada dokumen insentif.</p><label>Nama penyetuju<select class="rk-in" id="rkSigApprovedBy" '+(isSuperAdminRole()?'':'disabled')+'>'+signatoryEmployeeOptions(incentiveUI.signatoryIds.approved,true)+'</select></label><small>Belum tersimpan. Superadmin harus memilih penandatangan yang benar.</small></section>'+
+        '<section class="rk-card rk-sig-person-card"><div class="rk-sig-number">03</div><h3>Diterima oleh</h3><p>Nama penerima tidak dipilih manual. Sistem mengikuti karyawan yang sedang diproses.</p><label>Nama penerima<input class="rk-in" id="rkSigReceivedBy" readonly value="Otomatis mengikuti karyawan yang sedang diproses"></label><small>Untuk Semua karyawan, penerima mengikuti setiap baris karyawan dalam rincian.</small></section></div>'+
+        '<div class="rk-card rk-sig-signature-note"><h3>Ruang tanda tangan</h3><p>Kolom tanda tangan fisik dibiarkan kosong terlebih dahulu karena contoh PDF perusahaan belum tersedia. PDF menggunakan nama penandatangan yang tersimpan; tata letak tanda tangan akan disesuaikan setelah contoh dokumen diberikan.</p></div>'+
+        '<div class="rk-toolbar rk-sig-actions"><div id="rkSigNotice" class="rk-incentive-note" aria-live="polite">Memuat penandatangan...</div><span style="flex:1"></span><button class="rk-btn ghost" id="rkSigReload" type="button">Muat Penandatangan</button><button class="rk-btn" id="rkSigSave" type="button" '+(isSuperAdminRole()?'':'disabled')+'>Simpan Penandatangan (Superadmin)</button></div>';
+      var scope=document.getElementById('rkSigScope');
+      if(scope){scope.value=incentiveUI.signatoryScope||'ALL';scope.addEventListener('change',function(){incentiveUI.signatoryScope=this.value||'ALL';updateSignatoryRecipient();loadIncentiveSignatories();});}
+      var prep=document.getElementById('rkSigPreparedBy');if(prep)prep.addEventListener('change',function(){incentiveUI.signatoryIds.prepared=this.value;});
+      var appr=document.getElementById('rkSigApprovedBy');if(appr)appr.addEventListener('change',function(){incentiveUI.signatoryIds.approved=this.value;});
+      var reload=document.getElementById('rkSigReload');if(reload)reload.addEventListener('click',function(){loadIncentiveSignatories(true);});
+      var save=document.getElementById('rkSigSave');if(save)save.addEventListener('click',saveIncentiveSignatories);
+      updateSignatoryRecipient();
+      if(!rows.length){var note=document.getElementById('rkSigNotice');if(note)note.textContent='Daftar karyawan belum tersedia. Nama penandatangan belum dapat dipilih.';}
+      else loadIncentiveSignatories();
+    };
+    if(empUI.fullList&&empUI.fullList.length)build();
+    else syncEmpDirectory(false).then(build).catch(function(){build();});
+  }
+  function loadIncentiveSignatories(force){
+    var note=document.getElementById('rkSigNotice');
+    return rpcOptional('hr_get_incentive_signatories',{}).then(function(r){
+      if(!r){incentiveUI.signatoryConfig=null;if(note)note.textContent='Konfigurasi penandatangan belum tersedia dari backend. Nama contoh bukan konfigurasi tersimpan.';return null;}
+      var root=r.signatories||r.data||r;
+      incentiveUI.signatoryConfig=root;
+      var map=root.by_employee_id||root.byEmployeeId||root.employee_overrides||{};
+      var scope=incentiveUI.signatoryScope||'ALL';
+      var d=scope!=='ALL'?(map[scope]||root.global||root.default||{}):(root.global||root.default||{});
+      var preparedId=String(d.prepared_by_employee_id||d.preparedEmployeeId||''),approvedId=String(d.approved_by_employee_id||d.approvedEmployeeId||'');
+      var preparedText=String(d.prepared_by||d.prepared||d.requested_by||''),approvedText=String(d.approved_by||d.approved||d.approver||'');
+      if(preparedId)incentiveUI.signatoryIds.prepared=preparedId;
+      if(approvedId)incentiveUI.signatoryIds.approved=approvedId;
+      var prep=document.getElementById('rkSigPreparedBy'),appr=document.getElementById('rkSigApprovedBy');
+      if(prep){prep.innerHTML=signatoryEmployeeOptions(incentiveUI.signatoryIds.prepared,true);if(preparedId)prep.value=preparedId;}
+      if(appr){appr.innerHTML=signatoryEmployeeOptions(incentiveUI.signatoryIds.approved,true);if(approvedId)appr.value=approvedId;}
+      var pEmp=signatoryEmployeeById(preparedId),aEmp=signatoryEmployeeById(approvedId);
+      incentiveUI.signatures.prepared=pEmp?pEmp.nama:preparedText;
+      incentiveUI.signatures.approved=aEmp?aEmp.nama:approvedText;
+      incentiveUI.signatures.received=scope==='ALL'?'Sesuai nama karyawan pada rincian':((signatoryEmployeeById(scope)||{}).nama||'');
+      updateSignatoryRecipient();
+      var configured=!!(preparedId&&approvedId&&preparedText&&approvedText);
+      if(note)note.textContent=configured?'Penandatangan dimuat dari konfigurasi backend.':'Konfigurasi untuk cakupan ini belum tersimpan lengkap. Nama saran tidak digunakan saat cetak PDF.';
+      return root;
+    }).catch(function(e){incentiveUI.signatoryConfig=null;if(note)note.textContent='Gagal memuat penandatangan: '+(e&&e.message||e);return null;});
+  }
+  function saveIncentiveSignatories(){
+    if(!isSuperAdminRole()){rkToast('Hanya Superadmin yang dapat menyimpan penandatangan.');return;}
+    var scope=(document.getElementById('rkSigScope')||{}).value||'ALL';
+    var preparedId=(document.getElementById('rkSigPreparedBy')||{}).value||'';
+    var approvedId=(document.getElementById('rkSigApprovedBy')||{}).value||'';
+    var prepared=signatoryEmployeeById(preparedId),approved=signatoryEmployeeById(approvedId);
+    if(!preparedId||!approvedId){rkToast('Pilih nama Pengaju dan Disetujui oleh terlebih dahulu.');return;}
+    var cfg={scope:scope==='ALL'?'ALL':'EMPLOYEE',scope_employee_id:scope==='ALL'?null:scope,prepared_by_employee_id:preparedId,prepared_by:prepared?prepared.nama:'',approved_by_employee_id:approvedId,approved_by:approved?approved.nama:'',received_by_mode:'CURRENT_EMPLOYEE',received_by:scope==='ALL'?'PER_EMPLOYEE':((signatoryEmployeeById(scope)||{}).nama||'')};
+    var scopeLabel=scope==='ALL'?'semua karyawan':((signatoryEmployeeById(scope)||{}).nama||scope);
+    if(!confirm('Simpan konfigurasi penandatangan untuk '+scopeLabel+'? Pengaju dan penyetuju akan digunakan pada dokumen insentif sesuai cakupan ini.'))return;
+    var note=document.getElementById('rkSigNotice');if(note)note.textContent='Menyimpan penandatangan ke backend...';
+    var button=document.getElementById('rkSigSave');if(button){button.disabled=true;button.textContent='Menyimpan...';}
+    rpcOptional('hr_save_incentive_signatories',{p_signatories:cfg}).then(function(r){
+      if(r&&r.ok!==false){incentiveUI.signatoryScope=scope;incentiveUI.signatoryIds={prepared:preparedId,approved:approvedId};incentiveUI.signatures={prepared:cfg.prepared_by,approved:cfg.approved_by,received:cfg.received_by};if(note)note.textContent='Penandatangan berhasil dikirim untuk disimpan di backend.';rkToast(r.message||'Penandatangan disimpan.');}
+      else{if(note)note.textContent='Backend belum mengonfirmasi penyimpanan. Pastikan RPC hr_save_incentive_signatories mendukung konfigurasi berdasarkan cakupan karyawan.';rkToast('Penandatangan belum tersimpan permanen. Periksa RPC backend.');}
+    }).catch(function(e){if(note)note.textContent='Gagal menyimpan penandatangan: '+(e&&e.message||e);rkToast('Penandatangan gagal disimpan.');})
+      .finally(function(){if(button){button.disabled=!isSuperAdminRole();button.textContent='Simpan Penandatangan (Superadmin)';}});
+  }
+  function incentiveRecapTable(rows){
+    if(!rows.length)return '<div class="rk-empty">Backend belum mengembalikan baris rekap untuk periode ini.</div>';
+    function val(row, keys){ return incentiveFieldValue(row, keys); }
+    function areaValue(row, keys){ var v=val(row,keys); return v===null?null:Number(v); }
+    function amount(row, keys){ return incentiveMoney(val(row,keys)); }
+    function amountTotal(row){
+      var raw=val(row,['total_amount','total','grand_total']);
+      if(raw!==null && Number.isFinite(Number(raw))) return Number(raw);
+      var meal=val(row,['meal_amount','total_meal']), transport=val(row,['transport_amount','total_transport']), phone=val(row,['phone_amount','total_phone']);
+      var outside=val(row,['outside_amount','dinas_luar_amount','total_outside']);
+      if(outside===null){
+        var av=[['area_1_amount','outside_area1_amount','area1_amount'],['area_2_amount','outside_area2_amount','area2_amount'],['area_3_amount','outside_area3_amount','area3_amount'],['area_4_amount','outside_area4_amount','area4_amount'],['area_lain_amount','outside_area_lain_amount','area_other_amount']].map(function(k){return val(row,k);});
+        if(av.some(function(v){return v!==null;})) outside=av.reduce(function(a,v){return a+(v===null?0:Number(v)||0);},0);
+      }
+      var picket=val(row,['picket_amount','uang_piket_amount']);
+      var parts=[meal,transport,phone,outside,picket];
+      return parts.every(function(v){return v!==null && Number.isFinite(Number(v));}) ? parts.reduce(function(a,v){return a+Number(v);},0) : null;
+    }
+    var headers = '<thead>' +
+      '<tr>' +
+        '<th rowspan="2">Karyawan / NIK</th><th rowspan="2">Job Code</th>' +
+        '<th rowspan="2">Hari Masuk</th><th rowspan="2">Hari Tepat Waktu</th><th rowspan="2">Jumlah Jam Piket</th>' +
+        '<th colspan="3">Subsidi</th><th colspan="5">Insentif Dinas Luar</th>' +
+        '<th rowspan="2">Kompensasi Pulang ke Keluarga</th><th colspan="3">Lain-lain</th><th rowspan="2">Total</th>' +
+      '</tr><tr>' +
+        '<th>Uang Makan</th><th>Transport</th><th>Pulsa</th>' +
+        '<th>Area 1</th><th>Area 2</th><th>Area 3</th><th>Area 4</th><th>Area Lain</th>' +
+        '<th>Uang Piket</th><th>Subsidi Ekstra Transport</th><th>Kurang Bayar Bulan Lalu</th>' +
+      '</tr></thead>';
+    var body = rows.map(function(x){
+      var name=x.nama||x.full_name||x.employee_name||'—', nik=x.employee_id||x.nik||'';
+      var total=amountTotal(x);
+      return '<tr>'+
+        '<td><b>'+escH(name)+'</b><br><small>'+escH(nik)+'</small></td>'+
+        '<td>'+escH(x.job_code||x.jobCode||'—')+'</td>'+
+        '<td>'+escH(x.attendance_days==null?'—':x.attendance_days)+'</td>'+
+        '<td>'+escH(x.punctual_days==null?'—':x.punctual_days)+'</td>'+
+        '<td>'+escH(x.picket_hours==null?'0':x.picket_hours)+'</td>'+
+        '<td>'+amount(x,['meal_amount','total_meal'])+'</td>'+
+        '<td>'+amount(x,['transport_amount','total_transport'])+'</td>'+
+        '<td>'+amount(x,['phone_amount','total_phone'])+'</td>'+
+        '<td>'+incentiveMoney(areaValue(x,['area_1_amount','outside_area1_amount','area1_amount','dinas_luar_area1_amount']))+'</td>'+
+        '<td>'+incentiveMoney(areaValue(x,['area_2_amount','outside_area2_amount','area2_amount','dinas_luar_area2_amount']))+'</td>'+
+        '<td>'+incentiveMoney(areaValue(x,['area_3_amount','outside_area3_amount','area3_amount','dinas_luar_area3_amount']))+'</td>'+
+        '<td>'+incentiveMoney(areaValue(x,['area_4_amount','outside_area4_amount','area4_amount','dinas_luar_area4_amount']))+'</td>'+
+        '<td>'+incentiveMoney(areaValue(x,['area_lain_amount','outside_area_lain_amount','area_other_amount','dinas_luar_area_lain_amount']))+'</td>'+
+        '<td>'+amount(x,['family_trip_amount','compensation_family_trip_amount','kompensasi_pulang_keluarga'])+'</td>'+
+        '<td>'+amount(x,['picket_amount','uang_piket_amount'])+'</td>'+
+        '<td>'+amount(x,['extra_transport_amount','extra_transport_subsidy_amount','subsidi_ekstra_transport'])+'</td>'+
+        '<td>'+amount(x,['underpayment_last_month_amount','kurang_bayar_bulan_lalu'])+'</td>'+
+        '<td><b>'+incentiveMoney(total)+'</b></td>'+
+      '</tr>';
+    }).join('');
+    return '<div class="rk-table-wrap"><table class="rk-incentive-table rk-incentive-factor-table">'+headers+'<tbody>'+body+'</tbody></table></div>';
+  }
+  function incentiveFieldValue(x,keys){for(var i=0;i<keys.length;i++){if(x&&x[keys[i]]!==undefined&&x[keys[i]]!==null&&x[keys[i]]!=='')return x[keys[i]];}return null;}
+  function incentiveSum(rows,keys){var total=0,found=false;(rows||[]).forEach(function(x){var v=incentiveFieldValue(x,keys);if(v!==null&&Number.isFinite(Number(v))){total+=Number(v);found=true;}});return found?total:null;}
+  function formulaConfigFromForm(){
+    function n(id,def){var el=document.getElementById(id),v=el?Number(el.value):def;return Number.isFinite(v)&&v>=0?v:def;}
+    var config={meal_other:n('rkFormulaMealOther',INCENTIVE_DEFAULTS.meal_other),meal_ob:n('rkFormulaMealOb',INCENTIVE_DEFAULTS.meal_ob),transport_daily:n('rkFormulaTransportDaily',INCENTIVE_DEFAULTS.transport_daily),transport_cap:n('rkFormulaTransportCap',INCENTIVE_DEFAULTS.transport_cap),transport_threshold:n('rkFormulaTransportThreshold',INCENTIVE_DEFAULTS.transport_threshold),phone_daily:n('rkFormulaPhoneDaily',INCENTIVE_DEFAULTS.phone_daily),phone_cap:n('rkFormulaPhoneCap',INCENTIVE_DEFAULTS.phone_cap),phone_threshold:n('rkFormulaPhoneThreshold',INCENTIVE_DEFAULTS.phone_threshold),piket_hourly_rate:15000,piket_min_hours:4,piket_max_hours:8,piket_rounding:'FLOOR_HOUR',eligibility:{meal_requires_on_time:true,meal_exclude_outside:true,transport_exclude_outside:true,phone_include_outside:true,outside_accept_either_event:false,outside_requires_clock_in:true,outside_ignore_late_early:true,standby_as_outside:!!document.getElementById('rkFormulaStandbyPaid')&&document.getElementById('rkFormulaStandbyPaid').checked,piket_paid:true},outside_rates:{}};
+    ['AREA 1','AREA 2','AREA 3','AREA 4','AREA LAIN'].forEach(function(area,idx){config.outside_rates[area]={};var roles=area==='AREA LAIN'?['MGR','STAFF']:['SS','SM','PM'];roles.forEach(function(role){var key='rkFormulaArea'+(idx+1)+role;var def=(INCENTIVE_DEFAULTS.outside_rates[area]||{})[role]||0;config.outside_rates[area][role]=n(key,def);});});
+    return config;
+  }
+  function formulaField(id,label,value){return '<label>'+escH(label)+'<input class="rk-in" id="'+id+'" type="number" min="0" step="1" value="'+escH(value)+'" '+(isSuperAdminRole()?'':'disabled')+'></label>';}
+  function formulaCheckbox(id,label,checked){return '<label class="rk-formula-check"><input type="checkbox" id="'+id+'" '+(checked?'checked ':'')+(isSuperAdminRole()?'':'disabled')+'> '+escH(label)+'</label>';}
+  function renderIncentiveFormulaPage(){
+    var el=document.getElementById('rkp-incentive-formula');if(!el)return;var d=INCENTIVE_DEFAULTS;
+    var html='<div class="rk-formula-intro"><div><span class="rk-sig-kicker">KONTROL PERHITUNGAN</span><h2>Formula Insentif</h2><p>Atur nominal, ambang hari, tarif dinas luar, dan faktor kelayakan. Nilai yang ditampilkan tidak berlaku permanen sebelum disimpan oleh Superadmin.</p></div><div class="rk-formula-role-pill">'+(isSuperAdminRole()?'MODE EDIT · SUPERADMIN':'MODE LIHAT')+'</div></div>'+
+      '<div class="rk-formula-guide"><strong>Alur hitung</strong><div class="rk-formula-guide-grid"><div><b>1. Data kehadiran</b><span>Periode 6 bulan lalu sampai tanggal 5 bulan periode, berdasarkan absensi, kalender kerja, lokasi, dan kode kehadiran.</span></div><div><b>2. Kelayakan</b><span>Setiap komponen menerapkan centang faktor masing-masing, bukan mengubah data absensi asal.</span></div><div><b>3. Nominal</b><span>Tarif per hari, batas maksimum, job code, dan area digunakan backend untuk menghitung hasil akhir.</span></div></div></div>'+
+      '<div class="rk-formula-grid"><section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>01 · Subsidi</h3><p>Nominal dasar dan ambang hari untuk setiap komponen.</p></div><span class="rk-formula-tag">Rupiah</span></div><div class="rk-incentive-grid">'+formulaField('rkFormulaMealOther','Uang makan selain OB (Rp)',d.meal_other)+formulaField('rkFormulaMealOb','Uang makan OB (Rp)',d.meal_ob)+formulaField('rkFormulaTransportDaily','Transport per hari (Rp)',d.transport_daily)+formulaField('rkFormulaTransportCap','Batas transport pada ambang hari (Rp)',d.transport_cap)+formulaField('rkFormulaTransportThreshold','Ambang hari transport',d.transport_threshold)+formulaField('rkFormulaPhoneDaily','Pulsa per hari (Rp)',d.phone_daily)+formulaField('rkFormulaPhoneCap','Batas pulsa pada ambang hari (Rp)',d.phone_cap)+formulaField('rkFormulaPhoneThreshold','Ambang hari pulsa',d.phone_threshold)+'</div><div class="rk-formula-explain"><b>Logika default</b><span>Uang makan: Rp20.000 per hari tepat waktu (OB Rp10.000). Transport: Rp15.385 per hari, maksimum Rp400.000 mulai 25 hari. Pulsa: Rp3.846 per hari, maksimum Rp100.000 mulai 25 hari.</span></div></section>'+
+      '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>02 · Faktor kelayakan</h3><p>Centang untuk mengaktifkan aturan. Perubahan diterapkan oleh backend setelah disimpan.</p></div><span class="rk-formula-tag">Aturan</span></div><div class="rk-formula-check-list">'+formulaCheckbox('rkFormulaMealOnTime','Uang makan: EARLY dan ON_TIME memenuhi syarat; LATE tidak',true)+formulaCheckbox('rkFormulaMealExcludeOutside','Uang makan tidak dihitung saat dinas luar / di luar lokasi',true)+formulaCheckbox('rkFormulaTransportExcludeOutside','Transport tidak dihitung saat dinas luar / di luar lokasi',true)+formulaCheckbox('rkFormulaPhoneIncludeOutside','Subsidi pulsa tetap dihitung saat dinas luar / di luar lokasi',true)+formulaCheckbox('rkFormulaOutsideEitherEvent','Dinas luar wajib memiliki Clock In dengan Area tervalidasi',true)+formulaCheckbox('rkFormulaOutsideIgnoreLate','Dinas luar tidak dipengaruhi keterlambatan atau pulang cepat',true)+formulaCheckbox('rkFormulaStandbyPaid','Standby pada hari libur dibayar dengan tarif dinas luar',true)+formulaCheckbox('rkFormulaPiketPaid','Piket pada hari libur masuk perhitungan insentif',true)+'</div></section></div>'+
+      '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>03 · Tarif dinas luar berdasarkan Area &amp; Job Code</h3><p>Tarif dihitung berdasarkan kode area dan job_code karyawan yang tersimpan. Nilai di bawah adalah tarif awal dari ketentuan yang diberikan.</p></div><span class="rk-formula-tag">Area 1–4</span></div><div class="rk-table-wrap"><table class="rk-incentive-table rk-formula-rate-table"><thead><tr><th>Area</th><th>SS (Rp)</th><th>SM (Rp)</th><th>PM (Rp)</th></tr></thead><tbody>';
+    ['AREA 1','AREA 2','AREA 3','AREA 4'].forEach(function(area,i){html+='<tr><td><b>'+area+'</b></td>'+['SS','SM','PM'].map(function(role){return '<td><input class="rk-in" style="min-width:100px" id="rkFormulaArea'+(i+1)+role+'" type="number" min="0" step="1" value="'+d.outside_rates[area][role]+'" '+(isSuperAdminRole()?'':'disabled')+'></td>';}).join('')+'</tr>';});
+    html+='<tr><td><b>AREA LAIN</b></td><td colspan="1">'+formulaField('rkFormulaArea5MGR','MGR (Rp)',d.outside_rates['AREA LAIN'].MGR)+'</td><td colspan="2">'+formulaField('rkFormulaArea5STAFF','STAFF (Rp)',d.outside_rates['AREA LAIN'].STAFF)+'</td></tr></tbody></table></div></section>'+
+      '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>04 · Aturan Piket aktif</h3><p>Ketentuan ini dikunci sesuai keputusan perusahaan dan dihitung backend berdasarkan pasangan Clock In–Clock Out yang disetujui.</p></div><span class="rk-formula-tag">Aktif</span></div><div class="rk-incentive-grid"><label>Tarif per jam<input class="rk-in" disabled value="Rp 15.000"></label><label>Minimal durasi<input class="rk-in" disabled value="4 jam (di bawahnya Rp 0)"></label><label>Maksimal durasi per hari<input class="rk-in" disabled value="8 jam"></label><label>Pembulatan<input class="rk-in" disabled value="Kelipatan 1 jam, dibulatkan ke bawah"></label></div><div class="rk-formula-explain"><b>Transport &amp; Pulsa</b><span>Piket kantor: tetap mendapat transport dan pulsa harian. Piket dinas luar P1–P5: tidak mendapat transport, tetap mendapat pulsa. P1–P5 pada kandidat ini dihitung sebagai Piket per jam tanpa tambahan tarif DL harian untuk mencegah pembayaran ganda; klausul kombinasi tarif DL perlu ditinjau terpisah.</span></div></section>'+
+      '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>05 · Komponen yang masih placeholder</h3><p>Ditampilkan untuk persiapan, tetapi tidak dihitung ke total sampai aturan resminya ditetapkan.</p></div><span class="rk-formula-tag muted">Tidak dihitung</span></div><div class="rk-incentive-grid"><label>Kompensasi pulang ke keluarga<input class="rk-in" disabled value="Belum didefinisikan"></label><label>Ekstra transport<input class="rk-in" disabled value="Belum didefinisikan"></label><label>Kurang bayar bulan lalu<input class="rk-in" disabled value="Belum didefinisikan"></label></div></section>'+
+      '<div class="rk-formula-footer"><div class="rk-incentive-note" id="rkFormulaNote">Memeriksa formula tersimpan...</div><div class="rk-toolbar"><button class="rk-btn ghost" id="rkFormulaReload" type="button">Muat Formula Tersimpan</button><span style="flex:1"></span><button class="rk-btn" id="rkFormulaSave" type="button" '+(isSuperAdminRole()?'':'disabled')+'>Simpan Formula (Superadmin)</button></div></div>';
+    el.innerHTML=html;
+    if(!isSuperAdminRole())el.insertAdjacentHTML('afterbegin','<div class="rk-note">Anda hanya dapat melihat formula. Hanya Superadmin yang dapat mengubah angka, faktor, dan menyimpan konfigurasi.</div>');
+    ['rkFormulaMealOnTime','rkFormulaMealExcludeOutside','rkFormulaTransportExcludeOutside','rkFormulaPhoneIncludeOutside','rkFormulaOutsideEitherEvent','rkFormulaOutsideIgnoreLate','rkFormulaPiketPaid'].forEach(function(id){var x=document.getElementById(id);if(x){x.checked=true;x.disabled=true;}});
+    Array.prototype.forEach.call(el.querySelectorAll('input'),function(inp){
+      var mark=function(){incentiveUI.formulaDirty=true;var note=document.getElementById('rkFormulaNote');if(note)note.textContent='Ada perubahan yang belum disimpan. Klik Simpan Formula untuk meninjau dan mengonfirmasi.';};
+      inp.addEventListener('input',mark);inp.addEventListener('change',mark);
+    });
+    document.getElementById('rkFormulaSave').addEventListener('click',saveIncentiveFormula);
+    document.getElementById('rkFormulaReload').addEventListener('click',function(){loadIncentiveFormula(true);});
+    loadIncentiveFormula(false);
+  }
+  function applyIncentiveFormula(cfg){
+    if(!cfg||typeof cfg!=='object')return;var d=Object.assign({},INCENTIVE_DEFAULTS,cfg);var outside=Object.assign({},INCENTIVE_DEFAULTS.outside_rates,cfg.outside_rates||{});d.outside_rates=outside;
+    function set(id,v){var e=document.getElementById(id);if(e&&v!=null)e.value=v;}
+    set('rkFormulaMealOther',d.meal_other);set('rkFormulaMealOb',d.meal_ob);set('rkFormulaTransportDaily',d.transport_daily);set('rkFormulaTransportCap',d.transport_cap);set('rkFormulaTransportThreshold',d.transport_threshold);set('rkFormulaPhoneDaily',d.phone_daily);set('rkFormulaPhoneCap',d.phone_cap);set('rkFormulaPhoneThreshold',d.phone_threshold);var elg=Object.assign({},INCENTIVE_DEFAULTS.eligibility,cfg.eligibility||{});function setCheck(id,v){var e=document.getElementById(id);if(e)e.checked=!!v;}setCheck('rkFormulaMealOnTime',elg.meal_requires_on_time);setCheck('rkFormulaMealExcludeOutside',elg.meal_exclude_outside);setCheck('rkFormulaTransportExcludeOutside',elg.transport_exclude_outside);setCheck('rkFormulaPhoneIncludeOutside',elg.phone_include_outside);setCheck('rkFormulaOutsideEitherEvent',elg.outside_requires_clock_in!==false);setCheck('rkFormulaOutsideIgnoreLate',elg.outside_ignore_late_early);setCheck('rkFormulaStandbyPaid',elg.standby_as_outside);setCheck('rkFormulaPiketPaid',elg.piket_paid);
+    ['AREA 1','AREA 2','AREA 3','AREA 4','AREA LAIN'].forEach(function(area,idx){var roles=area==='AREA LAIN'?['MGR','STAFF']:['SS','SM','PM'];roles.forEach(function(role){set('rkFormulaArea'+(idx+1)+role,(outside[area]||{})[role]);});});
+  }
+  function loadIncentiveFormula(force){
+    var note=document.getElementById('rkFormulaNote');
+    if(force&&incentiveUI.formulaDirty&&!confirm('Muat ulang formula dari backend? Perubahan angka/centang yang belum disimpan akan dibuang.'))return;
+    if(note)note.textContent='Memeriksa formula yang tersimpan di backend...';
+    return rpcOptional('hr_get_incentive_formula',{}).then(function(r){
+      if(r){incentiveUI.formula=r.config||r.formula||r;incentiveUI.formulaLoaded=true;applyIncentiveFormula(incentiveUI.formula);incentiveUI.formulaDirty=false;if(note)note.textContent='Formula dimuat dari backend. Perubahan berikutnya harus disimpan oleh Superadmin.';}
+      else{incentiveUI.formula=INCENTIVE_DEFAULTS;incentiveUI.formulaLoaded=false;incentiveUI.formulaDirty=false;applyIncentiveFormula(INCENTIVE_DEFAULTS);if(note)note.textContent='RPC hr_get_incentive_formula belum tersedia/berhasil. Nilai default hanya pratinjau, belum tersimpan permanen.';}
+      return r;
+    }).catch(function(e){if(note)note.textContent='Gagal memuat formula: '+(e&&e.message||e);return null;});
+  }
+  function saveIncentiveFormula(){
+    if(!isSuperAdminRole()){rkToast('Hanya Superadmin yang dapat menyimpan formula.');return;}
+    var cfg=formulaConfigFromForm(),note=document.getElementById('rkFormulaNote');
+    if(!confirm('Konfirmasi perubahan Formula Insentif?\n\nTarif dan faktor yang saat ini terlihat akan disimpan sebagai konfigurasi aktif untuk perhitungan berikutnya. Pastikan setiap angka dan centang sudah benar.'))return;
+    if(note)note.textContent='Menyimpan formula ke backend...';
+    var button=document.getElementById('rkFormulaSave');if(button){button.disabled=true;button.textContent='Menyimpan...';}
+    rpcOptional('hr_save_incentive_formula',{p_config:cfg}).then(function(r){
+      if(r&&r.ok!==false){incentiveUI.formula=cfg;incentiveUI.formulaLoaded=true;incentiveUI.formulaDirty=false;if(note)note.textContent='Formula berhasil dikirim dan dikonfirmasi backend.';rkToast(r.message||'Formula insentif tersimpan.');}
+      else{if(note)note.textContent='Formula belum tersimpan. Backend perlu RPC hr_save_incentive_formula dengan pemeriksaan akses Superadmin.';rkToast('Formula belum disimpan. Periksa RPC backend hr_save_incentive_formula.');}
+    }).catch(function(e){if(note)note.textContent='Gagal menyimpan formula: '+(e&&e.message||e);rkToast('Formula gagal disimpan.');})
+      .finally(function(){if(button){button.disabled=!isSuperAdminRole();button.textContent='Simpan Formula (Superadmin)';}});
   }
 
+  function incentiveEmployeeDetailTable(row){
+    var details=Array.isArray(row.details)?row.details:[];
+    if(!details.length)return '<div class="rk-empty">Belum ada rincian event absensi untuk karyawan ini pada periode terpilih.</div>';
+    return '<div class="rk-table-wrap"><table class="rk-incentive-table"><thead><tr><th>Tanggal</th><th>Kode</th><th>Clock In</th><th>Clock Out</th><th>Ketepatan</th><th>Area</th><th>Makan</th><th>Transport</th><th>Pulsa</th><th>Dinas luar</th><th>Piket</th><th>Catatan audit</th></tr></thead><tbody>'+details.map(function(d){var warns=Array.isArray(d.warnings)?d.warnings.join(' · '):String(d.warnings||'');return '<tr><td>'+escH(d.date||'—')+'</td><td>'+escH(d.attendance_code||'—')+'</td><td>'+escH(d.clock_in||'—')+'<br><small>'+escH(d.clock_in_status||'')+'</small></td><td>'+escH(d.clock_out||'—')+'<br><small>'+escH(d.clock_out_status||'')+'</small></td><td>'+escH(d.punctuality_status||'—')+'</td><td>'+escH(d.area||'—')+'</td><td>'+incentiveMoney(d.meal_amount)+'</td><td>'+((d.transport_eligible===true)?'Ya':'—')+'</td><td>'+((d.phone_eligible===true)?'Ya':'—')+'</td><td>'+incentiveMoney(d.outside_amount)+'</td><td>'+escH(d.picket_hours_paid||0)+' jam<br>'+incentiveMoney(d.picket_amount)+'</td><td>'+escH(warns||'—')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  }
+  function incentiveEmployeeSignatory(root, employeeId){
+    root=root||{};var map=root.by_employee_id||root.byEmployeeId||root.employee_overrides||{};
+    var cfg=map[employeeId]||root.global||root.default||{};
+    if(!cfg.prepared_by||!cfg.approved_by||!cfg.prepared_by_employee_id||!cfg.approved_by_employee_id)return null;
+    return cfg;
+  }
+  function incentiveLogoHtml(){
+    // Print-only master logo copied from the supplied expected-print PDF.
+    // The app header/login logos are not changed.
+    var src='data:image/jpeg;base64,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';
+    return '<img src="'+src+'" alt="ReHolz">';
+  }
+  function incentiveSignatureNameTag(value, role){
+    var label=titleCasePrintName(value||'');
+    var fontPt=7.186;
+    // The final column is wider than its visual grid cell; the label and name are
+    // centered at the same anchor. Keep enough safe width for long Indonesian names.
+    var maxWidthPt=role==='received'?118:(role==='approved'?170:180);
+    try{
+      var canvas=document.createElement('canvas');
+      var ctx=canvas.getContext('2d');
+      if(ctx&&label){
+        var pxPerPt=96/72;
+        ctx.font='700 '+(fontPt*pxPerPt).toFixed(4)+'px Calibri, Carlito, Arial, sans-serif';
+        var widthPt=ctx.measureText(label).width/pxPerPt;
+        if(widthPt>maxWidthPt)fontPt=Math.max(4.8,fontPt*(maxWidthPt/widthPt)*0.97);
+      }
+    }catch(e){ /* Keep the base size if canvas measurement is unavailable. */ }
+    return '<b style="--rk-sig-fit-size:'+fontPt.toFixed(3)+'pt">'+escH(label)+'</b>';
+  }
+  function incentiveEmployeePrintPages(row,p,formula,signatory){
+    var rawName=String(row.nama||'—'), name=titleCasePrintName(rawName), receiverName=rawName.toLocaleUpperCase('id-ID');
+    var nik=row.employee_id||row.nik||'—';
+    var details=Array.isArray(row.details)?row.details:[];
+    var cfg=(formula&&formula.config&&typeof formula.config==='object')?formula.config:
+      ((incentiveUI.formula&&typeof incentiveUI.formula==='object')?incentiveUI.formula:INCENTIVE_DEFAULTS);
+    var job=String(row.job_code||row.jobCode||'').trim().toUpperCase();
+    // Project is intentionally a placeholder until the Project menu is integrated.
+    // Preserve the existing location/project source for the Area note in the details table.
+    var projectNote=titleCasePrintName(row.project||row.project_name||row.projectName||row.branch||row.cabang||'');
+    var project='-';
+    function num(v){if(v===null||v===undefined||v==='')return null;var n=Number(v);return Number.isFinite(n)?n:null;}
+    function val(keys){for(var i=0;i<keys.length;i++){var v=row[keys[i]];if(v!==null&&v!==undefined&&v!=='')return v;}return null;}
+    function fmt(v){if(v==='-')return '-';var n=num(v);return n===null?'':Math.round(n).toLocaleString('en-US');}
+    function areaInfo(key,label,amountKeys,areaLabel){
+      var amountValue=val(amountKeys), matched=details.filter(function(d){
+        var a=String(d.area||'').toUpperCase();
+        return (d.outside_eligible===true || (num(d.outside_amount)||0)>0) &&
+          (a===areaLabel.toUpperCase() || (areaLabel==='Area lainnya' && (a==='AREA LAINNYA'||a==='AREA LAIN')));
+      });
+      var count=matched.length;
+      if(!count && num(amountValue)>0) count=details.filter(function(d){return String(d.area||'').toUpperCase()===areaLabel.toUpperCase();}).length;
+      var rates=(cfg.outside_rates||{}), rateMap=rates[key]||rates[key.toLowerCase()]||{};
+      var rate=num(rateMap[job]);
+      if(rate===null && key==='AREA LAIN') rate=num(rateMap[job]);
+      var notes=matched.map(function(d){return String(d.date||'').slice(0,10);}).filter(Boolean);
+      return {rate:rate===null?0:rate,count:count,amount:num(amountValue)===null?0:num(amountValue),notes:notes};
+    }
+    function dateParts(iso){
+      var m=String(iso||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);if(!m)return String(iso||'');
+      var months=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agt','Sept','Okt','Nov','Des'];
+      return Number(m[3])+' '+months[Number(m[2])-1]+' '+m[1];
+    }
+    function periodLabel(from,to){
+      var a=dateParts(from),b=dateParts(to),ma=a.match(/^(\d+) (.+) (\d{4})$/),mb=b.match(/^(\d+) (.+) (\d{4})$/);
+      if(ma&&mb&&ma[3]===mb[3])return ma[1]+' '+ma[2]+' - '+mb[1]+' '+mb[2]+' '+mb[3];
+      return a+' - '+b;
+    }
+    function terbilang(n){
+      n=Math.floor(Math.abs(Number(n)||0));
+      if(n===0)return 'nol';
+      var satu=['','satu','dua','tiga','empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas'];
+      function ratus(x){
+        if(x<12)return satu[x];
+        if(x<20)return satu[x-10]+' belas';
+        if(x<100)return satu[Math.floor(x/10)]+' puluh'+(x%10?' '+ratus(x%10):'');
+        if(x<200)return 'seratus'+(x%100?' '+ratus(x%100):'');
+        if(x<1000)return satu[Math.floor(x/100)]+' ratus'+(x%100?' '+ratus(x%100):'');
+        return '';
+      }
+      var scales=['','ribu','juta','miliar','triliun'],parts=[],idx=0;
+      while(n>0&&idx<scales.length){var group=n%1000;if(group){var w=(idx===1&&group===1)?'seribu':ratus(group)+(scales[idx]?' '+scales[idx]:'');parts.unshift(w);}n=Math.floor(n/1000);idx++;}
+      return parts.join(' ').replace(/\s+/g,' ').trim();
+    }
+    function detailDateRange(rows){
+      var dates=Array.from(new Set(rows.map(function(d){return String(d.date||'').slice(0,10);}).filter(function(d){return /^\d{4}-\d{2}-\d{2}$/.test(d);}))).sort();
+      if(!dates.length)return '';
+      return dates.length===1?dateParts(dates[0]):periodLabel(dates[0],dates[dates.length-1]);
+    }
+    function areaNotes(area){
+      var rows=details.filter(function(d){var a=String(d.area||'').toLowerCase();return (d.outside_eligible===true||(num(d.outside_amount)||0)>0)&&(a===area.toLowerCase()||(area==='Area lainnya'&&a==='area lain'));});
+      var range=detailDateRange(rows);
+      return range?(projectNote?projectNote+' ('+range+')':range):'';
+    }
+    function rowHtml(label,rate,qty,total,note,klass){
+      return '<tr class="'+(klass||'')+'"><td>'+label+'</td><td class="num">'+(rate===null||rate===undefined?'':fmt(rate))+'</td><td class="num">'+(qty===null||qty===undefined?'':fmt(qty))+'</td><td class="num">'+(total===null||total===undefined?'':fmt(total))+'</td><td>'+(note||'')+'</td></tr>';
+    }
+    var mealDays=num(val(['meal_days','punctual_days']))||0;
+    var transportDays=num(val(['transport_days']))||0;
+    var phoneDays=num(val(['phone_days']))||0;
+    var mealRate=num(job==='OB'?cfg.meal_ob:cfg.meal_other);if(mealRate===null)mealRate=0;
+    var transportRate=num(cfg.transport_daily);if(transportRate===null)transportRate=0;
+    var phoneRate=num(cfg.phone_daily);if(phoneRate===null)phoneRate=0;
+    var area1=areaInfo('AREA 1','Area 1',['area_1_amount','outside_area1_amount','area1_amount','dinas_luar_area1_amount'],'Area 1');
+    var area2=areaInfo('AREA 2','Area 2',['area_2_amount','outside_area2_amount','area2_amount','dinas_luar_area2_amount'],'Area 2');
+    var area3=areaInfo('AREA 3','Area 3',['area_3_amount','outside_area3_amount','area3_amount','dinas_luar_area3_amount'],'Area 3');
+    var area4=areaInfo('AREA 4','Area 4',['area_4_amount','outside_area4_amount','area4_amount','dinas_luar_area4_amount'],'Area 4');
+    var areaL=areaInfo('AREA LAIN','Area Lain',['area_lain_amount','outside_area_lain_amount','area_other_amount','dinas_luar_area_lain_amount'],'Area lainnya');
+    var picketRate=num(cfg.piket_hourly_rate);if(picketRate===null)picketRate=15000;
+    var picketHours=num(val(['picket_hours']));if(picketHours===null)picketHours=0;
+    var total=num(val(['total_amount','total','grand_total']))||0;
+    var jobPosition=String(row.job_code||row.job_position||'');
+    var sign=signatory||{};
+    var content='<div class="rk-incentive-exact-content">'+
+      '<header class="rk-incentive-exact-head"><div class="rk-incentive-exact-logo">'+incentiveLogoHtml()+'</div><div class="rk-incentive-exact-identity">'+
+        '<h1>INSENTIF</h1>'+
+        '<div class="rk-incentive-exact-meta"><i>Penerima</i><span>:&nbsp;&nbsp;&nbsp;'+escH(receiverName)+'</span></div>'+
+        '<div class="rk-incentive-exact-meta"><i>Project</i><span>:&nbsp;&nbsp;&nbsp;'+escH(project)+'</span></div>'+
+        '<div class="rk-incentive-exact-meta"><i>Periode</i><span>:&nbsp;&nbsp;&nbsp;'+escH(periodLabel(p.from,p.to))+'</span></div>'+
+        '<div class="rk-incentive-exact-meta"><i>Kode Posisi</i><span>:&nbsp;&nbsp;&nbsp;'+escH(jobPosition)+'</span></div>'+
+      '</div></header>'+
+      '<table class="rk-incentive-exact-table"><colgroup><col style="width:26.4%"><col style="width:19.5%"><col style="width:10.4%"><col style="width:19.5%"><col style="width:24.2%"></colgroup><thead><tr><th>Uraian Biaya</th><th>Rupiah / hari</th><th>Jml hari atau jam</th><th>Total</th><th>Keterangan</th></tr></thead><tbody>'+
+      rowHtml('Uang makan',mealRate,mealDays,val(['meal_amount'])===null?0:val(['meal_amount']),'', '')+
+      rowHtml('Subsidi Transport',transportRate,transportDays,val(['transport_amount'])===null?0:val(['transport_amount']),'','')+
+      rowHtml('Subsidi Pulsa',phoneRate,phoneDays,val(['phone_amount'])===null?0:val(['phone_amount']),'','')+
+      rowHtml('Insentif dinas luar','','','','','section')+
+      rowHtml('Area 1',area1.rate,area1.count,area1.amount,escH(areaNotes('Area 1')),'area-rate')+
+      rowHtml('Area 2',area2.rate,area2.count,area2.amount,escH(areaNotes('Area 2')),'area-rate')+
+      rowHtml('Area 3',area3.rate,area3.count,area3.amount,escH(areaNotes('Area 3')),'area-rate')+
+      rowHtml('Area 4',area4.rate,area4.count,area4.amount,escH(areaNotes('Area 4')),'area-rate')+
+      rowHtml('Area Lain',areaL.rate,areaL.count,areaL.amount,escH(areaNotes('Area lainnya')),'area-rate')+
+      rowHtml('Kompensasi pulang ke keluarga','','',val(['family_trip_amount','family_compensation_amount','kompensasi_pulang_keluarga'])===null?'':val(['family_trip_amount','family_compensation_amount','kompensasi_pulang_keluarga']),'','')+
+      rowHtml('Lain - lain','','','','','section')+
+      rowHtml('- Uang piket',picketRate,picketHours,val(['picket_amount'])===null?0:val(['picket_amount']),'','')+
+      rowHtml('- Subsidi ekstra transport','','',val(['extra_transport_amount','extra_transport_subsidy_amount','subsidi_ekstra_transport'])===null?'':val(['extra_transport_amount','extra_transport_subsidy_amount','subsidi_ekstra_transport']),'','')+
+      rowHtml('- Kurang bayar bulan lalu','','',val(['underpayment_last_month_amount','kurang_bayar_bulan_lalu'])===null?'':val(['underpayment_last_month_amount','kurang_bayar_bulan_lalu']),'','')+
+      '<tr class="total"><td colspan="3" class="total-label">Total</td><td class="num">'+fmt(total)+'</td><td></td></tr>'+
+      '</tbody></table>'+
+      '<div class="rk-incentive-exact-terbilang"><i>Terbilang :</i><span>'+escH(titleCasePrintName(terbilang(total)))+'</span></div>'+
+      '<div class="rk-incentive-exact-signatures"><div><span>Disiapkan Oleh,</span>'+incentiveSignatureNameTag(sign.prepared_by||'','prepared')+'</div><div><span>Disetujui Oleh,</span>'+incentiveSignatureNameTag(sign.approved_by||'','approved')+'</div><div><span>Diterima Oleh,</span>'+incentiveSignatureNameTag(name,'received')+'</div></div>'+
+      '</div>';
+    return '<article class="rk-incentive-print-page rk-incentive-exact-page">'+content+'</article>';
+  }
+  function titleCasePrintName(value){
+    return String(value||'').toLocaleLowerCase('id-ID').replace(/(^|[\s'-])([a-zà-ÿ])/g,function(_,sep,ch){return sep+ch.toLocaleUpperCase('id-ID');});
+  }
+  function renderIncentiveEmployeePage(){
+    var el=document.getElementById('rkp-incentive-employee');if(!el)return;if(!incentiveUI.period)incentiveUI.period=incentiveMonthDefault();var p=incentiveBounds(incentiveUI.period);
+    var build=function(){
+      var employees=empCurrentList().map(empNormalize).filter(function(x){return x.nik;}).sort(function(a,b){return String(a.nama||'').localeCompare(String(b.nama||''),'id',{sensitivity:'base'});});
+      var opts='<option value="ALL">Semua Karyawan</option>'+employees.map(function(x){return '<option value="'+escH(x.nik)+'">'+escH(x.nama)+' ('+escH(x.nik)+')</option>';}).join('');
+      el.innerHTML='<div class="rk-toolbar"><span class="rk-card-sub">Rekap detail per karyawan. Data diambil langsung dari mesin perhitungan backend.</span><span style="flex:1"></span><button class="rk-btn ghost" id="rkIncEmpReload" type="button">Muat Ulang</button><button class="rk-btn" id="rkIncEmpLoad" type="button">Tampilkan Rekap</button><button class="rk-btn" id="rkIncEmpPrint" type="button" disabled>Cetak PDF</button><button class="rk-btn ghost" id="rkIncEmpPrintRekap" type="button" disabled>Cetak Rekap</button></div><div class="rk-card"><div class="rk-incentive-grid"><label>Bulan periode pembayaran<input class="rk-in" type="month" id="rkIncEmpPeriod" value="'+escH(incentiveUI.period)+'"></label><label>Mulai periode<input class="rk-in" type="date" id="rkIncEmpFrom" value="'+(p?p.from:'')+'" readonly></label><label>Sampai tanggal<input class="rk-in" type="date" id="rkIncEmpTo" value="'+(p?p.to:'')+'" readonly></label><label>Karyawan<select class="rk-in" id="rkIncEmpNik">'+opts+'</select></label></div><div class="rk-card-sub" style="margin-top:8px">Periode pembayaran: tanggal 6 bulan sebelumnya sampai tanggal 5 bulan terpilih, inklusif (Asia/Jakarta).</div></div><div id="rkIncEmpNotice" class="rk-incentive-note">Pilih periode dan karyawan, lalu klik Tampilkan Rekap.</div><div id="rkIncEmpPreview" class="rk-card"><div class="rk-empty">Rekap belum dimuat.</div></div>';
+      var period=document.getElementById('rkIncEmpPeriod');period.addEventListener('change',function(){incentiveUI.period=this.value||incentiveMonthDefault();var b=incentiveBounds(incentiveUI.period);document.getElementById('rkIncEmpFrom').value=b?b.from:'';document.getElementById('rkIncEmpTo').value=b?b.to:'';});
+      var select=document.getElementById('rkIncEmpNik');select.value=incentiveUI.employeeNik||'ALL';select.addEventListener('change',function(){incentiveUI.employeeNik=this.value||'ALL';});
+      document.getElementById('rkIncEmpLoad').addEventListener('click',loadIncentiveEmployeeRecap);
+      document.getElementById('rkIncEmpReload').addEventListener('click',loadIncentiveEmployeeRecap);
+      document.getElementById('rkIncEmpPrint').addEventListener('click',printIncentiveEmployeeRecap);
+      document.getElementById('rkIncEmpPrintRekap').addEventListener('click',printIncentiveEmployeeLedger);
+    };
+    if(empUI.fullList&&empUI.fullList.length)build();else syncEmpDirectory(false).then(build).catch(build);
+  }
+  function loadIncentiveEmployeeRecap(){
+    var month=(document.getElementById('rkIncEmpPeriod')||{}).value||incentiveUI.period||incentiveMonthDefault();incentiveUI.period=month;
+    var p=incentiveBounds(month),selected=(document.getElementById('rkIncEmpNik')||{}).value||'ALL';incentiveUI.employeeNik=selected;
+    var box=document.getElementById('rkIncEmpPreview'),note=document.getElementById('rkIncEmpNotice'),btn=document.getElementById('rkIncEmpPrint'),btnLedger=document.getElementById('rkIncEmpPrintRekap');
+    if(!p){if(note)note.textContent='Bulan periode tidak valid.';return Promise.resolve(null);}
+    incentiveUI.employeeRecap=null;incentiveUI.employeeRecapParams=null;
+    if(btn){btn.disabled=true;btn.textContent='Memuat...';}if(btnLedger){btnLedger.disabled=true;btnLedger.textContent='Memuat...';}
+    if(note)note.textContent='Mengambil rekap dan rincian dari backend...';if(box)box.innerHTML='<div class="rk-loading">Menghitung insentif...</div>';
+    return rpcOptional('hr_get_incentive_employee_recap',{p_start_date:p.from,p_end_date:p.to,p_employee_id:selected==='ALL'?null:selected}).then(function(r){
+      if(!r){incentiveUI.employeeRecap=null;incentiveUI.employeeRecapParams=null;if(box)box.innerHTML='<div class="rk-note">RPC hr_get_incentive_employee_recap belum tersedia atau gagal. Jalankan patch backend terlebih dahulu.</div>';if(note)note.textContent='Rekap belum berhasil dimuat.';return null;}
+      incentiveUI.employeeRecap=r;incentiveUI.employeeRecapParams={from:p.from,to:p.to,employeeId:selected};var rows=incentiveRows(r);
+      if(box){box.innerHTML=incentiveRecapTable(rows)+rows.map(function(x){var name=x.nama||x.employee_id||'Karyawan';return '<section class="rk-card"><h3>'+escH(name)+'</h3>'+incentiveEmployeeDetailTable(x)+'</section>';}).join('');}
+      if(note)note.textContent=rows.length+' karyawan ditampilkan · '+p.from+' sampai '+p.to+' · formula versi '+((r.formula&&r.formula.version)||'—')+'.';
+      if(btn){btn.disabled=!rows.length;btn.textContent='Cetak PDF';}if(btnLedger){btnLedger.disabled=!rows.length;btnLedger.textContent='Cetak Rekap';}return r;
+    }).catch(function(e){incentiveUI.employeeRecap=null;incentiveUI.employeeRecapParams=null;if(box)box.innerHTML='<div class="rk-note">Gagal memuat rekap: '+escH(e&&e.message||e)+'</div>';if(note)note.textContent='Rekap gagal dimuat.';if(btn){btn.disabled=true;btn.textContent='Cetak PDF';}if(btnLedger){btnLedger.disabled=true;btnLedger.textContent='Cetak Rekap';}return null;});
+  }
+  function incentiveLedgerPeriodLabel(p){
+    var months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    function parts(v){var m=String(v||'').slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?{day:String(Number(m[3])),month:months[Number(m[2])-1],year:m[1]}:null;}
+    var a=parts(p&&p.from),b=parts(p&&p.to);
+    if(!a||!b)return String((p&&p.from)||'')+' - '+String((p&&p.to)||'');
+    if(a.year===b.year)return a.day+' '+a.month+' - '+b.day+' '+b.month+' '+b.year;
+    return a.day+' '+a.month+' '+a.year+' - '+b.day+' '+b.month+' '+b.year;
+  }
+  function incentiveLedgerDate(v){
+    var m=String(v||'').slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m?(m[3]+'/'+m[2]+'/'+m[1]):String(v||'');
+  }
+  function incentiveLedgerLongDate(v){
+    var m=String(v||'').slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m)return String(v||'');
+    var months=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+    return String(Number(m[3]))+' '+months[Number(m[2])-1]+' '+m[1];
+  }
+  function incentiveLedgerNextDate(v){
+    var m=String(v||'').slice(0,10).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(!m)return String(v||'');
+    var d=new Date(Date.UTC(Number(m[1]),Number(m[2])-1,Number(m[3])+1));
+    return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+  }
+  function incentiveLedgerTodayISO(){
+    try{
+      var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+      var map={};parts.forEach(function(x){if(x.type!=='literal')map[x.type]=x.value;});
+      return map.year+'-'+map.month+'-'+map.day;
+    }catch(e){
+      var d=new Date(Date.now()+7*60*60*1000);
+      return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
+    }
+  }
+  function incentiveLedgerBankLabel(row){
+    row=row||{};
+    var nik=String(row.employee_id||row.nik||'');
+    var employee=empCurrentList().map(empNormalize).find(function(x){return String(x.nik||'')===nik;})||{};
+    var bank=String(row.bank_name||row.bankName||employee.bankName||employee.bank_name||'').trim().toLocaleUpperCase('id-ID');
+    var account=String(row.bank_account||row.bankAccount||employee.bankAccount||employee.bank_account||'').trim();
+    if(!bank&&!account)return '-';
+    if(!account)return bank+' -';
+    return (bank?bank+' - ':'')+account;
+  }
+  function incentiveLedgerAmount(row){
+    row=row||{};
+    var keys=['total_amount','grand_total','total','net_amount','payable_amount'];
+    for(var i=0;i<keys.length;i++)if(row[keys[i]]!==null&&row[keys[i]]!==undefined&&row[keys[i]]!==''){
+      var n=Number(row[keys[i]]);if(Number.isFinite(n))return n;
+    }
+    return null;
+  }
+  function incentiveLedgerMoney(v){return v===null||v===undefined||v===''?'':Math.round(Number(v)||0).toLocaleString('id-ID');}
+  function incentiveEmployeeLedgerSummary(rows,p){
+    var periodLabel=incentiveLedgerPeriodLabel(p);
+    var dateLabel=incentiveLedgerLongDate(incentiveLedgerTodayISO());
+    var periodText='Insentif Karyawan Radin Periode '+periodLabel;
+    var sorted=(rows||[]).slice().sort(function(a,b){return String(a.nama||a.full_name||a.employee_name||'').localeCompare(String(b.nama||b.full_name||b.employee_name||''),'id',{sensitivity:'base'});});
+    var complete=true,grandTotal=0;
+    var employeeRows=sorted.map(function(row){
+      row=row||{};
+      var name=String(row.nama||row.full_name||row.employee_name||'Karyawan').toLocaleUpperCase('id-ID');
+      var account=incentiveLedgerBankLabel(row);
+      var amount=incentiveLedgerAmount(row);
+      if(amount===null)complete=false;else grandTotal+=amount;
+      return '<tr class="rk-ledger-employee"><td></td><td></td><td class="rk-ledger-employee-name">'+escH(name)+'</td><td class="rk-ledger-account">'+escH(account)+'</td><td></td><td class="rk-ledger-money">'+escH(incentiveLedgerMoney(amount))+'</td></tr>';
+    });
+    var prepared=titleCasePrintName((incentiveUI.signatures&&incentiveUI.signatures.prepared)||'');
+    /* Keep each report sheet to at most 30 employee rows. The list remains
+       fully dynamic; only its page grouping is bounded so totals and the
+       signature footer never land alone on an otherwise blank page. */
+    var pageSize=30;
+    var chunks=[];
+    if(!employeeRows.length)chunks=[[]];
+    else for(var i=0;i<employeeRows.length;i+=pageSize)chunks.push(employeeRows.slice(i,i+pageSize));
+    return chunks.map(function(chunk,pageIndex){
+      var isFirst=pageIndex===0,isLast=pageIndex===chunks.length-1;
+      var bodyRows=chunk.join('');
+      if(!sorted.length)bodyRows='<tr><td colspan="6" class="rk-ledger-empty">Tidak ada karyawan pada filter ini.</td></tr>';
+      var periodRow=isFirst?'<tr class="rk-ledger-period-row"><td class="rk-ledger-no">1</td><td class="rk-ledger-date">'+escH(dateLabel)+'</td><td>'+escH(periodText)+'</td><td></td><td></td><td></td></tr>':'';
+      var totalRow=isLast&&complete&&sorted.length?'<tfoot><tr class="rk-ledger-grand-total"><td colspan="5">Total</td><td class="rk-ledger-money">'+escH(incentiveLedgerMoney(grandTotal))+'</td></tr></tfoot>':'';
+      var footer=isLast?'<footer class="rk-ledger-report-footer"><div>Surabaya, '+escH(incentiveLedgerLongDate(incentiveLedgerNextDate(p&&p.to)))+'</div><div>Dibuat oleh,</div><strong>'+escH(prepared)+'</strong></footer>':'';
+      return '<section class="rk-incentive-ledger-report">'+
+        '<header class="rk-ledger-report-head"><div class="rk-ledger-brand">'+incentiveLogoHtml()+'</div><div class="rk-ledger-title"><div class="rk-ledger-kicker">RINCIAN KAS KECIL</div><div class="rk-ledger-company">PT. RADIN MITRA LESTARI</div><div class="rk-ledger-period">'+escH(periodText)+'</div></div></header>'+
+        '<table class="rk-incentive-ledger-table"><colgroup><col style="width:4.5%"><col style="width:16.5%"><col style="width:33.5%"><col style="width:28%"><col style="width:8.5%"><col style="width:9%"></colgroup>'+
+        '<thead><tr><th>No</th><th>Tanggal</th><th>Keterangan</th><th>No Rekening</th><th>Masuk</th><th>Keluar</th></tr></thead><tbody>'+periodRow+bodyRows+'</tbody>'+totalRow+'</table>'+footer+
+        '</section>';
+    }).join('');
+  }
+  function incentiveWrapPrintPages(items,mode,allSelected){
+    if(mode==='ledger')return items.join('');
+    if(allSelected){
+      var pages=[],j=0;
+      for(;j+1<items.length;j+=2)pages.push('<section class="rk-incentive-pair-sheet">'+items[j]+items[j+1]+'</section>');
+      if(j<items.length)pages.push('<section class="rk-incentive-one-sheet rk-incentive-one-sheet-last">'+items[j]+'</section>');
+      return pages.join('');
+    }
+    // The supplied expected print contains two identical copies for the selected employee on one Letter sheet.
+    return items.length===1?'<section class="rk-incentive-pair-sheet rk-incentive-selected-copy">'+items[0]+items[0]+'</section>':items.map(function(x){return '<section class="rk-incentive-one-sheet">'+x+'</section>';}).join('');
+  }
+  async function printIncentiveEmployeeMode(mode){
+    var data=incentiveUI.employeeRecap;if(!data){rkToast('Muat rekap terlebih dahulu.');return;}
+    var rows=incentiveRows(data),period=(document.getElementById('rkIncEmpPeriod')||{}).value||incentiveUI.period||incentiveMonthDefault(),p=incentiveBounds(period),selected=(document.getElementById('rkIncEmpNik')||{}).value||'ALL';
+    if(!p){rkToast('Periode tidak valid.');return;}
+    if(selected!=='ALL')rows=rows.filter(function(r){return String(r.employee_id||r.nik||'')===selected;});
+    if(!rows.length){rkToast('Tidak ada data karyawan yang dapat dicetak.');return;}
+    if(!incentiveUI.employeeRecapParams||incentiveUI.employeeRecapParams.from!==p.from||incentiveUI.employeeRecapParams.to!==p.to||incentiveUI.employeeRecapParams.employeeId!==selected){rkToast('Periode atau karyawan berubah setelah rekap dimuat. Klik Tampilkan Rekap kembali sebelum mencetak.');return;}
+    var allSelected=selected==='ALL',button=document.getElementById(mode==='ledger'?'rkIncEmpPrintRekap':'rkIncEmpPrint'),otherButton=document.getElementById(mode==='ledger'?'rkIncEmpPrint':'rkIncEmpPrintRekap');
+    if(button){button.disabled=true;button.textContent=mode==='ledger'?'Menyiapkan rekap...':'Memeriksa penandatangan...';}
+    if(otherButton)otherButton.disabled=true;
+    var ledgerPrintWindow=null;
+    try{
+      if(mode==='ledger'){
+        // Open synchronously in the click gesture. The print document is isolated from the HRIS page CSS.
+        ledgerPrintWindow=window.open('about:blank','_blank');
+        if(!ledgerPrintWindow)throw new Error('Jendela cetak diblokir browser. Izinkan pop-up untuk file ReHolz, lalu coba Cetak Rekap lagi.');
+      }
+      var items=[];
+      if(mode==='ledger'){
+        items.push(incentiveEmployeeLedgerSummary(rows,p));
+      }else{
+        var root=await rpcOptional('hr_get_incentive_signatories',{});root=root&&(root.signatories||root.data||root);
+        if(!root)throw new Error('Konfigurasi penandatangan backend tidak tersedia.');
+        for(var i=0;i<rows.length;i++){
+          var row=rows[i],sign=incentiveEmployeeSignatory(root,String(row.employee_id||row.nik||''));
+          if(!sign)throw new Error('Penandatangan global atau override belum lengkap untuk '+(row.nama||row.employee_id||'karyawan')+'.');
+          items.push(incentiveEmployeePrintPages(row,p,data.formula,sign));
+        }
+      }
+      var host=document.getElementById('rkIncentivePrintHost');if(!host){host=document.createElement('div');host.id='rkIncentivePrintHost';host.className='rk-incentive-print-host';document.body.appendChild(host);}
+      host.className='rk-incentive-print-host '+(mode==='ledger'?'rk-incentive-print-ledger':'rk-incentive-print-slip');
+      host.innerHTML=incentiveWrapPrintPages(items,mode,allSelected);
+      var oldStyle=document.getElementById('rkIncentiveExactPrintCss');if(oldStyle)oldStyle.remove();
+      var printCss=document.createElement('style');printCss.id='rkIncentiveExactPrintCss';
+      printCss.textContent = (mode==='ledger'
+        ? '@page { size: 297mm 210mm; margin: 7mm 8mm 8mm; }\n'
+        : '@page { size: 215.9mm 279.4mm; margin: 0; }\n') + `
+@media print {
+  html, body { width:auto!important; min-width:0!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; overflow:visible!important; background:#fff!important; }
+  body.rk-printing-incentive { color:#111!important; -webkit-print-color-adjust:exact!important; print-color-adjust:exact!important; }
+  body.rk-printing-incentive > :not(#rkIncentivePrintHost) { display:none!important; }
+  body.rk-printing-incentive #rkIncentivePrintHost { display:block!important; position:static!important; inset:auto!important; transform:none!important; width:100%!important; max-width:none!important; min-width:0!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; overflow:visible!important; background:#fff!important; color:#111!important; font-family:Arial,Helvetica,sans-serif!important; box-shadow:none!important; }
+
+
+  /* Expected slip geometry: Letter portrait, two half-sheet forms, no nested page breaks. */
+  body.rk-printing-incentive .rk-incentive-pair-sheet { position:relative!important; display:grid!important; grid-template-columns:minmax(0,1fr)!important; grid-template-rows:138.69mm 138.69mm!important; box-sizing:border-box!important; width:215.9mm!important; height:277.38mm!important; min-height:277.38mm!important; max-height:277.38mm!important; margin:0!important; padding:0!important; overflow:hidden!important; page-break-after:always!important; break-after:page!important; page-break-inside:avoid!important; break-inside:avoid!important; }
+  body.rk-printing-incentive .rk-incentive-pair-sheet:last-child { page-break-after:auto!important; break-after:auto!important; }
+  body.rk-printing-incentive .rk-incentive-pair-sheet::after { content:''!important; position:absolute!important; left:5.2mm!important; top:143.15mm!important; width:188.6mm!important; height:0!important; border-top:.75pt solid #000!important; pointer-events:none!important; }
+  body.rk-printing-incentive .rk-incentive-one-sheet { display:block!important; box-sizing:border-box!important; width:215.9mm!important; height:138.69mm!important; min-height:138.69mm!important; max-height:138.69mm!important; margin:0!important; padding:0!important; overflow:hidden!important; page-break-after:always!important; break-after:page!important; page-break-inside:avoid!important; break-inside:avoid!important; }
+  body.rk-printing-incentive .rk-incentive-one-sheet:last-child { page-break-after:auto!important; break-after:auto!important; }
+  body.rk-printing-incentive .rk-incentive-exact-page { display:block!important; position:relative!important; box-sizing:border-box!important; width:215.9mm!important; height:138.69mm!important; min-height:138.69mm!important; max-height:138.69mm!important; margin:0!important; padding:10.37mm 0 0!important; overflow:hidden!important; page-break-after:auto!important; break-after:auto!important; page-break-inside:avoid!important; break-inside:avoid!important; background:#fff!important; color:#111!important; font-family:Arial,Helvetica,sans-serif!important; }
+  body.rk-printing-incentive .rk-incentive-exact-content { display:block!important; box-sizing:border-box!important; width:185.5mm!important; max-width:185.5mm!important; min-width:185.5mm!important; margin:0 0 0 7.83mm!important; padding:0!important; font-family:Calibri,Carlito,sans-serif!important; font-size:7.186pt!important; line-height:9.96pt!important; color:#111!important; }
+
+  /* Brand and identity are intentionally far apart, as in the source PDF. */
+  body.rk-printing-incentive .rk-incentive-exact-head { display:grid!important; grid-template-columns:105.52mm minmax(0,1fr)!important; gap:0!important; align-items:start!important; width:100%!important; height:62.64pt!important; min-height:62.64pt!important; margin:0!important; padding:0!important; }
+  body.rk-printing-incentive .rk-incentive-exact-logo { display:flex!important; align-items:flex-start!important; justify-content:flex-start!important; width:31mm!important; max-width:31mm!important; height:13.6mm!important; max-height:13.6mm!important; margin:0!important; padding:0!important; }
+  body.rk-printing-incentive .rk-incentive-exact-logo img { display:block!important; width:30.7mm!important; height:13.6mm!important; max-width:30.7mm!important; max-height:13.6mm!important; margin-left:.96pt!important; object-fit:fill!important; object-position:left top!important; }
+  body.rk-printing-incentive .rk-incentive-exact-identity { display:block!important; width:auto!important; min-width:0!important; margin:0!important; padding:0!important; font-size:9pt!important; line-height:9.96pt!important; color:#111!important; }
+  body.rk-printing-incentive .rk-incentive-exact-identity h1 { display:block!important; margin:0!important; padding:0!important; height:13.88pt!important; font-family:Calibri,Carlito,sans-serif!important; font-size:10.42pt!important; line-height:13.88pt!important; font-weight:700!important; color:#111!important; }
+  body.rk-printing-incentive .rk-incentive-exact-meta { display:grid!important; grid-template-columns:102.6pt minmax(0,1fr)!important; gap:0!important; width:100%!important; min-height:9.96pt!important; height:9.96pt!important; margin:0!important; padding:0!important; font-size:7.186pt!important; line-height:9.96pt!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-exact-meta i { display:block!important; margin:0!important; padding:0!important; font-family:Calibri,Carlito,sans-serif!important; font-style:italic!important; font-weight:400!important; }
+  body.rk-printing-incentive .rk-incentive-exact-meta span { display:block!important; min-width:0!important; margin:0!important; padding:0!important; font-family:Calibri,Carlito,sans-serif!important; font-style:italic!important; font-weight:400!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-exact-meta:nth-child(2) span { font-family:"Aptos Narrow","Liberation Sans Narrow",sans-serif!important; font-style:italic!important; }
+
+  /* Five columns, exact widths and row rhythm from the supplied expected print. */
+  body.rk-printing-incentive .rk-incentive-exact-table { display:table!important; width:100%!important; max-width:100%!important; min-width:100%!important; border-collapse:collapse!important; table-layout:fixed!important; margin:0!important; padding:0!important; font-family:Calibri,Carlito,sans-serif!important; font-size:7.186pt!important; line-height:9.96pt!important; color:#111!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table th, body.rk-printing-incentive .rk-incentive-exact-table td { box-sizing:border-box!important; height:9.13pt!important; min-height:9.13pt!important; max-height:9.13pt!important; border:.6pt solid #000!important; padding:0 1.1pt!important; vertical-align:middle!important; font-family:Calibri,Carlito,sans-serif!important; font-size:7.186pt!important; line-height:9.13pt!important; font-weight:400!important; text-align:left!important; overflow:hidden!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table th { height:20.92pt!important; min-height:20.92pt!important; max-height:20.92pt!important; background:#DAF2D0!important; font-family:Calibri,Carlito,sans-serif!important; font-size:7.186pt!important; font-weight:700!important; text-align:center!important; line-height:9.96pt!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table td.num { text-align:right!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table tr.section td { font-weight:700!important; background:#fff!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table tr.area-rate td:nth-child(2) { font-family:"Aptos Narrow","Liberation Sans Narrow",sans-serif!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table tr.total td { height:10.56pt!important; min-height:10.56pt!important; max-height:10.56pt!important; font-weight:700!important; border-top:.6pt solid #000!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table tr.total td:nth-child(-n+4) { background:#DAF2D0!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table tr.total td:last-child { background:#fff!important; }
+  body.rk-printing-incentive .rk-incentive-exact-table tr.total td.total-label { text-align:center!important; }
+  body.rk-printing-incentive .rk-incentive-exact-terbilang { display:block!important; box-sizing:border-box!important; width:76%!important; height:17.04pt!important; min-height:17.04pt!important; max-height:17.04pt!important; margin:0!important; padding:0 1.7pt!important; border-left:.6pt solid #000!important; border-right:.6pt solid #000!important; border-bottom:.6pt solid #000!important; border-top:0!important; background:#DAF2D0!important; font-family:Calibri,Carlito,sans-serif!important; font-size:7.186pt!important; line-height:17.04pt!important; font-style:italic!important; font-weight:700!important; white-space:nowrap!important; overflow:hidden!important; }
+  body.rk-printing-incentive .rk-incentive-exact-terbilang i { font-style:italic!important; font-weight:700!important; margin-right:5pt!important; }
+  body.rk-printing-incentive .rk-incentive-exact-terbilang span { font-style:italic!important; font-weight:700!important; }
+  body.rk-printing-incentive .rk-incentive-exact-terbilang i, body.rk-printing-incentive .rk-incentive-exact-terbilang span { position:relative!important; top:-1.2pt!important; }
+
+  /* Signature labels and signer names use the same three fixed positions as the reference. */
+  body.rk-printing-incentive .rk-incentive-exact-signatures { display:grid!important; grid-template-columns:47.1% 40.4% 12.5%!important; gap:0!important; width:100%!important; height:80pt!important; min-height:80pt!important; max-height:80pt!important; margin:19.6pt 0 0!important; padding:0!important; font-family:Arial,Helvetica,sans-serif!important; font-size:9pt!important; line-height:10pt!important; color:#111!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div { display:block!important; box-sizing:border-box!important; min-width:0!important; height:80pt!important; min-height:80pt!important; max-height:80pt!important; margin:0!important; padding:0!important; overflow:visible!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures span { display:block!important; margin:0!important; padding:0!important; font-family:Calibri,Carlito,sans-serif!important; font-size:7.186pt!important; line-height:10pt!important; font-weight:400!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:first-child>span { padding-left:1.4pt!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:nth-child(2), body.rk-printing-incentive .rk-incentive-exact-signatures>div:nth-child(3) { position:relative!important; }
+  /* Approved label and signer share the same measured visual center; keep the heading in its original position. */
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:nth-child(2)>span { position:absolute!important; top:0!important; left:22.8pt!important; width:170pt!important; max-width:170pt!important; margin:0!important; padding:0!important; transform:translateX(-50%)!important; text-align:center!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:nth-child(2)>b { position:absolute!important; top:59.8pt!important; left:22.8pt!important; width:170pt!important; max-width:170pt!important; margin:0!important; padding:0!important; border:0!important; transform:translateX(-50%)!important; text-align:center!important; white-space:nowrap!important; font-size:var(--rk-sig-fit-size,7.186pt)!important; line-height:10pt!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:nth-child(3)>span { position:absolute!important; top:0!important; left:50%!important; width:118pt!important; max-width:118pt!important; margin:0!important; padding:0!important; transform:translateX(-50%)!important; text-align:center!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:nth-child(3)>b { position:absolute!important; top:59.8pt!important; left:50%!important; width:118pt!important; max-width:118pt!important; margin:0!important; padding:0!important; border:0!important; transform:translateX(-50%)!important; text-align:center!important; white-space:nowrap!important; overflow:visible!important; word-break:normal!important; font-size:var(--rk-sig-fit-size,7.186pt)!important; line-height:10pt!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:first-child { position:relative!important; }
+  body.rk-printing-incentive .rk-incentive-exact-signatures>div:first-child>b { display:block!important; position:absolute!important; top:59.8pt!important; left:0!important; width:180pt!important; max-width:180pt!important; box-sizing:border-box!important; margin:0!important; padding:0 0 0 1.4pt!important; border:0!important; text-align:left!important; white-space:nowrap!important; font-size:var(--rk-sig-fit-size,7.186pt)!important; line-height:10pt!important; }
+
+  /* Consolidated petty-cash recap: A4 landscape, flexible rows, repeated table header, no fixed row count. */
+  body.rk-printing-incentive #rkIncentivePrintHost.rk-incentive-print-ledger { display:block!important; width:100%!important; max-width:none!important; height:auto!important; min-height:0!important; margin:0!important; padding:0!important; overflow:visible!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-report { display:block!important; width:100%!important; max-width:none!important; margin:0!important; padding:0!important; color:#111!important; font-family:Calibri,Carlito,Arial,sans-serif!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-report + .rk-incentive-ledger-report { page-break-before:always!important; break-before:page!important; }
+  body.rk-printing-incentive .rk-ledger-report-head { display:grid!important; grid-template-columns:34mm minmax(0,1fr)!important; align-items:center!important; gap:5mm!important; width:100%!important; margin:0 0 4mm!important; padding:0!important; border:0!important; font-size:8pt!important; line-height:1.18!important; }
+  body.rk-printing-incentive .rk-ledger-brand { display:flex!important; align-items:flex-start!important; justify-content:flex-start!important; width:34mm!important; min-width:34mm!important; }
+  body.rk-printing-incentive .rk-ledger-brand img { display:block!important; width:30.7mm!important; height:13.6mm!important; max-width:30.7mm!important; object-fit:fill!important; }
+  body.rk-printing-incentive .rk-ledger-title { display:block!important; text-align:right!important; font-size:8pt!important; line-height:1.2!important; font-weight:700!important; }
+  body.rk-printing-incentive .rk-ledger-kicker { font-size:10.4pt!important; line-height:1.2!important; font-weight:700!important; }
+  body.rk-printing-incentive .rk-ledger-company { font-size:9pt!important; line-height:1.2!important; font-weight:700!important; }
+  body.rk-printing-incentive .rk-ledger-period { font-size:8.3pt!important; line-height:1.2!important; font-weight:700!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table { display:table!important; width:100%!important; max-width:100%!important; border-collapse:collapse!important; table-layout:fixed!important; font-family:Calibri,Carlito,Arial,sans-serif!important; font-size:7.5pt!important; line-height:1.05!important; color:#111!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table thead { display:table-header-group!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table tbody { display:table-row-group!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table tr { page-break-inside:avoid!important; break-inside:avoid!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table th, body.rk-printing-incentive .rk-incentive-ledger-table td { box-sizing:border-box!important; border:.6pt solid #222!important; padding:.35mm 1.35mm!important; vertical-align:middle!important; overflow-wrap:break-word!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table th { font-size:7.8pt!important; line-height:1.05!important; font-weight:700!important; text-align:center!important; background:#DAF2D0!important; color:#111!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table td.rk-ledger-no, body.rk-printing-incentive .rk-incentive-ledger-table td.rk-ledger-date { text-align:center!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table td.rk-ledger-employee-name { padding-left:1.7mm!important; font-weight:400!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table td.rk-ledger-account { font-size:7.2pt!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table td.rk-ledger-money { text-align:right!important; white-space:nowrap!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table tr.rk-ledger-period-row td { font-weight:600!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table tfoot { display:table-row-group!important; font-weight:700!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table tfoot td { background:#DAF2D0!important; font-weight:700!important; border-top:1pt solid #222!important; padding:1.35mm!important; }
+  body.rk-printing-incentive .rk-incentive-ledger-table tfoot td:first-child { text-align:center!important; }
+  body.rk-printing-incentive .rk-ledger-empty { text-align:center!important; color:#555!important; padding:5mm!important; }
+  body.rk-printing-incentive .rk-ledger-report-footer { display:block!important; width:100%!important; min-height:20mm!important; margin:3mm 0 0!important; padding:0!important; text-align:right!important; font-family:Calibri,Carlito,Arial,sans-serif!important; font-size:8.5pt!important; line-height:1.2!important; page-break-inside:avoid!important; break-inside:avoid!important; }
+  body.rk-printing-incentive .rk-ledger-report-footer strong { display:block!important; margin-top:14mm!important; font-size:8.5pt!important; font-weight:400!important; }
+}
+`;
+
+      var printTitle=(mode==='ledger'?'Rekap_Insentif_':'Insentif_Karyawan_')+p.from+'_sampai_'+p.to;
+      if(mode==='ledger'){
+        // The ledger is printed in a clean document containing only its own CSS and content.
+        // Its physical page box is explicitly 297 x 210 mm (A4 landscape).
+        var pw=ledgerPrintWindow,doc=pw.document;
+        doc.open();
+        doc.write('<!doctype html><html><head><meta charset="utf-8"><title>'+escH(printTitle)+'</title><style>'+printCss.textContent+'</style></head><body class="rk-printing-incentive">'+host.outerHTML+'</body></html>');
+        doc.close();
+        pw.onafterprint=function(){setTimeout(function(){try{pw.close();}catch(_e){}},250);};
+        var imgs=Array.prototype.slice.call(doc.images||[]);
+        var imageReady=Promise.all(imgs.map(function(img){if(img.complete)return Promise.resolve();return new Promise(function(resolve){img.onload=resolve;img.onerror=resolve;});}));
+        var fontsReady=doc.fonts&&doc.fonts.ready?doc.fonts.ready:Promise.resolve();
+        Promise.all([imageReady,fontsReady]).then(function(){setTimeout(function(){try{pw.focus();pw.print();}catch(e){try{pw.close();}catch(_e){}rkToast('Gagal membuka cetak rekap: '+(e&&e.message||e));}},180);});
+        return;
+      }
+      document.head.appendChild(printCss);
+      var oldTitle=document.title;document.title=printTitle;
+      document.body.classList.add('rk-printing-incentive');
+      var restore=function(){document.body.classList.remove('rk-printing-incentive');document.title=oldTitle;var st=document.getElementById('rkIncentiveExactPrintCss');if(st)st.remove();};
+      window.addEventListener('afterprint',restore,{once:true});
+      setTimeout(function(){try{window.print();}catch(e){rkToast('Gagal membuka cetak PDF: '+(e&&e.message||e));restore();}},180);
+    }catch(e){if(ledgerPrintWindow&&!ledgerPrintWindow.closed){try{ledgerPrintWindow.close();}catch(_e){}}rkToast('PDF belum dapat dibuat: '+(e&&e.message||e));}
+    finally{if(button){button.disabled=false;button.textContent=mode==='ledger'?'Cetak Rekap':'Cetak PDF';}if(otherButton)otherButton.disabled=false;}
+  }
+  function printIncentiveEmployeeRecap(){return printIncentiveEmployeeMode('slip');}
+  function printIncentiveEmployeeLedger(){return printIncentiveEmployeeMode('ledger');}
+
+  /* Personal File batch preparation and Excel export. Secrets/biometrics are intentionally excluded. */
+  function ensurePfileExtra(nik){
+    if(pfileUI.extraByNik[nik] && pfileUI.loadedByNik[nik])return Promise.resolve(pfileUI.extraByNik[nik]);
+    if(pfileUI.extraPromiseByNik[nik])return pfileUI.extraPromiseByNik[nik];
+    pfileUI.extraPromiseByNik[nik]=rpcOptional('hr_get_personal_file',{p_nik:nik}).then(function(r){if(!r||typeof r!=='object')throw new Error('Personal File tidak tersedia untuk '+nik+'.');pfileUI.extraByNik[nik]=r;pfileUI.loadedByNik[nik]=Date.now();return r;}).finally(function(){delete pfileUI.extraPromiseByNik[nik];});
+    return pfileUI.extraPromiseByNik[nik];
+  }
+  function ensurePfileExtrasBatch(rows,progress){
+    function fallbackPerEmployee(todo){
+      var cursor=0,workers=[],missing=[];
+      function worker(){return (async function(){while(cursor<todo.length){var idx=cursor++,x=todo[idx];if(progress)progress(idx+1,rows.length,x);try{await ensurePfileExtra(x.nik);}catch(e){missing.push({nik:x.nik,nama:x.nama,error:e&&e.message||String(e)});}}})();}
+      for(var i=0;i<Math.min(4,todo.length);i++)workers.push(worker());
+      return Promise.all(workers).then(function(){if(missing.length)throw new Error('Data Personal File tidak tersedia untuk '+missing.length+' karyawan: '+missing.slice(0,6).map(function(x){return x.nama+' ('+x.nik+')';}).join(', ')+(missing.length>6?'…':''));return rows;});
+    }
+    return rpcOptional('hr_get_personal_file_batch',{p_niks:rows.map(function(x){return x.nik;})}).then(function(r){
+      var records=Array.isArray(r)?r:(r&&(r.records||r.rows||r.employees||r.items||r.data));
+      if(Array.isArray(records))records.forEach(function(rec){var profile=rec&&(rec.profile||rec.employee||rec.karyawan||rec.personalFile)||rec;var nik=String((rec&&(rec.employee_id||rec.nik||rec.p_nik))||(profile&&(profile.employee_id||profile.nik))||'');if(!nik)return;pfileUI.extraByNik[nik]=rec;pfileUI.loadedByNik[nik]=Date.now();});
+      var todo=rows.filter(function(x){return !(pfileUI.extraByNik[x.nik]&&pfileUI.loadedByNik[x.nik]);});
+      return todo.length?fallbackPerEmployee(todo):rows;
+    });
+  }
+  function printAllEmployeeRecords(){
+    var rows=empCurrentList().map(empNormalize).filter(function(x){return x.nik;});if(!rows.length){rkToast('Daftar karyawan belum tersedia.');return;}
+    var body=document.getElementById('rkPfBody');if(!body)return;body.innerHTML='<div class="rk-loading">Menyiapkan Personal File semua karyawan…</div>';
+    ensurePfileExtrasBatch(rows,function(i,n,x){if(body)body.innerHTML='<div class="rk-loading">Menyiapkan '+i+' dari '+n+': '+escH(x.nama)+'</div>';}).then(function(){
+      body.innerHTML=rows.map(function(raw){var x=pfileEmployee(raw.nik),pack=pfileUI.extraByNik[raw.nik]||{};return legacyPfileMarkup(x,pack);}).join('');
+      var host=document.getElementById('rkPfBody');return Promise.resolve(hydrateDesktopEmployeeFaces(host)).then(function(){var imgs=Array.prototype.slice.call(host.querySelectorAll('img'));return Promise.all(imgs.map(function(img){if(img.complete)return Promise.resolve();return new Promise(function(resolve){var done=function(){img.removeEventListener('load',done);img.removeEventListener('error',done);resolve();};img.addEventListener('load',done,{once:true});img.addEventListener('error',done,{once:true});setTimeout(done,1800);});}));});
+    }).then(function(){var old=document.title;document.title='Personal_File_Semua_Karyawan';document.body.classList.add('rk-printing-pfile');var restore=function(){document.body.classList.remove('rk-printing-pfile');document.title=old;};window.addEventListener('afterprint',restore,{once:true});setTimeout(function(){try{window.print();}catch(e){rkToast('Gagal membuka cetak PDF: '+(e&&e.message||e));restore();}},160);}).catch(function(e){paintPfile();rkToast('Personal File semua karyawan belum dapat dicetak: '+(e&&e.message||e));});
+  }
   /* ---------------- Integrasi & API publik konsol ---------------- */
   function injectLoginSplit() {
     // Sisipkan panel brand gaya Apps Script ke layar login (desktop saja; CSS menyembunyikan di mobile)
