@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<meta name="reholz-release" content="v13.9.0-ux-audit-fixes">
+<meta name="reholz-release" content="v13.3.0-dashboard-segment1-indonesian">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin="">
 <link rel="preconnect" href="https://tile.openstreetmap.org" crossorigin="">
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.9.0-ux-audit-fixes">
+<meta name="app-release" content="v13.8.5.0-signatories-dayoff-attendance-correction">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Sistem informasi karyawan ReHolz untuk presensi, foto profil, lokasi kantor, dan pengelolaan cuti.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -1309,10 +1309,7 @@ input, select, textarea {
   border-radius: 24px 24px 0 0;
   padding: 12px 20px calc(24px + env(safe-area-inset-bottom));
   max-height: 86vh;
-  max-height: 86dvh;
   overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
   animation: up .25s ease;
   box-shadow: 0 -8px 30px rgba(0, 64, 42, 0.15);
   border-top: 1px solid var(--card-border);
@@ -2478,36 +2475,6 @@ input, select, textarea {
 .ad-evidence-state { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px; width:100%; min-height:120px; padding:16px; text-align:center; color:#587164; font-size:12px; box-sizing:border-box; }
 #adEvidenceBox { min-width:0; min-height:120px; }
 #adEvidenceBox img { display:block; width:100%; height:100%; max-height:260px; object-fit:contain; border-radius:10px; background:#F4F7F5; }
-
-/* ===== ReHolz UX fixes v13.9 (audit) ===== */
-/* Kunci scroll body saat overlay/sheet/modal terbuka (Fix: popup ikut menggulir latar) */
-body.rh-noscroll { overflow: hidden !important; }
-/* Semua modal desktop & panel ikut menahan rantai scroll */
-.rk-emp-modal, .rk-emp-modal-content, .rk-cuti-detail-modal, .rk-dash-modal,
-.rk-att-photo-modal, .rk-att-approval-panel, .rk-location-modal,
-.rk-notif-panel, .rk-notif-list, .rk-user-menu, .rk-modal {
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-}
-/* iOS/Android: font input <16px memicu auto-zoom yang mengganggu (Fix: perangkat Apple harus zoom manual) */
-@media (pointer: coarse) {
-  input, select, textarea { font-size: 16px; }
-  .rk-in, .rk-input { font-size: 16px; }
-}
-/* Kurangi gerak berlebih untuk pengguna yang sensitif */
-@media (prefers-reduced-motion: reduce) {
-  .sheet { animation: none; }
-  * { scroll-behavior: auto !important; }
-}
-/* Tombol tutup generik untuk sheet luar-kantor */
-.rh-sheet-x {
-  position: absolute; top: 10px; right: 12px; z-index: 3;
-  width: 34px; height: 34px; border-radius: 50%;
-  background: #EDF3EE; color: #355246; font-size: 18px; line-height: 1;
-  display: flex; align-items: center; justify-content: center;
-}
-.overlay .sheet { position: relative; }
-
 </style>
 <base target="_blank">
 <style id="vvvebjs-styles">
@@ -2948,6 +2915,7 @@ body.rh-desk-on .rk-formula-footer{position:sticky;bottom:0;z-index:4;padding:12
 @media (max-width:760px){body.rh-desk-on .rk-sig-intro,body.rh-desk-on .rk-formula-intro{display:block;padding:16px}body.rh-desk-on .rk-sig-lock,body.rh-desk-on .rk-formula-role-pill{display:inline-flex;margin-top:12px}body.rh-desk-on .rk-formula-check-list{grid-template-columns:1fr}}
 </style>
 
+<base target="_blank">
 </head>
 <body>
 <div id="rhLimitedAccess" role="status" aria-live="polite">Akses terbatas</div>
@@ -3719,7 +3687,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Attendance Log Screen -->
 <section id="s-log" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack()">
+    <button class="back" onclick="go('s-home')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>Riwayat Presensi</h1>
@@ -3735,7 +3703,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Time Off Screen -->
 <section id="s-cuti" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack()">
+    <button class="back" onclick="go('s-home')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>Time Off</h1>
@@ -3769,7 +3737,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Employee Directory Screen -->
 <section id="s-emp" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack()">
+    <button class="back" onclick="go('s-home')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>Daftar Karyawan</h1>
@@ -3793,7 +3761,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Organization Chart Screen -->
 <section id="s-org" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack('s-emp')">
+    <button class="back" onclick="go('s-emp');loadEmployees()">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>Bagan Organisasi</h1>
@@ -3808,7 +3776,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Aktivitas Tim Screen -->
 <section id="s-team" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack()">
+    <button class="back" onclick="go('s-home')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>Aktivitas Tim</h1>
@@ -3825,7 +3793,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Lokasi Kantor Screen -->
 <section id="s-loc" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack()">
+    <button class="back" onclick="go('s-home')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>
@@ -3875,7 +3843,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Employee Management Screen -->
 <section id="s-kar" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack()">
+    <button class="back" onclick="go('s-home')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>
@@ -3915,7 +3883,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Approvals Screen -->
 <section id="s-appr" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack('s-inbox')">
+    <button class="back" onclick="go('s-inbox')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1 id="apprTitle">Presensi</h1>
@@ -3948,7 +3916,7 @@ window.__APP_PREPARING_ASSETS = true;
 <!-- Screen Menu Admin -->
 <section id="s-admin" class="scr">
   <div class="topbar">
-    <button class="back" onclick="goBack()">
+    <button class="back" onclick="go('s-home')">
       <svg viewBox="0 0 24 24" class="ic-back" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
     </button>
     <h1>
@@ -4025,7 +3993,7 @@ window.__APP_PREPARING_ASSETS = true;
         <span class="arr"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#8FA79A" stroke-width="2.2" stroke-linecap="round"><path d="M9 18l6-6-6-6"></path></svg></span>
       </button>
     </div>
-    <div class="hint" id="verTxt">Versi 13.9.0</div>
+    <div class="hint" id="verTxt">Versi 6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID</div>
   </div>
 </section>
 
@@ -4144,7 +4112,6 @@ window.__APP_PREPARING_ASSETS = true;
 <div class="overlay" id="ovOutside">
   <div class="sheet">
     <div class="grab"></div>
-    <button type="button" class="rh-sheet-x" onclick="outsideCancel()" aria-label="Batalkan presensi" title="Batalkan">&#10005;</button>
     <div style="text-align:center;padding:6px 0 2px">
       <div style="font-size:56px" id="outIcon"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#007850" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.2-6.5-10.2a6.5 6.5 0 0113 0C18.5 15.8 12 21 12 21z"></path><circle cx="12" cy="10.5" r="2.4"></circle></svg></div>
     </div>
@@ -4283,8 +4250,8 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://gkpaaabmzusqzrstbivp.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrcGFhYWJtenVzcXpyc3RiaXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MjEzNTQsImV4cCI6MjEwOTA5NzM1NH0.Asv7bcSPWWeTuCWHfncEtJVOiVZ7b_TpyZbvheyH2rE';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v13.9.0-ux-audit-fixes';
-var RH_DISPLAY_VERSION = 'v13.9.0';
+var RH_HTML_RELEASE = 'v13.8.3.4-face-cache-refresh';
+var RH_DISPLAY_VERSION = 'v13.8.3.3';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -4345,8 +4312,8 @@ var FACE_UI_CONFIG = {
   },
   colors: { match: '#A9C6A8', neutral: '#D8B46A', mismatch: '#D17C6C', detecting: '#ffffff' },
   localThreshold: 0.60, smoothingWindow: 5, faceLostGraceMs: 1500, freshSubmitMs: 8000, freshSaveMs: 2000,
-  overrideLinkText: 'Aktifkan kirim manual (tetap dicek server)',
-  hint: 'Foto diambil & dikirim hanya saat Anda menekan tombol Kirim.'
+  overrideLinkText: 'Tetap kirim (verifikasi server)',
+  hint: 'Posisikan wajah di dalam bingkai.'
 };
 
 var OUTSIDE_DIALOG = {
@@ -5759,7 +5726,6 @@ function go(id, fromPop) {
   if (id === 's-face') { toast('Face ID management is retired. Tap your own profile photo on Account to update it.'); id = 's-akun'; }
   if (!document.getElementById(id)) { id = 's-home'; }
   var prev = currentScr();
-  if (!fromPop) navPush(prev, id);
   if (!fromPop && window.history && id && id !== 's-login') {
     try {
       if (window.history.state && window.history.state.tkApp) {
@@ -5796,21 +5762,12 @@ window.addEventListener('popstate', function(ev) {
   var st = ev.state;
   if (st && st.tkApp && st.scr && document.getElementById(st.scr)) {
     if (currentScr() === 's-att') camStop();
-    if (NAV_STACK.length) NAV_STACK.pop();
     go(st.scr, true);
   }
 });
 
 var _backTo = 's-inbox';
 function backTarget() { return _backTo; }
-
-document.addEventListener('keydown', function(ev) {
-  if (ev.key !== 'Escape') return;
-  var out = $('ovOutside');
-  if (out && out.classList.contains('on')) { outsideCancel(); return; }
-  var ov = $('ov');
-  if (ov && ov.classList.contains('on')) closeSheet();
-});
 
 function openSheet(id) {
   ['shAjukan', 'shProfile', 'shPhotoActions', 'shPin', 'shFace', 'shKarForm', 'shKarDetail', 'shTema'].forEach(function(x) { var el = $(x); if (el) el.style.display = 'none'; });
@@ -5822,62 +5779,6 @@ function openSheet(id) {
 function closeSheet() {
   $('ov').classList.remove('on', 'face-enroll-mode');
   stopFaceSelf();
-  rhUpdateScrollLock();
-}
-
-/* ===== UX v13.9: kunci scroll latar saat overlay/modal terbuka =====
-   Sebelumnya sheet/modal bisa "menembus": menggulir popup justru menggulir layar di belakangnya. */
-var RH_SCROLL_LOCK_MO = null;
-function rhAnyOverlayOpen() {
-  if (document.querySelector('.overlay.on')) return true;
-  var shades = document.querySelectorAll('[id$="Shade"], .rk-emp-modal-shade, .rk-cuti-detail-shade, .rk-att-photo-shade, .rk-att-approval-shade, .rk-dash-modal-shade');
-  for (var i = 0; i < shades.length; i++) {
-    var el = shades[i];
-    if (el.classList && el.classList.contains('on')) return true;
-    if (el.style && (el.style.display === 'flex' || el.style.display === 'block') && el.id) return true;
-  }
-  return false;
-}
-function rhUpdateScrollLock() {
-  try { document.body.classList.toggle('rh-noscroll', rhAnyOverlayOpen()); } catch (e) {}
-}
-function rhInitScrollLock() {
-  if (RH_SCROLL_LOCK_MO || !window.MutationObserver) { rhUpdateScrollLock(); return; }
-  var pending = false;
-  RH_SCROLL_LOCK_MO = new MutationObserver(function() {
-    if (pending) return;
-    pending = true;
-    setTimeout(function() { pending = false; rhUpdateScrollLock(); }, 30);
-  });
-  RH_SCROLL_LOCK_MO.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
-  rhUpdateScrollLock();
-}
-
-/* ===== UX v13.9: tumpukan navigasi untuk tombol kembali yang konsisten =====
-   Tombol kembali tidak lagi selalu "lempar ke Beranda", tetapi kembali ke layar asal. */
-var NAV_STACK = [];
-var NAV_NO_STACK = { 's-login': 1, 's-splash': 1, 's-att': 1 };
-function navPush(prev, next) {
-  if (!prev || prev === next || NAV_NO_STACK[prev]) return;
-  if (NAV_STACK[NAV_STACK.length - 1] === prev) return;
-  NAV_STACK.push(prev);
-  if (NAV_STACK.length > 24) NAV_STACK.shift();
-}
-function goBack(fallback) {
-  var cur = currentScr();
-  var target = null;
-  while (NAV_STACK.length) {
-    var cand = NAV_STACK.pop();
-    if (cand && cand !== cur && document.getElementById(cand) && !NAV_NO_STACK[cand]) { target = cand; break; }
-  }
-  if (!target) target = fallback || 's-home';
-  if (target === cur || !document.getElementById(target)) target = 's-home';
-  go(target, true);
-}
-function detailBackTarget(fallback) {
-  var cur = currentScr();
-  var ok = { 's-inbox': 1, 's-cuti': 1, 's-appr': 1, 's-home': 1, 's-log': 1, 's-emp': 1 };
-  return ok[cur] ? cur : (fallback || 's-home');
 }
 
 function applyRoleMenus() {
@@ -5943,8 +5844,14 @@ function enterApp() {
     var saved = S.freshLogin ? null : loadLastScreen();
     var target = saved && RESTORABLE.indexOf(saved.scr) >= 0 ? saved.scr : 's-home';
     if (ROLE_GATE[target] && ROLE_GATE[target].indexOf(String(S.user.role || '').toUpperCase()) < 0) target = 's-home';
-    showReleaseGate('Memuat data utama...');
+    showReleaseGate('Memuat ulang data karyawan, foto profil, dan referensi...');
     Promise.resolve(loadBootstrap()).then(function() {
+      if (stale(gen) || !window.__RH_RELEASE_PREP_STARTED) return;
+      return Promise.all([
+        prewarmSemiStaticData().catch(function() { return false; }),
+        prewarmTimeoffReferenceData().catch(function() { return false; })
+      ]);
+    }).then(function() {
       if (stale(gen) || !window.__RH_RELEASE_PREP_STARTED) return;
       try { localStorage.setItem(PREP_CACHE_KEY, '1'); } catch (e) {}
       RH_RELEASE_UPGRADE_ACTIVE = false;
@@ -5952,11 +5859,8 @@ function enterApp() {
       hideReleaseGate();
       S.freshLogin = false;
       go(target); syncDesktopNav(target);
+      // Refresh live attendance/approval information after semi-static assets have warmed.
       loadTeam(); loadMyRequests(); updateBadges();
-      // Pemanasan foto & referensi dipindah ke latar belakang: dashboard langsung tampil,
-      // unduhan massal tidak lagi menahan layar (Fix: dashboard terasa lama karena mengambil terlalu banyak data).
-      prewarmSemiStaticData().catch(function() { return false; });
-      prewarmTimeoffReferenceData().catch(function() { return false; });
     }).catch(function(e) {
       console.warn('[ReHolz] Release data refresh incomplete; opening with available cache:', e && e.message || e);
       if (stale(gen) || !window.__RH_RELEASE_PREP_STARTED) return;
@@ -5969,13 +5873,13 @@ function enterApp() {
     // A failed or slow network must not leave the app blocked forever. Cache preparation continues in the background.
     setTimeout(function() {
       if (!window.__RH_RELEASE_PREP_STARTED || stale(gen)) return;
-      console.warn('[ReHolz] Release warm-up exceeded 15 seconds; using available cache.');
+      console.warn('[ReHolz] Release warm-up exceeded 45 seconds; using available cache.');
       RH_RELEASE_UPGRADE_ACTIVE = false;
       window.__RH_RELEASE_PREP_STARTED = false;
       hideReleaseGate();
       go('s-home'); syncDesktopNav('s-home');
       backgroundLoads();
-    }, 15000);
+    }, 45000);
     return;
   }
   if (S.freshLogin) {
@@ -6565,15 +6469,9 @@ function loadFaceApiScript() {
 }
 
 function scheduleNets() {
-  // Jangan unduh model AI wajah pada koneksi hemat data/lambat; model tetap dimuat
-  // otomatis saat pengguna benar-benar membuka layar presensi.
-  try {
-    var conn = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
-    if (conn && (conn.saveData || /(^|-)2g$/.test(String(conn.effectiveType || '')))) return;
-  } catch (e) {}
   var run = function() { ensureNets().catch(function(e) { console.warn('nets:', e); }); };
-  if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 9000 });
-  else setTimeout(run, 2500);
+  if (window.requestIdleCallback) requestIdleCallback(run, { timeout: 5000 });
+  else setTimeout(run, 1200);
 }
 
 function ensureNets() {
@@ -6775,7 +6673,7 @@ function renderGpsUi() {
     ATT.outside = true;
     // Dialog otomatis hanya di langkah 1 dan hanya saja lokasi PASTI di luar radius.
     var onStep1 = $('attStep1').style.display !== 'none';
-    if (ATT.type === 'MASUK' && onStep1 && !ATT.recheckingOutside && !ATT.outsideAwaitContinue && !ATT.outsideOk && !ATT.outsideDialogShown) {
+    if (onStep1 && !ATT.recheckingOutside && !ATT.outsideAwaitContinue && !ATT.outsideOk && !ATT.outsideDialogShown) {
       ATT.lastOutsideAt = GPS.at;
       openOutside();
     }
@@ -6792,20 +6690,10 @@ function renderGpsUi() {
   }
 }
 
-function outsideCancel() {
-  // Tutup dialog dan batalkan alur presensi secara eksplisit (setara tombol kembali).
-  $('ovOutside').classList.remove('on');
-  cancelAttendance();
-}
-
 function openOutside() {
   if (ATT.recheckingOutside || ATT.outsideDialogShown) return;
   ATT.outsideDialogShown = true;
   var area=$('outArea'),title=$('outTitle'),body=$('outBody'),msg=$('outNoteRequiredMsg'),note=$('outNote'),label=$('outAreaLabel');
-  var primary=$('outPrimary');
-  // Teks tombol harus sesuai aksi yang sedang dilakukan pengguna (sebelumnya selalu "Lanjut Clock In"
-  // bahkan saat Clock Out, sehingga pengguna mengira alur melompat/terkirim sendiri).
-  if (primary) primary.textContent = ATT.type === 'PULANG' ? 'Lanjut Clock Out' : 'Lanjut Clock In';
   if (ATT.dayOffChoice === 'STANDBY') {
     if(title)title.textContent='Standby · Dinas Luar pada Hari Libur';
     if(body)body.textContent='Pilih area Standby.';
@@ -6836,10 +6724,8 @@ function openOutside() {
 function outsideProceed() {
   var note = $('outNote').value.trim();
   var area = $('outArea').value;
-  if (ATT.type === 'MASUK') {
-    if (!note) { toast('Keterangan wajib diisi sebelum Clock In di luar lokasi kantor.'); $('outNote').focus(); return; }
-    if (!area) { toast('Pilih area/lokasi sebelum melanjutkan Clock In.'); $('outArea').focus(); return; }
-  }
+  if (!note) { toast('Keterangan wajib diisi sebelum Clock In di luar lokasi kantor.'); $('outNote').focus(); return; }
+  if (!area) { toast('Pilih area/lokasi sebelum melanjutkan Clock In.'); $('outArea').focus(); return; }
   ATT.area = area;
   ATT.outsideOk = true;
   $('attNote').value = note;
@@ -6874,10 +6760,9 @@ function attNext1() {
     attStep2();
     return;
   }
-  // Benar-benar di luar radius (fix akurat + seluruh lingkaran akurasi di luar).
+  // Benar-benar di luar radius (fix akurat + seluruh lingkaran akurasi di luar): wajib dialog + catatan.
   ATT.outside = true;
-  // Dialog + catatan wajib hanya untuk Clock In; Clock Out langsung lanjut ke langkah foto.
-  if (!ATT.outsideOk && ATT.type === 'MASUK') { openOutside(); return; }
+  if (!ATT.outsideOk) { openOutside(); return; }
   attStep2();
 }
 
@@ -6957,7 +6842,7 @@ function updateFaceState() {
       ? '⚠️ Wajah belum sesuai dengan Face ID tersimpan.'
       : CAM.state === 'neutral'
       ? 'Wajah terdeteksi. Menunggu verifikasi server.'
-      : '⏳ Memeriksa wajah…');
+      : '⏳ Memeriksa wajah…') + ' Verifikasi akhir dilakukan oleh server.';
   }
   if (!CAM.present && (now - CAM.presentAt) > FACE_UI_CONFIG.faceLostGraceMs) {
     CAM.state = 'detecting'; CAM.win = [];
@@ -6994,7 +6879,7 @@ function updateFaceState() {
     $('btnKirim').disabled = !CAM.override;
     ov.style.display = CAM.override ? 'none' : 'block';
     updateFaceInfo();
-    if (!ov.firstChild) ov.innerHTML = '<a href="#" onclick="enableOverride();return false" style="display:inline-block;padding:10px 14px;background:rgba(0,0,0,.45);border-radius:10px">' + FACE_UI_CONFIG.overrideLinkText + '</a>';
+    ov.innerHTML = '<a href="#" onclick="enableOverride();return false">' + FACE_UI_CONFIG.overrideLinkText + '</a>';
   }
 }
 
@@ -7003,7 +6888,7 @@ function enableOverride() {
   CAM.override = true;
   $('camOverride').style.display = 'none';
   $('btnKirim').disabled = false;
-  toast('Kirim manual aktif. Presensi TIDAK terkirim otomatis — tekan tombol Kirim untuk mengirim.');
+  toast('Verifikasi manual diaktifkan.');
 }
 
 function attStep2() {
@@ -7047,15 +6932,6 @@ function rhAttendanceCode(mode,area) {
   if(mode==='STANDBY')return n>=1&&n<=5?'SDL'+n:'';
   if(mode==='PIKET')return n===0?'P':'P'+n;
   return 'DL'+(n===0?5:n);
-}
-
-function rhPaintEvidenceStatus(st) {
-  var msg = $('doneMsg');
-  if (!msg || $('attDone').style.display === 'none') return;
-  var base = msg.dataset.baseMsg || msg.textContent || '';
-  if (st && st.pending) msg.textContent = base + ' Foto bukti sedang diunggah di latar belakang…';
-  else if (st && st.failed) msg.textContent = base + ' PERHATIAN: presensi tercatat, tetapi foto bukti belum tersimpan (' + (st.reason || 'kendala jaringan') + '). Hubungi HR untuk tindak lanjut.';
-  else msg.textContent = base + ' Foto bukti tersimpan.';
 }
 
 async function submitAttendance() {
@@ -7115,25 +6991,21 @@ async function submitAttendance() {
     };
     var res = await api('simpanAbsensi', [payload], 40000);
     var attendanceId = res && (res.id || res.absensiId || res.absensi_id || res.attendance_id);
-    // Unggah foto bukti berjalan di LATAR BELAKANG. Layar hasil tampil seketika;
-    // status unggah diperbarui pada pesan selesai tanpa menahan pengguna.
-    var evidenceUpload = { pending: !!(fotoBase64 && attendanceId), failed: false, reason: '' };
+    var evidenceSaved = !fotoBase64;
+    var evidenceFailureReason = '';
     if (fotoBase64 && attendanceId) {
-      uploadEvidenceAsync(attendanceId, fotoBase64).then(function(evidenceResult) {
+      try {
+        var evidenceResult = await uploadEvidenceAsync(attendanceId, fotoBase64);
         if (evidenceResult && (evidenceResult.success === false || evidenceResult.ok === false)) throw new Error(evidenceResult.message || 'Server belum mengonfirmasi penyimpanan foto bukti.');
-        evidenceUpload.pending = false;
-        rhPaintEvidenceStatus(evidenceUpload);
-      }).catch(function(uploadErr) {
-        evidenceUpload.pending = false;
-        evidenceUpload.failed = true;
-        evidenceUpload.reason = (uploadErr && uploadErr.message) || 'Unggah foto bukti gagal.';
+        evidenceSaved = true;
+      } catch (uploadErr) {
+        evidenceSaved = false;
+        evidenceFailureReason = (uploadErr && uploadErr.message) || 'Unggah foto bukti gagal.';
         console.warn('Failed to save the evidence photo:', uploadErr);
-        rhPaintEvidenceStatus(evidenceUpload);
-        toast('Foto bukti belum tersimpan di server. Hubungi HR untuk tindak lanjut.');
-      });
+      }
     } else if (fotoBase64 && !attendanceId) {
-      evidenceUpload.failed = true;
-      evidenceUpload.reason = 'Respons server tidak memuat ID presensi.';
+      evidenceSaved = false;
+      evidenceFailureReason = 'Respons server tidak memuat ID presensi.';
       console.warn('Evidence photo was captured but no attendance ID was returned.');
     }
     if (S.approver) { refreshPending(); }
@@ -7152,13 +7024,12 @@ async function submitAttendance() {
       : 'Pengajuan berhasil dikirim';
     var completionMessage = String(res && res.message || 'Pengajuan presensi berhasil dikirim.');
     if (!fotoBase64) completionMessage += ' Foto bukti tidak berhasil diambil; presensi dikirim tanpa foto.';
+    else if (!evidenceSaved) completionMessage += ' PERHATIAN: absensi tercatat, tetapi foto bukti belum tersimpan (' + evidenceFailureReason + '). Hubungi HR untuk tindak lanjut bukti yang belum tersimpan.';
     $('doneMsg').textContent = completionMessage;
-    $('doneMsg').dataset.baseMsg = completionMessage;
-    rhPaintEvidenceStatus(evidenceUpload);
   } catch (e) {
     if (e && e.message !== 'STALE') {
       var msg = (e && e.message) ? e.message : String(e || 'Terjadi kendala yang tidak diketahui.');
-      toast('Pengiriman presensi gagal: ' + msg + ' Periksa koneksi lalu coba lagi.');
+      alert('Pengiriman presensi gagal. Periksa koneksi dan coba lagi.');
     }
     b.disabled = false;
     b.textContent = 'Kirim';
@@ -7650,7 +7521,7 @@ function canActAsDirectManager(role, row, kind) {
 }
 
 function openCutiDetail(id, fromAppr) {
-  _backTo = fromAppr ? 's-appr' : detailBackTarget('s-cuti');
+  _backTo = fromAppr ? 's-appr' : 's-cuti';
   var x = null;
   if (fromAppr && DATA.appr) x = (DATA.appr.cuti || []).find(function(c) { return c.id === id; });
   if (!x) x = DATA.cutiList.find(function(c) { return c.id === id; });
@@ -8364,9 +8235,6 @@ function karSave(mode) {
     toast(r.message);
     if (mode === 'add' && r.pin) {
       $('karPinResult').innerHTML = '<div class="pin-display"><div style="font-size:13px;color:#007850">🔑 PIN untuk ' + esc(nama) + ':</div><b>' + esc(r.pin) + '</b><div style="font-size:11px;color:#007850;margin-top:4px">PIN hanya akan ditampilkan 1 kali.</div></div>';
-    } else {
-      // Sukses tanpa PIN sementara: tutup formulir otomatis agar tidak terasa "menggantung".
-      closeSheet();
     }
     loadKaryawanMgr(true);
   }).catch(function(e) { if (e && e.message === 'STALE') return; toast('❌ ' + e.message); });
@@ -8440,19 +8308,15 @@ window.completeMyNotificationTitle = completeMyNotificationTitle;
 
 function renderNotifs(force) {
   var userKey = String(S.user && S.user.nik || '');
-  if (!force && RH_NOTIF_STATE.mobileUser === userKey && RH_NOTIF_STATE.mobileAt && Date.now() - RH_NOTIF_STATE.mobileAt < 60000 && RH_NOTIF_STATE.mobileHtml) {
+  if (!force && RH_NOTIF_STATE.mobileUser === userKey && RH_NOTIF_STATE.mobileAt && Date.now() - RH_NOTIF_STATE.mobileAt < 8000 && RH_NOTIF_STATE.mobileHtml) {
     $('paneNotif').innerHTML = RH_NOTIF_STATE.mobileHtml;
     S.unreadNotificationTotal = RH_NOTIF_STATE.unreadCount || 0;
     updateBadges();
     // The mobile inbox defaults to 'Untuk Anda': opening it marks personal outcomes read in bulk.
     markAllMyNotificationsReadUi(RH_NOTIF_STATE.mobileItems || [], 'mobile-cache').catch(function () {});
-    // Setelah 8 detik, segarkan diam-diam di latar: isi tidak pernah diganti teks "Memuat..." lagi.
-    if (Date.now() - RH_NOTIF_STATE.mobileAt > 8000) setTimeout(function() { renderNotifs(true); }, 60);
     return Promise.resolve(RH_NOTIF_STATE.mobileItems);
   }
-  // Stale-while-revalidate: tampilkan cache lama selagi memuat, bukan layar "Memuat..." kosong.
-  if (RH_NOTIF_STATE.mobileHtml && RH_NOTIF_STATE.mobileUser === userKey) $('paneNotif').innerHTML = RH_NOTIF_STATE.mobileHtml;
-  else $('paneNotif').innerHTML = '<div class="empty">Memuat pemberitahuan...</div>';
+  $('paneNotif').innerHTML = '<div class="empty">Memuat pemberitahuan...</div>';
   var myReqFresh = !!(DATA.myReq && RH_NOTIF_STATE.myRequestsAt && Date.now() - RH_NOTIF_STATE.myRequestsAt < 20000);
   var myRequestsPromise = (!force && myReqFresh) ? Promise.resolve(DATA.myReq) : loadMyRequests();
   return Promise.all([
@@ -8836,7 +8700,7 @@ function absenItemHtml(a, fromAppr) {
 }
 
 async function openAbsenDetail(id, fromAppr) {
-  _backTo = fromAppr ? 's-appr' : detailBackTarget('s-home');
+  _backTo = fromAppr ? 's-appr' : 's-home';
   var a = null;
   if (fromAppr && DATA.appr) a = (DATA.appr.absensi || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(id); });
   if (!a && DATA.myReq) a = (DATA.myReq.absensi || []).find(function(x) { return String(x.id || x.absensiId || x.requestId || '') === String(id); });
@@ -9092,7 +8956,6 @@ function bootApp() {
   window.__APP_BOOTED_ONCE = true;
   runReleaseUpgradeGate();
   applyUiConfig();
-  try { rhInitScrollLock(); } catch (e) {}
   // Hangatkan GPS sejak aplikasi dibuka agar saat absen lokasi sudah siap (tidak menunggu lagi).
   try { gpsWarm(); } catch (e) {}
   var pinEl = $('lgPin');
@@ -9338,7 +9201,7 @@ Object.assign(window, {
   karOpenAdd, karOpenEdit, karOnSelectNew, karSave, karDeactivate, karReactivate,
   karResetPin, karOpenDetail, karDetailTab, switchInboxTab, loadInbox, openApprList, openAbsenDetail, openCutiDetail,
   actAbsen, actCuti, registerFaceSelf, saveSelfFace, changeProfileFaceByUpload, loadAdminHistory, adminDeleteToday,
-  adminDeleteRecord, backTarget, nextAttType, outsideProceed, outsideRecheck, goBack, detailBackTarget, outsideCancel, rhInitScrollLock, rhUpdateScrollLock,
+  adminDeleteRecord, backTarget, nextAttType, outsideProceed, outsideRecheck,
   renderCutiList, openProfileSheet, openProfilePhotoActions, changePin, enableOverride, downloadAppHtml
 });
 
@@ -10897,22 +10760,15 @@ function showHrPlaceholder(title, group, description) {
       return;
     }
     el.innerHTML = '<div class="rk-loading">Memuat dashboard...</div>';
-    // Katalog karyawan penuh & progres foto dimuat di latar; dashboard dilukis dari data ringan lebih dulu.
-    ensureKar(false).catch(function () {}).then(function () {
-      var el2 = document.getElementById('rkp-dash');
-      if (el2 && cur === 'dash' && el2.dataset.filled === '1') { paintDash(el2); }
-    });
-    api('getFaceProgress', [], 20000).catch(function () { return null; }).then(function (fp) {
-      if (fp) dashCache.fp = fp;
-      var el2 = document.getElementById('rkp-dash');
-      if (el2 && cur === 'dash' && el2.dataset.filled === '1') paintDash(el2);
-    });
     Promise.all([
+      ensureKar(false).catch(function () {}),
+      api('getFaceProgress', [], 20000).catch(function () { return null; }),
       api('getPendingApprovalsFull', [], 20000).catch(function () { return null; }),
       rpcOptional('hr_get_employee_directory', {}).catch(function () { return null; })
     ]).then(function (rs) {
-      dashCache.ap = rs[0] || dashCache.ap || null;
-      var dir = rs[1];
+      dashCache.fp = rs[1] || dashCache.fp || null;
+      dashCache.ap = rs[2] || dashCache.ap || null;
+      var dir = rs[3];
       var dirRows = Array.isArray(dir) ? dir : (dir && (Array.isArray(dir.list) ? dir.list : (Array.isArray(dir.data) ? dir.data : null)));
       if (dirRows) dashCache.employeeList = dirRows.map(function (x) { return empNormalize(x); });
       dashCache.at = Date.now();
@@ -12297,13 +12153,6 @@ function showHrPlaceholder(title, group, description) {
         if(saveBtn){saveBtn.textContent='Berhasil dibuat';saveBtn.disabled=true;}
         var closeBtn=shade.querySelector('[data-emp-edit-close]'); if(closeBtn) closeBtn.textContent='Selesai';
         syncEmpDirectory(true).catch(function(){});
-        // Jika tidak ada PIN sementara yang wajib dicatat, tutup otomatis: tanda sukses
-        // tidak lagi meninggalkan popup menggantung (keluhan superadmin).
-        if (!(result.created && result.created.pin)) {
-          setTimeout(function(){
-            if (shade.classList.contains('on')) { empCloseModal('rkEmpEditShade'); rkToast('Karyawan berhasil ditambahkan.'); }
-          }, 1400);
-        }
       }).catch(function(e){
         if(msg) msg.textContent=(e&&e.message)||'Karyawan gagal ditambahkan. Coba lagi.';
         if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Buat Karyawan';}
@@ -15574,14 +15423,12 @@ function showHrPlaceholder(title, group, description) {
     var list = document.getElementById('rkNotifList');
     if (!list) return Promise.resolve(null);
     var userKey = String(window.S && S.user && S.user.nik || '');
-    if (!force && RH_NOTIF_STATE.desktopUser === userKey && RH_NOTIF_STATE.desktopAt && Date.now() - RH_NOTIF_STATE.desktopAt < 60000 && RH_NOTIF_STATE.desktopItems) {
+    if (!force && RH_NOTIF_STATE.desktopUser === userKey && RH_NOTIF_STATE.desktopAt && Date.now() - RH_NOTIF_STATE.desktopAt < 8000 && RH_NOTIF_STATE.desktopItems) {
       paintDeskNotifItems();
       if (activeDeskNotifTab === 'personal' && typeof window.markAllMyNotificationsReadUI === 'function') window.markAllMyNotificationsReadUI(RH_NOTIF_STATE.desktopItems.personal || [], 'desktop-cache').catch(function () {});
       return Promise.resolve(RH_NOTIF_STATE.desktopItems);
     }
-    // Tampilkan cache selama memuat ulang agar panel tidak tampak "loading terus".
-    if (RH_NOTIF_STATE.desktopItems) paintDeskNotifItems();
-    else list.innerHTML = '<div class="rk-notif-empty">Memuat pemberitahuan…</div>';
+    list.innerHTML = '<div class="rk-notif-empty">Memuat pemberitahuan…</div>';
     var myReqFresh = !!(DATA.myReq && RH_NOTIF_STATE.myRequestsAt && Date.now() - RH_NOTIF_STATE.myRequestsAt < 20000);
     var requestPromise = (!force && myReqFresh)
       ? Promise.resolve(DATA.myReq)
@@ -15827,23 +15674,7 @@ function showHrPlaceholder(title, group, description) {
     reject: function (kind, id) { aprAct(kind, id, 'REJECT'); },
     approvalDetail: function (kind, id) { aprAct(kind, id, 'APPROVE'); },
     attendanceDetail: function (id) { openDesktopAttendanceDetail(id); },
-    rkToggleGroup: function (btn) {
-      var g = btn && btn.parentNode;
-      if (!g || !g.classList) return;
-      var willOpen = g.classList.contains('closed');
-      g.classList.toggle('closed');
-      btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-      // Akordeon: grup lain menutup agar sidebar tetap ringkas dan mudah dipindai.
-      if (willOpen) {
-        var others = document.querySelectorAll('#rkNav .rk-group');
-        for (var i = 0; i < others.length; i++) {
-          if (others[i] !== g) {
-            others[i].classList.add('closed');
-            var p = others[i].querySelector('.rk-parent'); if (p) p.setAttribute('aria-expanded', 'false');
-          }
-        }
-      }
-    },
+    rkToggleGroup: function (btn) { var g = btn && btn.parentNode; if (g && g.classList) g.classList.toggle('closed'); },
     changePin: function () { submitDesktopPinChange(); },
     userSetRole: function (nik) { userSetRole(nik); },
     faceGrant: function (nik) { try { faceMgrGrant(nik); } catch (e) { rkToast(e.message); } setTimeout(refreshFace, 1500); },
