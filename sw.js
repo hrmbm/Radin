@@ -1,17 +1,17 @@
 /* ReHolz HRIS Service Worker v21. Deploy with the matching v13.2 HTML. */
 'use strict';
-const RH_SW_RELEASE = 'v21-reholz-office-location-flex-branch-casefold';
-const RH_EXPECTED_HTML_RELEASE = 'v13.2.0-office-location-flex-branch-casefold';
-const RH_SHELL_CACHE = 'rehholz-app-shell-v21';
+const RH_SW_RELEASE = 'v22-reholz-ux-audit-fixes';
+const RH_EXPECTED_HTML_RELEASE = 'v13.9.0-ux-audit-fixes';
+const RH_SHELL_CACHE = 'rehholz-app-shell-v22';
 const RH_SCOPE_URL = new URL(self.registration.scope);
-const RH_CANONICAL_APP_URL = new URL('index_reholz_dashboard_employee_record_v13_2.html', RH_SCOPE_URL);
+const RH_CANONICAL_APP_URL = new URL('index_reholz_hris_v13_9.html', RH_SCOPE_URL);
 
 function isAppNavigation(urlValue) {
   try {
     const u = new URL(urlValue);
     if (u.origin !== RH_SCOPE_URL.origin || !u.pathname.startsWith(RH_SCOPE_URL.pathname)) return false;
     const leaf = u.pathname.slice(RH_SCOPE_URL.pathname.length);
-    return leaf === '' || leaf === '/' || /^index(?:_[^/]*)?\.html$/i.test(leaf) || /^index_reholz_dashboard_employee_record.*\.html$/i.test(leaf);
+    return leaf === '' || leaf === '/' || /^index(?:_[^/]*)?\.html$/i.test(leaf) || /^index_reholz.*\.html$/i.test(leaf);
   } catch (_) { return false; }
 }
 
@@ -109,7 +109,7 @@ self.addEventListener('fetch', event => {
   if (request.method !== 'GET' || request.mode !== 'navigate' || !isAppNavigation(request.url)) return;
   event.respondWith((async () => {
     const offlinePage = new Response(
-      '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>ReHolz HRIS update required</title><body style="font-family:system-ui;padding:24px"><h2>ReHolz HRIS</h2><p>The v13.2 app release is not available at its expected address yet. Confirm that index_reholz_dashboard_employee_record_v13_2.html and sw.js are both published in the same directory, then reopen the app. Previous cached shells have been retained.</p></body>',
+      '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>ReHolz HRIS update required</title><body style="font-family:system-ui;padding:24px"><h2>ReHolz HRIS</h2><p>The v13.9 app release is not available at its expected address yet. Confirm that index_reholz_hris_v13_9.html and sw.js are both published in the same directory, then reopen the app. Previous cached shells have been retained.</p></body>',
       { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }, status: 503 }
     );
     const requested = new URL(request.url);
