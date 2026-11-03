@@ -11096,12 +11096,12 @@ function showHrPlaceholder(title, group, description) {
         circles += '<circle class="rk-gender-arc" pathLength="100" data-rk-chart-tip="1" data-rk-tip-title="' + escH(item.l) + '" data-rk-tip-value="' + item.v + '" data-rk-tip-detail="' + percent.toFixed(1) + '%" style="--rk-gender-len:' + percent.toFixed(4) + ';--rk-gender-offset:' + dashOffset.toFixed(4) + ';--rk-gender-delay:' + (i * 0.16) + 's" cx="69" cy="69" r="' + radius + '" fill="none" stroke="' + stroke + '" stroke-width="' + thick + '" stroke-dasharray="0 100" stroke-dashoffset="' + dashOffset.toFixed(4) + '" transform="rotate(-90 69 69)"/>';
         offset += item.v / total * circumference;
       });
-      ring = '<div class="rk-gender-visual"><div class="rk-gender-ring"><svg class="rk-gender-svg" viewBox="0 0 138 138" width="138" height="138" aria-label="Distribusi Jenis Kelamin">' + circles + '</svg>' +
+      ring = '<div class="rk-gender-visual"><div class="rk-gender-ring"><svg class="rk-gender-svg" viewBox="0 0 138 138" width="138" height="138" aria-label="Gender">' + circles + '</svg>' +
         '<div class="rk-gender-center"><b>' + total + '</b></div></div>' + workforceLegend(rows, total, 'gender') + '</div>';
     } else {
       ring = '<div class="rk-workforce-no-data"><span class="rk-empty-ring">–</span><b>Data jenis kelamin belum tersedia</b><small>Ringkasan karyawan belum memuat informasi jenis kelamin.</small></div>';
     }
-    return '<article class="rk-card rk-workforce-card rk-dash-animate">' + workforceHeader('Distribusi Jenis Kelamin', 'Distribusi jenis kelamin berdasarkan data karyawan yang tersedia.') +
+    return '<article class="rk-card rk-workforce-card rk-dash-animate">' + workforceHeader('Distribusi Gender', 'Distribusi Gender berdasarkan data karyawan yang tersedia.') +
       ring + '</article>';
   }
   var dashActionYear = new Date().getFullYear();
