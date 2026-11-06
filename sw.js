@@ -1,7 +1,7 @@
 /* ReHolz HRIS Service Worker v34.
  * GitHub Pages deployment: publish this file beside index.html as sw.js.
  * The app shell is resolved from the Service Worker scope (./), never a versioned HTML filename.
- * Release compatibility is checked only with the reholz-release meta marker inside the HTML.
+ * Release compatibility is checked only with the reholz-release marker inside the HTML.
  */
 'use strict';
 
