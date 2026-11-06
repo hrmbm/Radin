@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<meta name="reholz-release" content="v13.9.9-clockout-area-lock">
+<meta name="reholz-release" content="v14.0.3-clockout-area-lock-jakarta">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v13.9.9-clockout-area-lock">
+<meta name="app-release" content="v14.0.3-clockout-area-lock-jakarta">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Portal sistem terintegrasi untuk mengelola data karyawan ReHolz.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -4443,7 +4443,7 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://gkpaaabmzusqzrstbivp.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrcGFhYWJtenVzcXpyc3RiaXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MjEzNTQsImV4cCI6MjEwOTA5NzM1NH0.Asv7bcSPWWeTuCWHfncEtJVOiVZ7b_TpyZbvheyH2rE';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v13.9.9-clockout-area-lock';
+var RH_HTML_RELEASE = 'v14.0.3-clockout-area-lock-jakarta';
 var RH_DISPLAY_VERSION = 'v13.9.5';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
@@ -6899,8 +6899,18 @@ function ensureNets() {
 }
 
 function rhTodayLocalIso() {
-  var d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  // Attendance day follows the HRIS business timezone, not the device timezone.
+  try {
+    var parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(new Date());
+    var values = Object.create(null);
+    parts.forEach(function (part) { if (part.type !== 'literal') values[part.type] = part.value; });
+    return values.year + '-' + values.month + '-' + values.day;
+  } catch (e) {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
 }
 async function rhReadRpcForDayOff(fn, params) {
   try {
@@ -7049,7 +7059,7 @@ async function startAttendance(type) {
   ATT.outside = false;
   ATT.outsideOk = false;
   ATT.area = '';
-  ATT.areaLock = (type === 'PULANG' && S.status && S.status.masuk) ? (rhReadLocalClockInArea() || '') : '';
+  ATT.areaLock = (type === 'PULANG') ? (rhReadLocalClockInArea() || '') : '';
   ATT.lastOutsideAt = 0;
   ATT.recheckingOutside = false;
   ATT.outsideDialogShown = false;
@@ -15397,6 +15407,7 @@ function showHrPlaceholder(title, group, description) {
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
   }
+  var INCENTIVE_OUTSIDE_JOB_CODES = ['MGR','STAFF','HYBRID','OB','SS','SM','PM'];
   var INCENTIVE_DEFAULTS = {
     meal_other:20000, meal_ob:10000,
     transport_daily:15385, transport_cap:400000, transport_threshold:25,
@@ -15412,13 +15423,23 @@ function showHrPlaceholder(title, group, description) {
     piket_hourly_rate:15000,piket_min_hours:4,piket_max_hours:8,piket_rounding:'FLOOR_HOUR',
     extras:{family_trip:null,extra_transport:null,underpayment_last_month:null}
   };
-  function incentiveMonthDefault(){var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit'}).formatToParts(new Date()),y=parts.find(function(x){return x.type==='year';}),m=parts.find(function(x){return x.type==='month';});return (y?y.value:'2026')+'-'+(m?m.value:'01');}
+  function incentiveJakartaParts(){
+    var parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Jakarta',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    var out={};parts.forEach(function(x){if(x.type!=='literal')out[x.type]=x.value;});
+    return {year:Number(out.year)||2026,month:Number(out.month)||1,day:Number(out.day)||1};
+  }
+  // Payroll period is named by its closing month: day 6 onward belongs to next month's payroll.
+  function incentiveMonthDefault(){
+    var p=incentiveJakartaParts(),d=new Date(Date.UTC(p.year,p.month-1,1));
+    if(p.day>=6)d.setUTCMonth(d.getUTCMonth()+1);
+    return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0');
+  }
   function incentiveBounds(monthValue){
-    var m=String(monthValue||incentiveMonthDefault()).match(/^(\d{4})-(\d{2})$/);if(!m)return null;
+    var value=String(monthValue||incentiveMonthDefault()),m=value.match(/^(\d{4})-(\d{2})$/);if(!m)return null;
     var y=Number(m[1]),mo=Number(m[2]);if(mo<1||mo>12)return null;
-    var end=new Date(y,mo-1,5), start=new Date(y,mo-2,6);
-    function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
-    return {from:iso(start),to:iso(end),month:monthValue};
+    var start=new Date(Date.UTC(y,mo-2,6)),end=new Date(Date.UTC(y,mo-1,5));
+    function iso(d){return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');}
+    return {from:iso(start),to:iso(end),month:value};
   }
   function incentiveMoney(v){if(v===null||v===undefined||v==='')return '—';var n=Number(v);return Number.isFinite(n)?'Rp '+Math.round(n).toLocaleString('id-ID'):'—';}
   function incentiveNum(v){if(v===null||v===undefined||v==='')return null;var n=Number(v);return Number.isFinite(n)?n:null;}
@@ -15579,7 +15600,20 @@ function showHrPlaceholder(title, group, description) {
   function formulaConfigFromForm(){
     function n(id,def){var el=document.getElementById(id),v=el?Number(el.value):def;return Number.isFinite(v)&&v>=0?v:def;}
     var config={meal_other:n('rkFormulaMealOther',INCENTIVE_DEFAULTS.meal_other),meal_ob:n('rkFormulaMealOb',INCENTIVE_DEFAULTS.meal_ob),transport_daily:n('rkFormulaTransportDaily',INCENTIVE_DEFAULTS.transport_daily),transport_cap:n('rkFormulaTransportCap',INCENTIVE_DEFAULTS.transport_cap),transport_threshold:n('rkFormulaTransportThreshold',INCENTIVE_DEFAULTS.transport_threshold),phone_daily:n('rkFormulaPhoneDaily',INCENTIVE_DEFAULTS.phone_daily),phone_cap:n('rkFormulaPhoneCap',INCENTIVE_DEFAULTS.phone_cap),phone_threshold:n('rkFormulaPhoneThreshold',INCENTIVE_DEFAULTS.phone_threshold),piket_hourly_rate:15000,piket_min_hours:4,piket_max_hours:8,piket_rounding:'FLOOR_HOUR',eligibility:{meal_requires_on_time:true,meal_exclude_outside:true,transport_exclude_outside:true,phone_include_outside:true,outside_accept_either_event:!!document.getElementById('rkFormulaOutsideEitherEvent')&&document.getElementById('rkFormulaOutsideEitherEvent').checked,outside_requires_clock_in:false,outside_ignore_late_early:true,standby_as_outside:!!document.getElementById('rkFormulaStandbyPaid')&&document.getElementById('rkFormulaStandbyPaid').checked,piket_paid:true},outside_rates:{}};
-    ['AREA 1','AREA 2','AREA 3','AREA 4','AREA LAIN'].forEach(function(area,idx){config.outside_rates[area]={};var roles=area==='AREA LAIN'?['MGR','STAFF']:['SS','SM','PM'];roles.forEach(function(role){var key='rkFormulaArea'+(idx+1)+role;var def=(INCENTIVE_DEFAULTS.outside_rates[area]||{})[role]||0;config.outside_rates[area][role]=n(key,def);});});
+    var savedRates=(incentiveUI.formula&&incentiveUI.formula.outside_rates)||{};
+    ['AREA 1','AREA 2','AREA 3','AREA 4','AREA LAIN'].forEach(function(area,idx){
+      var areaRates=Object.assign({},savedRates[area]||INCENTIVE_DEFAULTS.outside_rates[area]||{});
+      INCENTIVE_OUTSIDE_JOB_CODES.forEach(function(role){
+        var field=document.getElementById('rkFormulaArea'+(idx+1)+role);
+        if(!field)return;
+        var raw=String(field.value==null?'':field.value).trim();
+        if(raw===''){delete areaRates[role];return;}
+        var rate=Number(raw);
+        if(!Number.isFinite(rate)||rate<0)throw new Error('Tarif '+area+' / '+role+' harus berupa angka nol atau lebih.');
+        areaRates[role]=rate;
+      });
+      config.outside_rates[area]=areaRates;
+    });
     return config;
   }
   function formulaField(id,label,value){return '<label>'+escH(label)+'<input class="rk-in" id="'+id+'" type="number" min="0" step="1" value="'+escH(value)+'" '+(isSuperAdminRole()?'':'disabled')+'></label>';}
@@ -15590,9 +15624,15 @@ function showHrPlaceholder(title, group, description) {
       '<div class="rk-formula-guide"><strong>Alur hitung</strong><div class="rk-formula-guide-grid"><div><b>1. Data kehadiran</b><span>Berdasarkan presensi, kalender, lokasi, dan kode.</span></div><div><b>2. Kelayakan</b><span>Mengikuti faktor kelayakan yang aktif.</span></div><div><b>3. Nominal</b><span>Mengikuti tarif, batas, Kode Jabatan, dan area.</span></div></div></div>'+
       '<div class="rk-formula-grid"><section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>01 · Subsidi</h3><p>Nominal dasar dan ambang hari untuk setiap komponen.</p></div><span class="rk-formula-tag">Rupiah</span></div><div class="rk-incentive-grid">'+formulaField('rkFormulaMealOther','Uang makan selain OB (Rp)',d.meal_other)+formulaField('rkFormulaMealOb','Uang makan OB (Rp)',d.meal_ob)+formulaField('rkFormulaTransportDaily','Transport per hari (Rp)',d.transport_daily)+formulaField('rkFormulaTransportCap','Batas transport pada ambang hari (Rp)',d.transport_cap)+formulaField('rkFormulaTransportThreshold','Ambang hari transport',d.transport_threshold)+formulaField('rkFormulaPhoneDaily','Pulsa per hari (Rp)',d.phone_daily)+formulaField('rkFormulaPhoneCap','Batas pulsa pada ambang hari (Rp)',d.phone_cap)+formulaField('rkFormulaPhoneThreshold','Ambang hari pulsa',d.phone_threshold)+'</div><div class="rk-formula-explain"><b>Logika default</b><span>Uang makan: Rp20.000 per hari tepat waktu (OB Rp10.000). Transport: Rp15.385 per hari, maksimum Rp400.000 mulai 25 hari. Pulsa: Rp3.846 per hari, maksimum Rp100.000 mulai 25 hari.</span></div></section>'+
       '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>02 · Faktor kelayakan</h3><p>Centang untuk mengaktifkan aturan. Perubahan diterapkan oleh backend setelah disimpan.</p></div><span class="rk-formula-tag">Aturan</span></div><div class="rk-formula-check-list">'+formulaCheckbox('rkFormulaMealOnTime','Uang makan: EARLY dan ON_TIME memenuhi syarat; LATE tidak',true)+formulaCheckbox('rkFormulaMealExcludeOutside','Uang makan tidak dihitung saat dinas luar / di luar lokasi',true)+formulaCheckbox('rkFormulaTransportExcludeOutside','Transport tidak dihitung saat dinas luar / di luar lokasi',true)+formulaCheckbox('rkFormulaPhoneIncludeOutside','Subsidi pulsa tetap dihitung saat dinas luar / di luar lokasi',true)+formulaCheckbox('rkFormulaOutsideEitherEvent','Dinas luar dapat dihitung dari Clock In atau Clock Out dengan Area tervalidasi',true)+formulaCheckbox('rkFormulaOutsideIgnoreLate','Dinas luar tidak dipengaruhi keterlambatan atau pulang cepat',true)+formulaCheckbox('rkFormulaStandbyPaid','Standby pada hari libur dibayar dengan tarif dinas luar',true)+formulaCheckbox('rkFormulaPiketPaid','Piket pada hari libur masuk perhitungan insentif',true)+'</div></section></div>'+
-      '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>03 · Tarif dinas luar berdasarkan Area &amp; Kode Jabatan</h3><p>Tarif dihitung berdasarkan kode area dan job_code karyawan yang tersimpan. Nilai di bawah adalah tarif awal dari ketentuan yang diberikan.</p></div><span class="rk-formula-tag">Area 1–4</span></div><div class="rk-table-wrap"><table class="rk-incentive-table rk-formula-rate-table"><thead><tr><th>Area</th><th>SS (Rp)</th><th>SM (Rp)</th><th>PM (Rp)</th></tr></thead><tbody>';
-    ['AREA 1','AREA 2','AREA 3','AREA 4'].forEach(function(area,i){html+='<tr><td><b>'+area+'</b></td>'+['SS','SM','PM'].map(function(role){return '<td><input class="rk-in" style="min-width:100px" id="rkFormulaArea'+(i+1)+role+'" type="number" min="0" step="1" value="'+d.outside_rates[area][role]+'" '+(isSuperAdminRole()?'':'disabled')+'></td>';}).join('')+'</tr>';});
-    html+='<tr><td><b>AREA LAIN</b></td><td colspan="1">'+formulaField('rkFormulaArea5MGR','MGR (Rp)',d.outside_rates['AREA LAIN'].MGR)+'</td><td colspan="2">'+formulaField('rkFormulaArea5STAFF','STAFF (Rp)',d.outside_rates['AREA LAIN'].STAFF)+'</td></tr></tbody></table></div></section>'+
+      '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>03 · Tarif dinas luar berdasarkan Area &amp; Kode Jabatan</h3></div><span class="rk-formula-tag">Area 1–4 + Lain</span></div><div class="rk-table-wrap"><table class="rk-incentive-table rk-formula-rate-table"><thead><tr><th>Area</th>'+INCENTIVE_OUTSIDE_JOB_CODES.map(function(role){return '<th>'+escH(role)+' (Rp)</th>';}).join('')+'</tr></thead><tbody>';
+    ['AREA 1','AREA 2','AREA 3','AREA 4','AREA LAIN'].forEach(function(area,i){
+      var areaRates=d.outside_rates[area]||{};
+      html+='<tr><td><b>'+area+'</b></td>'+INCENTIVE_OUTSIDE_JOB_CODES.map(function(role){
+        var value=areaRates[role];
+        return '<td><input class="rk-in" style="min-width:94px;width:100%" id="rkFormulaArea'+(i+1)+role+'" type="number" min="0" step="1" placeholder="—" value="'+(value==null?'':escH(value))+'" '+(isSuperAdminRole()?'':'disabled')+'></td>';
+      }).join('')+'</tr>';
+    });
+    html+='</tbody></table></div></section>'+
       '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>04 · Aturan Piket aktif</h3><p>Ketentuan ini dikunci sesuai keputusan perusahaan dan dihitung backend berdasarkan pasangan Clock In–Clock Out yang disetujui.</p></div><span class="rk-formula-tag">Aktif</span></div><div class="rk-incentive-grid"><label>Tarif per jam<input class="rk-in" disabled value="Rp 15.000"></label><label>Minimal durasi<input class="rk-in" disabled value="4 jam (di bawahnya Rp 0)"></label><label>Maksimal durasi per hari<input class="rk-in" disabled value="8 jam"></label><label>Pembulatan<input class="rk-in" disabled value="Kelipatan 1 jam, dibulatkan ke bawah"></label></div><div class="rk-formula-explain"><b>Transport &amp; Pulsa</b><span>Piket kantor: tetap mendapat transport dan pulsa harian. Piket dinas luar P1–P4/PL: tidak mendapat transport, tetap mendapat pulsa. P1–P4/PL pada kandidat ini dihitung sebagai Piket per jam tanpa tambahan tarif DL harian untuk mencegah pembayaran ganda; klausul kombinasi tarif DL perlu ditinjau terpisah.</span></div></section>'+
       '<section class="rk-card rk-formula-card"><div class="rk-formula-card-head"><div><h3>05 · Komponen yang masih placeholder</h3><p>Ditampilkan untuk persiapan, tetapi tidak dihitung ke total sampai aturan resminya ditetapkan.</p></div><span class="rk-formula-tag muted">Tidak dihitung</span></div><div class="rk-incentive-grid"><label>Kompensasi pulang ke keluarga<input class="rk-in" disabled value="Belum didefinisikan"></label><label>Ekstra transport<input class="rk-in" disabled value="Belum didefinisikan"></label><label>Kurang bayar bulan lalu<input class="rk-in" disabled value="Belum didefinisikan"></label></div></section>'+
       '<div class="rk-formula-footer"><div class="rk-incentive-note" id="rkFormulaNote">Memeriksa formula tersimpan...</div><div class="rk-toolbar"><button class="rk-btn ghost" id="rkFormulaReload" type="button">Muat Formula Tersimpan</button><span style="flex:1"></span><button class="rk-btn" id="rkFormulaSave" type="button" '+(isSuperAdminRole()?'':'disabled')+'>Simpan Formula (Superadmin)</button></div></div>';
@@ -15611,7 +15651,7 @@ function showHrPlaceholder(title, group, description) {
     if(!cfg||typeof cfg!=='object')return;var d=Object.assign({},INCENTIVE_DEFAULTS,cfg);var outside=Object.assign({},INCENTIVE_DEFAULTS.outside_rates,cfg.outside_rates||{});d.outside_rates=outside;
     function set(id,v){var e=document.getElementById(id);if(e&&v!=null)e.value=v;}
     set('rkFormulaMealOther',d.meal_other);set('rkFormulaMealOb',d.meal_ob);set('rkFormulaTransportDaily',d.transport_daily);set('rkFormulaTransportCap',d.transport_cap);set('rkFormulaTransportThreshold',d.transport_threshold);set('rkFormulaPhoneDaily',d.phone_daily);set('rkFormulaPhoneCap',d.phone_cap);set('rkFormulaPhoneThreshold',d.phone_threshold);var elg=Object.assign({},INCENTIVE_DEFAULTS.eligibility,cfg.eligibility||{});function setCheck(id,v){var e=document.getElementById(id);if(e)e.checked=!!v;}setCheck('rkFormulaMealOnTime',elg.meal_requires_on_time);setCheck('rkFormulaMealExcludeOutside',elg.meal_exclude_outside);setCheck('rkFormulaTransportExcludeOutside',elg.transport_exclude_outside);setCheck('rkFormulaPhoneIncludeOutside',elg.phone_include_outside);setCheck('rkFormulaOutsideEitherEvent',elg.outside_accept_either_event!==false && elg.outside_requires_clock_in!==true);setCheck('rkFormulaOutsideIgnoreLate',elg.outside_ignore_late_early);setCheck('rkFormulaStandbyPaid',elg.standby_as_outside);setCheck('rkFormulaPiketPaid',elg.piket_paid);
-    ['AREA 1','AREA 2','AREA 3','AREA 4','AREA LAIN'].forEach(function(area,idx){var roles=area==='AREA LAIN'?['MGR','STAFF']:['SS','SM','PM'];roles.forEach(function(role){set('rkFormulaArea'+(idx+1)+role,(outside[area]||{})[role]);});});
+    ['AREA 1','AREA 2','AREA 3','AREA 4','AREA LAIN'].forEach(function(area,idx){INCENTIVE_OUTSIDE_JOB_CODES.forEach(function(role){set('rkFormulaArea'+(idx+1)+role,(outside[area]||{})[role]);});});
   }
   function loadIncentiveFormula(force){
     var note=document.getElementById('rkFormulaNote');
@@ -15639,7 +15679,7 @@ function showHrPlaceholder(title, group, description) {
   function incentiveEmployeeDetailTable(row){
     var details=Array.isArray(row.details)?row.details:[];
     if(!details.length)return '<div class="rk-empty">Belum ada rincian event absensi untuk karyawan ini pada periode terpilih.</div>';
-    return '<div class="rk-table-wrap"><table class="rk-incentive-table"><thead><tr><th>Tanggal</th><th>Kode</th><th>Clock In</th><th>Clock Out</th><th>Ketepatan</th><th>Area</th><th>Makan</th><th>Transport</th><th>Pulsa</th><th>Dinas luar</th><th>Piket</th><th>Catatan audit</th></tr></thead><tbody>'+details.map(function(d){var warns=Array.isArray(d.warnings)?d.warnings.join(' · '):String(d.warnings||'');return '<tr><td>'+escH(d.date||'—')+'</td><td>'+escH(d.attendance_code||'—')+'</td><td>'+escH(d.clock_in||'—')+'<br><small>'+escH(d.clock_in_status||'')+'</small></td><td>'+escH(d.clock_out||'—')+'<br><small>'+escH(d.clock_out_status||'')+'</small></td><td>'+escH(d.punctuality_status||'—')+'</td><td>'+escH(d.area||'—')+'</td><td>'+incentiveMoney(d.meal_amount)+'</td><td>'+((d.transport_eligible===true)?'Ya':'—')+'</td><td>'+((d.phone_eligible===true)?'Ya':'—')+'</td><td>'+incentiveMoney(d.outside_amount)+'</td><td>'+escH(d.picket_hours_paid||0)+' jam<br>'+incentiveMoney(d.picket_amount)+'</td><td>'+escH(warns||'—')+'</td></tr>';}).join('')+'</tbody></table></div>';
+    return '<div class="rk-table-wrap"><table class="rk-incentive-table"><thead><tr><th>Tanggal</th><th>Kode</th><th>Clock In</th><th>Clock Out</th><th>Ketepatan</th><th>Area</th><th>Makan</th><th>Transport</th><th>Pulsa</th><th>Dinas luar</th><th>Piket</th><th>Catatan audit</th></tr></thead><tbody>'+details.map(function(d){var warns=Array.isArray(d.warnings)?d.warnings.join(' · '):String(d.warnings||'');var rateMeta=d.outside_rate_key?String(d.outside_rate_key)+' · '+String(d.outside_job_code||row.job_code||'Kode Jabatan kosong'):'';var rateMissing=(d.outside_eligible===true&&d.outside_rate_configured===false)?'<br><small style="color:#a33;font-weight:700">Tarif belum diatur</small>':'';return '<tr><td>'+escH(d.date||'—')+'</td><td>'+escH(d.attendance_code||'—')+'</td><td>'+escH(d.clock_in||'—')+'<br><small>'+escH(d.clock_in_status||'')+'</small></td><td>'+escH(d.clock_out||'—')+'<br><small>'+escH(d.clock_out_status||'')+'</small></td><td>'+escH(d.punctuality_status||'—')+'</td><td>'+escH(d.area||'—')+'</td><td>'+incentiveMoney(d.meal_amount)+'</td><td>'+((d.transport_eligible===true)?'Ya':'—')+'</td><td>'+((d.phone_eligible===true)?'Ya':'—')+'</td><td>'+incentiveMoney(d.outside_amount)+(rateMeta?'<br><small>'+escH(rateMeta)+'</small>':'')+rateMissing+'</td><td>'+escH(d.picket_hours_paid||0)+' jam<br>'+incentiveMoney(d.picket_amount)+'</td><td>'+escH(warns||'—')+'</td></tr>';}).join('')+'</tbody></table></div>';
   }
   function incentiveEmployeeSignatory(root, employeeId){
     root=root||{};var map=root.by_employee_id||root.byEmployeeId||root.employee_overrides||{};
@@ -15946,8 +15986,14 @@ function showHrPlaceholder(title, group, description) {
 
   function incentiveMonthOptions(selected){
     var names=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-    var now=new Date(),out='';
-    for(var i=0;i<48;i++){var d=new Date(now.getFullYear(),now.getMonth()-i,1),v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');out+='<option value="'+v+'"'+(v===selected?' selected':'')+'>'+names[d.getMonth()]+' '+d.getFullYear()+'</option>';}
+    var value=String(selected||incentiveMonthDefault()),parts=value.match(/^\d{4}-(\d{2})$/),chosen=parts?Number(parts[1]):1,out='';
+    names.forEach(function(name,index){var v=String(index+1).padStart(2,'0');out+='<option value="'+v+'"'+((index+1)===chosen?' selected':'')+'>'+name+'</option>';});
+    return out;
+  }
+  function incentiveYearOptions(selected){
+    var current=incentiveJakartaParts().year,chosen=Number(selected)||current;
+    var first=Math.min(current-10,chosen),last=Math.max(current+5,chosen),out='';
+    for(var y=last;y>=first;y--)out+='<option value="'+y+'"'+(y===chosen?' selected':'')+'>'+y+'</option>';
     return out;
   }
   function renderIncentiveEmployeePage(){
@@ -15955,8 +16001,15 @@ function showHrPlaceholder(title, group, description) {
     var build=function(){
       var employees=empCurrentList().map(empNormalize).filter(function(x){return x.nik;}).sort(function(a,b){return String(a.nama||'').localeCompare(String(b.nama||''),'id',{sensitivity:'base'});});
       var opts='<option value="ALL">Semua Karyawan</option>'+employees.map(function(x){return '<option value="'+escH(x.nik)+'">'+escH(x.nama)+' ('+escH(x.nik)+')</option>';}).join('');
-      el.innerHTML='<div class="rk-toolbar"><span style="flex:1"></span><button class="rk-btn ghost" id="rkIncEmpReload" type="button">Muat Ulang</button><button class="rk-btn" id="rkIncEmpPrint" type="button" disabled>Cetak PDF</button><button class="rk-btn" id="rkIncEmpPrintRekap" type="button" disabled>Cetak Rekap</button></div><div class="rk-card"><div class="rk-incentive-grid"><label>Bulan Periode<select class="rk-in" id="rkIncEmpPeriod">'+incentiveMonthOptions(incentiveUI.period)+'</select></label><label>Karyawan<select class="rk-in" id="rkIncEmpNik">'+opts+'</select></label></div></div><div id="rkIncEmpNotice" class="rk-incentive-note"></div><div id="rkIncEmpPreview" class="rk-card"><div class="rk-empty">Memuat rekap…</div></div>';
-      var period=document.getElementById('rkIncEmpPeriod');period.addEventListener('change',function(){incentiveUI.period=this.value||incentiveMonthDefault();loadIncentiveEmployeeRecap();});
+      var periodParts=String(incentiveUI.period||incentiveMonthDefault()).match(/^(\d{4})-(\d{2})$/),periodYear=periodParts?periodParts[1]:String(incentiveJakartaParts().year),periodMonth=periodParts?periodParts[2]:'01';
+      el.innerHTML='<div class="rk-toolbar"><span style="flex:1"></span><button class="rk-btn ghost" id="rkIncEmpReload" type="button">Muat Ulang</button><button class="rk-btn" id="rkIncEmpPrint" type="button" disabled>Cetak PDF</button><button class="rk-btn" id="rkIncEmpPrintRekap" type="button" disabled>Cetak Rekap</button></div><div class="rk-card"><div class="rk-incentive-grid rk-incentive-period-grid"><label>Bulan<select class="rk-in" id="rkIncEmpMonth">'+incentiveMonthOptions(incentiveUI.period)+'</select></label><label>Tahun<select class="rk-in" id="rkIncEmpYear">'+incentiveYearOptions(periodYear)+'</select></label><label>Karyawan<select class="rk-in" id="rkIncEmpNik">'+opts+'</select></label><input type="hidden" id="rkIncEmpPeriod" value="'+escH(incentiveUI.period)+'"></div></div><div id="rkIncEmpNotice" class="rk-incentive-note"></div><div id="rkIncEmpPreview" class="rk-card"><div class="rk-empty">Memuat rekap…</div></div>';
+      var periodField=document.getElementById('rkIncEmpPeriod'),monthSelect=document.getElementById('rkIncEmpMonth'),yearSelect=document.getElementById('rkIncEmpYear');
+      function updateSelectedPayrollPeriod(){
+        var value=String(yearSelect.value||periodYear)+'-'+String(monthSelect.value||periodMonth).padStart(2,'0');
+        periodField.value=value;incentiveUI.period=value;loadIncentiveEmployeeRecap();
+      }
+      monthSelect.addEventListener('change',updateSelectedPayrollPeriod);
+      yearSelect.addEventListener('change',updateSelectedPayrollPeriod);
       var select=document.getElementById('rkIncEmpNik');select.value=incentiveUI.employeeNik||'ALL';select.addEventListener('change',function(){incentiveUI.employeeNik=this.value||'ALL';loadIncentiveEmployeeRecap();});
       document.getElementById('rkIncEmpReload').addEventListener('click',loadIncentiveEmployeeRecap);
       document.getElementById('rkIncEmpPrint').addEventListener('click',printIncentiveEmployeeRecap);
@@ -18049,10 +18102,6 @@ body.rh-desk-on .rk-cuti-detail-actions button:disabled {
 }
 </style>
 
-</body></html>
-
-
-
 
 <style id="rh-v13-8-3-notification-feedback-css">
   #toast, #rkToast { transition: opacity .18s ease, transform .18s ease, background-color .18s ease; }
@@ -18099,149 +18148,78 @@ body.rh-desk-on .rk-cuti-detail-actions button:disabled {
 </style>
 
 
-<style id="rh-login-mobile-reference-and-dashboard-logo-fix-20261106">
-/* Mobile login: restore the original single-card attendance screen. */
+<style id="rh-mobile-login-compact-original-geometry-20261106">
+/* Mobile login restored to the original compact proportions: max card 388px, logo 185px. */
 @media (max-width: 1023.98px) {
   #s-login {
-    display: none;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    justify-content: center !important;
-    min-height: 100vh !important;
-    min-height: 100dvh !important;
-    padding: 8px !important;
-    gap: 0 !important;
-    background: linear-gradient(155deg,#003824 0%,#00573A 52%,#007850 100%) !important;
+    display: none !important;
+    min-height: 100vh !important; min-height: 100dvh !important;
+    padding: 24px !important; gap: 0 !important;
+    align-items: center !important; justify-content: center !important;
+    background: linear-gradient(155deg,#003824 0%,#00573A 50%,#002E1E 100%) !important;
     box-sizing: border-box !important;
   }
   #s-login.on { display: flex !important; }
   #s-login .login-card {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    justify-content: flex-start !important;
-    width: 100% !important;
-    max-width: none !important;
-    min-height: calc(100dvh - 16px) !important;
-    margin: 0 !important;
-    padding: clamp(34px,8.6vw,70px) clamp(24px,6.7vw,54px) clamp(30px,7.2vw,64px) !important;
-    border: 0 !important;
-    border-radius: clamp(28px,6vw,48px) !important;
-    background: #FFFFFF !important;
-    box-shadow: none !important;
+    display: block !important; flex: 0 1 388px !important;
+    width: 100% !important; max-width: 388px !important; min-height: 0 !important; height: auto !important;
+    margin: auto !important; padding: 32px 26px 28px !important;
+    background: #FFFFFF !important; border: 1px solid rgba(255,255,255,.4) !important;
+    border-radius: 24px !important; box-shadow: 0 24px 60px -12px rgba(0,40,26,.35) !important;
     box-sizing: border-box !important;
   }
   #s-login .rh-login-logo-wrap {
-    display: block !important;
-    position: static !important;
-    width: min(42vw,335px) !important;
-    max-width: 100% !important;
-    height: auto !important;
-    margin: 0 auto clamp(24px,5vw,38px) !important;
-    padding: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    line-height: 0 !important;
+    display: block !important; position: static !important;
+    width: 185px !important; max-width: 100% !important; height: auto !important;
+    margin: 0 auto 14px !important; padding: 0 !important;
+    background: transparent !important; border: 0 !important; border-radius: 0 !important;
+    box-shadow: none !important; line-height: 0 !important;
   }
   #s-login .rh-login-logo-wrap picture,
   #s-login .rh-login-logo-wrap img {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 300 / 115;
-    object-fit: contain !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    display: block !important; width: 100% !important; max-width: 100% !important; height: auto !important;
+    aspect-ratio: 300 / 115 !important; object-fit: contain !important;
+    background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
   }
+  #s-login .rh-lg-brand, #s-login .rh-lg-head { display: none !important; }
   #s-login .login-card h1 {
-    margin: 0 0 clamp(14px,2.8vw,24px) !important;
-    text-align: center !important;
-    font-size: clamp(24px,4.2vw,36px) !important;
-    line-height: 1.15 !important;
-    letter-spacing: 1.2px !important;
-    font-weight: 850 !important;
-    color: #16291F !important;
+    margin: 0 0 4px !important; text-align: center !important; font-size: 18px !important;
+    line-height: 1.2 !important; letter-spacing: 1.5px !important; font-weight: 800 !important; color: var(--txt) !important;
   }
-  #s-login .login-card .field {
-    margin: 0 0 clamp(18px,3vw,26px) !important;
-  }
-  #s-login .login-card .field label {
-    display: block !important;
-    margin: 0 0 clamp(8px,1.5vw,13px) !important;
-    font-size: clamp(16px,3vw,25px) !important;
-    line-height: 1.2 !important;
-    color: #355444 !important;
-    font-weight: 500 !important;
-  }
-  #s-login .login-card .field input {
-    width: 100% !important;
-    height: clamp(62px,12vw,98px) !important;
-    min-height: clamp(62px,12vw,98px) !important;
-    padding: 0 clamp(16px,3.8vw,32px) !important;
-    border: 3px solid #DDE8DE !important;
-    border-radius: clamp(16px,3vw,24px) !important;
-    background: #FFFBC8 !important;
-    color: #111111 !important;
-    font-size: clamp(19px,3.5vw,29px) !important;
-    line-height: 1.2 !important;
-    box-shadow: none !important;
-    box-sizing: border-box !important;
+  #s-login .login-card p { font-size: 13px !important; margin-bottom: 22px !important; }
+  #s-login .login-card .field { margin: 0 0 14px !important; }
+  #s-login .login-card .field label { margin: 0 0 6px !important; font-size: 12.5px !important; line-height: 1.2 !important; color: #3D5043 !important; font-weight: 600 !important; }
+  #s-login .login-card .field input,
+  #s-login .login-card .field select,
+  #s-login .login-card .field textarea {
+    width: 100% !important; height: auto !important; min-height: 0 !important;
+    padding: 13px 15px !important; border: 1.5px solid var(--line) !important; border-radius: 12px !important;
+    background: #FFFFFF !important; color: var(--txt) !important; font-size: 15px !important; line-height: 1.45 !important;
+    box-shadow: none !important; box-sizing: border-box !important;
   }
   #s-login .login-card .btn {
-    width: 100% !important;
-    min-height: clamp(64px,12vw,96px) !important;
-    margin: clamp(2px,.8vw,8px) 0 0 !important;
-    border: 0 !important;
-    border-radius: clamp(18px,3.2vw,26px) !important;
-    background: linear-gradient(115deg,#0B9366 0%,#007850 62%,#00583D 100%) !important;
-    color: #FFFFFF !important;
-    font-size: clamp(19px,3.5vw,29px) !important;
-    font-weight: 700 !important;
-    box-shadow: 0 12px 28px rgba(0,100,65,.18) !important;
+    width: 100% !important; min-height: 0 !important; height: auto !important;
+    margin: 0 !important; padding: 14px 16px !important; border: 0 !important; border-radius: 13px !important;
+    background: linear-gradient(135deg,#007850 0%,#005C3E 100%) !important; color: #FFFFFF !important;
+    font-size: 15px !important; line-height: 1.45 !important; font-weight: 600 !important;
+    box-shadow: 0 4px 14px rgba(0,120,80,.22) !important;
   }
-  #s-login .login-card .err {
-    min-height: 0 !important;
-    margin: 8px 0 0 !important;
-    font-size: 13px !important;
-  }
-  #s-login .login-card .hint {
-    margin: auto 0 0 !important;
-    padding-top: clamp(34px,5vw,52px) !important;
-    text-align: center !important;
-    font-size: clamp(14px,2.8vw,24px) !important;
-    color: #007850 !important;
-    line-height: 1.35 !important;
-  }
+  #s-login .login-card .err { min-height: 16px !important; margin: 10px 0 0 !important; font-size: 13px !important; }
+  #s-login .login-card .hint { margin: 18px 0 0 !important; padding: 0 !important; text-align: center !important; font-size: 13px !important; color: var(--txt-muted) !important; line-height: 1.45 !important; }
 }
-/* Desktop sidebar: green transparent original artwork, no colored tile. */
+
+/* Desktop sidebar: green transparent original artwork, no tile. */
 @media (min-width: 1024px) {
   #desktopSidebar .d-brand .d-logo-wrap {
-    width: 135px !important;
-    max-width: 100% !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-    line-height: 0 !important;
+    width: 135px !important; max-width: 100% !important; padding: 0 !important; margin: 0 !important;
+    background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
+    overflow: visible !important; line-height: 0 !important;
   }
   #desktopSidebar .d-brand .d-logo-wrap img {
-    display: block !important;
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 300 / 115 !important;
-    object-fit: contain !important;
-    background: transparent !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
+    display: block !important; width: 100% !important; height: auto !important; aspect-ratio: 300 / 115 !important;
+    object-fit: contain !important; background: transparent !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important;
   }
 }
 </style>
+
+</body></html>
