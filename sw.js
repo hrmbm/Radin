@@ -1,13 +1,13 @@
-/* ReHolz HRIS Service Worker v28.
+/* ReHolz HRIS Service Worker v31.
  * GitHub Pages deployment: publish this file beside index.html as sw.js.
  * The app shell is resolved from the Service Worker scope (./), never a versioned HTML filename.
  * Release compatibility is checked only with the reholz-release meta marker inside the HTML.
  */
 'use strict';
 
-const RH_SW_RELEASE = 'v28-pending-location-audit';
-const RH_EXPECTED_HTML_RELEASE = 'v13.9.5-pending-location-audit';
-const RH_SHELL_CACHE = 'rehholz-app-shell-v28';
+const RH_SW_RELEASE = 'v31-clockout-area-lock';
+const RH_EXPECTED_HTML_RELEASE = 'v13.9.9-clockout-area-lock';
+const RH_SHELL_CACHE = 'rehholz-app-shell-v31';
 const RH_SCOPE_URL = new URL(self.registration.scope);
 // GitHub Pages serves index.html automatically at the scope directory URL.
 const RH_CANONICAL_APP_URL = new URL('./', RH_SCOPE_URL);
