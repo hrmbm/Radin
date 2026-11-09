@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<meta name="reholz-release" content="v14.0.3-clockout-area-lock-jakarta">
+<meta name="reholz-release" content="v14.0.4-timeoff-balance-warning">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v14.0.3-clockout-area-lock-jakarta">
+<meta name="app-release" content="v14.0.4-timeoff-balance-warning">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Portal sistem terintegrasi untuk mengelola data karyawan ReHolz.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -4443,7 +4443,7 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://gkpaaabmzusqzrstbivp.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdrcGFhYWJtenVzcXpyc3RiaXZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM1MjEzNTQsImV4cCI6MjEwOTA5NzM1NH0.Asv7bcSPWWeTuCWHfncEtJVOiVZ7b_TpyZbvheyH2rE';
 var APP_VERSION = '6.6-SUPABASE-REHOLZ-HRIS-AREA-DELEGATE-ROLE-GRID'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v14.0.3-clockout-area-lock-jakarta';
+var RH_HTML_RELEASE = 'v14.0.4-timeoff-balance-warning';
 var RH_DISPLAY_VERSION = 'v13.9.5';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
@@ -4901,7 +4901,7 @@ function setPrepProgress(p, t) {
 
 function registerAppServiceWorker() {
   if (!('serviceWorker' in navigator)) return Promise.resolve(false);
-  return navigator.serviceWorker.register('./sw.js?v=28', { scope: './', updateViaCache: 'none' }).then(function(registration) {
+  return navigator.serviceWorker.register('./sw.js?v=29', { scope: './', updateViaCache: 'none' }).then(function(registration) {
     // Ask the browser to revalidate sw.js instead of trusting an old HTTP-cache copy.
     try { if (registration && typeof registration.update === 'function') registration.update().catch(function() {}); } catch (e) {}
     // The new worker self-activates; this message also helps older compatible workers.
@@ -8060,9 +8060,10 @@ function onCutiKode() {
   if(sickArea)sickArea.style.display=sel.value==='SSD'&&sickSel&&sickSel.value==='1'?'block':'none';
   // Lampiran selalu tersedia dan opsional untuk semua kategori Time Off.
   $('ctDocWrap').style.display = 'block';
-  if (sel.value === 'CT') {
+  var sisaCutiHabis = S.sisaCT === 0 || (typeof S.sisaCT === 'string' && S.sisaCT.trim() !== '' && Number(S.sisaCT) === 0);
+  if (sel.value === 'CT' && sisaCutiHabis) {
     $('ctSisa').style.display = 'block';
-    $('ctSisa').innerHTML = '📊 Sisa cuti tahunan Anda: <b>' + (S.sisaCT != null ? S.sisaCT : '-') + ' hari</b>';
+    $('ctSisa').innerHTML = '📊 Sisa cuti tahunan Anda: <b>' + S.sisaCT + ' hari</b>';
   } else {
     $('ctSisa').style.display = 'none';
   }
@@ -14299,8 +14300,9 @@ function showHrPlaceholder(title, group, description) {
     var sickWrap=document.getElementById('rkTorSickOutsideWrap'), sickSel=document.getElementById('rkTorSickOutside'), sickArea=document.getElementById('rkTorSickAreaWrap');
     if(sickWrap)sickWrap.style.display=code==='SSD'?'':'none'; if(sickArea)sickArea.style.display=code==='SSD'&&sickSel&&sickSel.value==='1'?'':'none';
     if (remaining) {
-      remaining.style.display = code === 'CT' ? 'block' : 'none';
-      if (code === 'CT') remaining.innerHTML = 'Sisa cuti tahunan Anda: <b>' + escH(S.sisaCT != null ? S.sisaCT : '—') + ' hari</b>';
+      var sisaCutiHabis = S.sisaCT === 0 || (typeof S.sisaCT === 'string' && S.sisaCT.trim() !== '' && Number(S.sisaCT) === 0);
+      remaining.style.display = code === 'CT' && sisaCutiHabis ? 'block' : 'none';
+      if (code === 'CT' && sisaCutiHabis) remaining.innerHTML = 'Sisa cuti tahunan Anda: <b>' + escH(S.sisaCT) + ' hari</b>';
     }
     if (btn) btn.textContent = timeOffRequestGroup === 'cuti' ? 'Ajukan Time Off' : 'Ajukan Izin';
   }
