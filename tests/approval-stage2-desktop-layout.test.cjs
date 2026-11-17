@@ -1,0 +1,37 @@
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+let passed = 0, failed = 0;
+function check(name, ok) { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}`); ok ? passed++ : failed++; }
+const style = (html.match(/<style id="rh-stage2-desktop-approval-layout-v59">([\s\S]*?)<\/style>/) || [])[1] || '';
+const finalStyle = (html.match(/<style id="rh-stage2-approval-consistency-v62">([\s\S]*?)<\/style>/) || [])[1] || '';
+check('Stage 2 desktop layout override exists', !!style);
+check('desktop CSS is placed in the page stylesheet and print HTML template remains intact', html.lastIndexOf('<style id=\"rh-stage2-approval-consistency-v62\">') > html.lastIndexOf('function rhPrintInIsolatedFrame') && html.includes("html+'</body></html>');"));
+check('desktop reimbursement uses a two-column media-left/details-right grid', /\.rh-reim-approval-detail\s*\{[\s\S]*?display:grid;[\s\S]*?grid-template-columns:minmax\(0,1\.08fr\) minmax\(390px,\.92fr\)/.test(style));
+check('desktop reimbursement media and details occupy separate grid children', /\.rh-reim-evidence-hero/.test(style) && /\.rh-reim-detail-body/.test(style));
+check('desktop reimbursement modal restores desktop width and independent detail scroll', /\.rh-reim-detail-modal\s*\{[\s\S]*?width:min\(1120px/.test(style) && /\.rh-reim-detail-body\s*\{[\s\S]*?overflow-y:auto/.test(style));
+check('mobile reimbursement is explicitly preserved as a single column', /@media\s*\(max-width:1023px\)[\s\S]*?\.rh-reim-approval-detail\s*\{\s*display:block/.test(style));
+check('desktop attendance visual grid uses constrained proportional rows', /\.rk-att-approval-visual\s*\{[\s\S]*?grid-template-rows:minmax\(160px,1\.65fr\) minmax\(120px,1fr\)/.test(style));
+check('desktop attendance media no longer imposes the old large iframe/photo minimum heights', /\.rk-att-approval-map iframe\s*\{[\s\S]*?min-height:0 !important/.test(style) && /\.rk-att-approval-photo img\s*\{[\s\S]*?min-height:0 !important/.test(style));
+check('desktop attendance details and left media stretch to the same content height', /\.rk-att-approval-layout\s*\{[\s\S]*?align-items:stretch/.test(style) && /\.rk-att-approval-body\s*\{[\s\S]*?align-self:stretch/.test(style));
+check('Time Off desktop keeps the existing attachment-left/details-right layout', /body\.rh-desk-on \.rk-cuti-detail-layout\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1\.08fr\)\s+minmax\(390px,\s*\.92fr\)/.test(html));
+check('Time Off desktop attachment panel remains the left grid region', /body\.rh-desk-on \.rk-cuti-detail-layout[\s\S]{0,700}\.rk-cuti-attachment-panel/.test(html));
+check('mobile breakpoints remain separate from desktop-only layout rules', /@media\s*\(min-width:1024px\)/.test(style) && /@media\s*\(max-width:1023px\)/.test(style));
+
+check('final Stage 2 correction stylesheet exists', !!finalStyle);
+check('Reimbursement desktop actions use the shared Time Off action group and button classes', /rh-reim-actions rk-cuti-detail-actions/.test(html) && /class=\"rk-btn danger\" data-reim-detail-action=\"REJECT\"/.test(html));
+check('mobile Presensi, Time Off and Reimbursement actions share one full-width vertical layout and exact 46px × 6px button shape', /@media \(max-width:1023px\)[\s\S]*?\.det-actions,[\s\S]*?\.rh-reim-actions\.rk-cuti-detail-actions[\s\S]*?flex-direction:column;[\s\S]*?gap:10px;[\s\S]*?\.det-actions button,[\s\S]*?\.rh-reim-actions\.rk-cuti-detail-actions \.rk-btn[\s\S]*?width:100% !important;[\s\S]*?height:46px !important;[\s\S]*?border-radius:6px !important;[\s\S]*?font-size:15px !important/.test(finalStyle) && /\.det-actions button\.btn-att-approve[\s\S]*?background:#087A4B !important/.test(finalStyle) && /\.det-actions button\.btn-att-reject[\s\S]*?background:#B43C35 !important/.test(finalStyle));
+check('Presensi, Time Off and Reimbursement desktop buttons share an exact 88×36 geometry and 5px radius', /body\.rh-desk-on \.rk-att-actions button,[\s\S]*?body\.rh-desk-on \.rh-reim-actions\.rk-cuti-detail-actions button[\s\S]*?width:88px !important;[\s\S]*?height:36px !important;[\s\S]*?border-radius:5px !important/.test(finalStyle) && /rk-cuti-detail-actions \.rk-btn:not\(\.danger\)[\s\S]*?background:#087A4B !important/.test(finalStyle) && /rk-cuti-detail-actions \.rk-btn\.danger[\s\S]*?background:#B43C35 !important/.test(finalStyle));
+check('attendance left media is explicitly split into proportional map and photo rows', /grid-template-rows:minmax\(0,1\.18fr\) minmax\(0,\.82fr\)/.test(finalStyle));
+check('attendance map iframe and photo are absolutely fitted within their own split boxes', /rk-att-approval-map iframe[\s\S]*?position:absolute;[\s\S]*?inset:0;[\s\S]*?height:100%/.test(finalStyle) && /rk-att-approval-photo img[\s\S]*?position:absolute;[\s\S]*?object-fit:contain/.test(finalStyle));
+check('attendance media and detail columns share the fixed popup content height at runtime', /function syncDesktopAttendanceApprovalMediaLayout\(shade\)[\s\S]*?layout\.style\.height='100%'[\s\S]*?body\.style\.height='100%'[\s\S]*?body\.scrollHeight>body\.clientHeight\+2/.test(html));
+check('attendance action buttons remain anchored/sticky at the bottom of the detail panel', /body\.rh-desk-on \.rk-att-actions \{[\s\S]*?position:sticky;[\s\S]*?bottom:0;[\s\S]*?margin-top:auto !important/.test(finalStyle));
+check('reimbursement approval timeline is top-down for manager stage and puts submitter last', /function reimbursementApprovalTimeline\(row,name,created\)[\s\S]*?if\(status==='PENDING_ATASAN'\)return managerPending\+submittedItem;[\s\S]*?if\(status==='PENDING_HR'\)return hrPending\+managerDone\+submittedItem/.test(html));
+check('attendance and Time Off timeline builders keep approver stages above the requester', html.indexOf("timeline = '<div class=\"rk-att-tl-item pending\"") < html.indexOf("Diajukan oleh ' + escH(row.nama") && html.indexOf('stage(superadminClass,superadminLabel') < html.indexOf("stage('done','Diajukan oleh"));
+const marker = (html.match(/<meta name="reholz-release" content="([^"]+)"/) || [])[1];
+const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+const expected = (sw.match(/const RH_EXPECTED_HTML_RELEASE = '([^']+)'/) || [])[1];
+check('HTML and Service Worker release markers match v65', marker === expected && /rehholz-app-shell-v72/.test(sw));
+console.log(`\n${passed} passed, ${failed} failed`);
+process.exit(failed ? 1 : 0);

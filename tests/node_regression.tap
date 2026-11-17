@@ -1,0 +1,296 @@
+TAP version 13
+# PASS normal attendance area selector shows Surabaya & Sekitarnya by display name
+# PASS Piket area is displayed by its exact name without an attendance-code suffix
+# PASS Standby selector deliberately does not include Surabaya & Sekitarnya
+# PASS internal SBY marker is not a display attendance code
+# PASS SBY location is accepted from saved Clock In and reused on Clock Out
+# PASS normal and Piket submit accept SBY but Standby submit rejects it
+# PASS area label normalization is case-safe after lowercasing
+# PASS attendance recap/export location column is derived by the shared label helper
+# PASS summary attendance code remains H for normal SBY attendance
+# PASS no display/report variants SDR-SBY, PSBY or DLSBY were introduced
+# PASS database stores the display area name and still validates GPS outside active radius
+# PASS report payload preserves raw GPS outside state while allowance logic remains office-equivalent
+# PASS database check constraint accepts the new display location only
+# PASS server day-off guard assigns P for SBY Piket and blocks SBY in Standby
+# PASS Piket code and Piket hour calculation treat SBY as Surabaya office-equivalent
+# PASS incentive calculation excludes SBY from Dinas Luar flag while retaining normal attendance eligibility
+# PASS HR attendance summary preserves explicit P marker and reports ordinary H for SBY normal work
+# PASS Admin is not blocked by the personal Clock In entry point
+# PASS Admin is not blocked by the personal Clock Out/submit entry point
+# PASS Admin generic API guard no longer blocks simpanAbsensi
+# PASS Admin optional RPC guard no longer blocks submit_attendance_with_photo
+# PASS Admin read-only notice explains personal attendance remains available
+# PASS database Admin attendance wrapper authenticates session and delegates to validated internal function
+# PASS desktop sidebar has Reimbursement group and Pengajuan Reimbursement submenu
+# PASS desktop reimbursement mount uses the existing reimbursementApp node
+# PASS mobile mount is restored when desktop console deactivates
+# PASS only Hybrid loads reimbursement data; non-Hybrid sees safe limited placeholder
+# PASS non-Hybrid desktop page is blurred and overlayed, including Admin
+# PASS non-Hybrid still mounts the safe placeholder behind the blur instead of an empty panel
+# PASS Hybrid access is based on job_code HYBRID and excludes read-only Admin
+# PASS BKK and Reimbursement print actions use the same green primary rk-btn style
+# PASS HTML and Service Worker release markers match
+# PASS Service Worker shell cache and release are advanced beyond v66/v67
+# PASS migrations are staged transactionally and do not contain live credentials
+# 34 passed, 0 failed
+# Subtest: tests-stage4-additions.test.cjs
+ok 1 - tests-stage4-additions.test.cjs
+  ---
+  duration_ms: 125.090498
+  type: 'test'
+  ...
+# PASS attendance popup stylesheet from Stage 2 remains present
+# PASS attendance popup width exactly matches Reimbursement desktop width
+# PASS attendance popup height matches the Reimbursement preview footprint with viewport cap
+# PASS attendance popup uses the same compact desktop corner treatment
+# PASS attendance header is reserved and content takes remaining popup height
+# PASS left map and photo remain in two proportional rows
+# PASS map and photo remain contained in their own media cells
+# PASS details column scrolls internally rather than expanding the popup
+# PASS decision buttons stay anchored in the details column
+# PASS runtime sizing no longer expands popup based on natural content height
+# PASS mobile dialog flow remains separate from desktop sizing rules
+# PASS HTML and Service Worker release markers match v66
+# 12 passed, 0 failed
+# Subtest: tests/approval-stage2-attendance-popup-proportions.test.cjs
+ok 2 - tests/approval-stage2-attendance-popup-proportions.test.cjs
+  ---
+  duration_ms: 97.815118
+  type: 'test'
+  ...
+# PASS one direct pending-approval API call remains, inside the canonical loader
+# PASS canonical queue normalizes attendance, Time Off and keeps reimbursement in the same result
+# PASS mobile approval refresh uses the canonical queue
+# PASS desktop approval inbox uses the canonical queue
+# PASS desktop attendance detail fallback uses the canonical queue
+# PASS desktop attendance detail prefers the shared current queue over potentially stale desktop cache rows
+# PASS desktop attendance action rechecks current row from the canonical queue
+# PASS desktop Time Off list supplements history from the canonical approval queue
+# PASS desktop decision dispatcher reads from the canonical queue
+# PASS mobile attendance photo uses shared renderer
+# PASS desktop attendance photo uses shared renderer
+# PASS desktop always invokes the shared photo renderer so the reserved photo panel shows either evidence or a visible empty/error state
+# PASS shared attendance renderer resolves private evidence through the same signed-URL resolver
+# PASS shared attendance renderer guards stale detail views and supports one refresh plus retry
+# PASS mobile Time Off attachment uses shared path and MIME helpers
+# PASS desktop Time Off attachment uses shared path and MIME helpers
+# PASS Time Off normalizer retains common identity, period, state and attachment fields
+# PASS reimbursement still uses its dedicated signed-URL API and display resolver
+# PASS attendance still uses its dedicated evidence authorization/signed URL API
+# PASS attendance normalization functions are extractable for runtime unit checks
+# PASS attendance row normalizes ID, employee, photo path, coordinates and status
+# PASS raw JPEG attendance evidence is normalized to a data URI instead of a fake Storage path
+# PASS Time Off normalization functions are extractable for runtime unit checks
+# PASS Time Off row normalizes identity, dates, status, path and MIME
+# PASS embedded JPEG Time Off evidence gets a valid image data URI
+# PASS HTML release marker and Service Worker expectation match
+# PASS Service Worker cache and release were advanced for the Stage 2 attendance popup proportion fix
+# 27 passed, 0 failed
+# Subtest: tests/approval-stage2-cross-platform.test.cjs
+ok 3 - tests/approval-stage2-cross-platform.test.cjs
+  ---
+  duration_ms: 85.43492
+  type: 'test'
+  ...
+# PASS Stage 2 desktop layout override exists
+# PASS desktop CSS is placed in the page stylesheet and print HTML template remains intact
+# PASS desktop reimbursement uses a two-column media-left/details-right grid
+# PASS desktop reimbursement media and details occupy separate grid children
+# PASS desktop reimbursement modal restores desktop width and independent detail scroll
+# PASS mobile reimbursement is explicitly preserved as a single column
+# PASS desktop attendance visual grid uses constrained proportional rows
+# PASS desktop attendance media no longer imposes the old large iframe/photo minimum heights
+# PASS desktop attendance details and left media stretch to the same content height
+# PASS Time Off desktop keeps the existing attachment-left/details-right layout
+# PASS Time Off desktop attachment panel remains the left grid region
+# PASS mobile breakpoints remain separate from desktop-only layout rules
+# PASS final Stage 2 correction stylesheet exists
+# PASS Reimbursement desktop actions use the shared Time Off action group and button classes
+# PASS mobile Presensi, Time Off and Reimbursement actions share one full-width vertical layout and exact 46px × 6px button shape
+# PASS Presensi, Time Off and Reimbursement desktop buttons share an exact 88×36 geometry and 5px radius
+# PASS attendance left media is explicitly split into proportional map and photo rows
+# PASS attendance map iframe and photo are absolutely fitted within their own split boxes
+# PASS attendance media and detail columns share the fixed popup content height at runtime
+# PASS attendance action buttons remain anchored/sticky at the bottom of the detail panel
+# PASS reimbursement approval timeline is top-down for manager stage and puts submitter last
+# PASS attendance and Time Off timeline builders keep approver stages above the requester
+# PASS HTML and Service Worker release markers match v65
+# 23 passed, 0 failed
+# Subtest: tests/approval-stage2-desktop-layout.test.cjs
+ok 4 - tests/approval-stage2-desktop-layout.test.cjs
+  ---
+  duration_ms: 45.294906
+  type: 'test'
+  ...
+# PASS single canonical reimbursement authorization helper exists
+# PASS assigned Superadmin may approve manager stage
+# PASS assigned Karyawan manager may approve manager stage
+# PASS wrong manager is blocked
+# PASS missing approval_line_id is blocked
+# PASS requester cannot approve own request
+# PASS Admin is read-only
+# PASS non-HYBRID reimbursement is blocked
+# PASS manager cannot approve HR stage
+# PASS Superadmin may approve HR stage
+# PASS terminal status cannot be approved
+# PASS desktop classic-script bridge exports reimbursementRpc
+# PASS desktop classic-script bridge exports reimbursementRequestId
+# PASS desktop classic-script bridge exports reimbursementCanActApprovalRow
+# PASS desktop classic-script bridge exports reimbursementDecisionConfirmed
+# PASS desktop classic-script bridge exports loadMyReimbursementRequests
+# PASS mobile inline detail handler is exported to window
+# PASS mobile approve/reject handler is exported to window
+# PASS desktop bulk approval waits for refreshBadge promise
+# PASS refreshBadge returns a promise
+# PASS personal approval queue does not await HR-wide monitoring
+# PASS canonical queue keeps Presensi/Time Off and Reimbursement failures independent
+# PASS mobile refresh consumes the canonical approval queue
+# PASS desktop personal queue consumes the same canonical approval queue
+# PASS desktop queue filters reimbursement by assigned approver
+# PASS mobile action rechecks authorization before RPC
+# PASS mobile reject requires a reason
+# PASS decision uncertainty is verified against server approval identity
+# PASS HTML and Service Worker release markers match
+# PASS Service Worker cache release advanced to v66
+# 30 passed, 0 failed
+# Subtest: tests/approval-stage2-independent.test.cjs
+ok 5 - tests/approval-stage2-independent.test.cjs
+  ---
+  duration_ms: 79.493907
+  type: 'test'
+  ...
+# PASS one canonical loader is exported for both clients
+# PASS mobile and desktop details call the same markup builder
+# PASS mobile and desktop details call the same attachment preview
+# PASS top hero is reserved for inline transaction evidence
+# PASS redundant attachment label, unavailable preview message and open/download link are absent from reimbursement detail
+# PASS requester label is renamed
+# PASS overbudget highlight is conditional on amount greater than zero
+# PASS irrelevant future approval-stage helper text is removed from the reimbursement detail
+# PASS unknown attachment without extension gets an inline image attempt then viewer fallback
+# PASS PDF, image, video and audio MIME paths are supported inline
+# PASS mobile action buttons restore their matching labels after a failed request
+# PASS shared queue isolates in-flight requests and cached data by session generation
+# PASS sample reimbursement detail includes requester, amount, overbudget and evidence slot
+# PASS sample overbudget detail receives the visual warning class
+# PASS sample detail includes approval actions and required rejection note
+# PASS Reimbursement desktop actions reuse the same button/action-group classes as Time Off
+# PASS sample timeline places active approver above the requester
+# PASS PENDING_HR timeline order is Superadmin, manager, requester
+# PASS approved timeline order is final approver, manager, requester
+# PASS manager rejection timeline still places the approver decision above requester
+# PASS Superadmin rejection timeline places HR decision first, manager approval second, requester last
+# 21 passed, 0 failed
+# Subtest: tests/approval-stage2-ui-consistency.test.cjs
+ok 6 - tests/approval-stage2-ui-consistency.test.cjs
+  ---
+  duration_ms: 165.840992
+  type: 'test'
+  ...
+# PASS canonical reimbursement permission helper exists
+# PASS assigned manager can approve stage 1
+# PASS wrong manager cannot approve
+# PASS missing manager mapping cannot approve
+# PASS HR role cannot approve manager stage
+# PASS assigned Superadmin can approve manager stage
+# PASS Superadmin can approve HR stage
+# PASS manager cannot approve HR stage
+# PASS Admin is read-only
+# PASS requester cannot approve own request
+# PASS non-HYBRID request cannot be approved
+# PASS mismatched stage metadata is rejected
+# PASS terminal request cannot be approved
+# PASS mobile detail renders actions only through canonical permission check
+# PASS mobile action rechecks permission before mutation
+# PASS mobile reimbursement mutation uses required RPC wrapper
+# PASS desktop inbox validates permission before mutation
+# PASS desktop detail validates permission before mutation
+# PASS desktop queue item uses canonical permission check
+# PASS bulk approval validates reimbursement permission
+# PASS no reimbursement mutation is routed through silent optional RPC
+# PASS uncertain response is verified against server approver identity
+# PASS service worker release marker matches HTML
+# PASS service worker cache release was advanced to v66
+# ALL PASS — 0 failed checks
+# Subtest: tests/approval-stage2.test.cjs
+ok 7 - tests/approval-stage2.test.cjs
+  ---
+  duration_ms: 81.560729
+  type: 'test'
+  ...
+# PASS all database RPC requests pass through one central client.rpc call
+# PASS classic desktop RPCs use the canonical window.rhRpc bridge
+# PASS attendance live map and monitoring use the canonical RPC broker
+# PASS day-off attendance context uses the core RPC wrapper
+# PASS optional reads no longer use an outer token-bearing dedupe cache
+# PASS read dedupe has a fixed maximum entry count
+# PASS read dedupe purges expired settled entries and bounds cache size
+# PASS rejected read promises are removed so retries can issue a fresh request
+# PASS read cache keys omit p_token and other credential fields
+# PASS read cache scope is isolated by session generation, user and role
+# PASS all get_ and hr_get_ reads are recognized for dedupe
+# PASS successful requests clear their timeout timer immediately
+# PASS concurrent identical reads share one in-flight Promise
+# PASS shared read resolves once for all callers
+# PASS a rejected read can be retried immediately without reusing its error
+# PASS read dedupe runtime cache remains within configured bound
+# PASS credential values are absent from serialized cache-key parameters
+# PASS cache scope changes when the login generation changes
+# PASS Time Off reference prewarm is single-flight for the current session
+# PASS Time Off prewarm ignores stale-session completions
+# PASS team prewarm reuses the same-user, same-session, same-day result for 30 seconds
+# PASS team fetch records a session-scoped cache timestamp
+# PASS no-clock-in detail query is reused for the same session and date range
+# PASS attendance range refresh invalidates the previous no-clock-in detail cache
+# PASS HR/Admin login prewarm reads local caches but no longer fetches a full company directory
+# PASS company-wide employee face photos are not prewarmed during HR/Admin login
+# PASS dashboard uses the role-secured compact employee directory summary
+# PASS dashboard no longer triggers the employee-manager catalog preload
+# PASS dashboard does not request unused face-progress data
+# PASS dashboard refresh reuses the queue result already fetched for rendering
+# PASS dashboard does not request full personal, bank or identity fields by default
+# PASS dashboard edit action fetches full employee details only after explicit edit click and Superadmin check
+# PASS non-Superadmin dashboard users are blocked before full personal directory fetch
+# PASS dashboard missing-data cards use server-provided boolean field-presence flags
+# PASS dashboard profile and edit actions keep full-detail loading outside initial dashboard path
+# PASS employee manager menu relies on go() as its single screen loader
+# PASS employee manager network loads are single-flight per session generation
+# PASS frontend does not open Supabase realtime subscriptions
+# PASS Stage 4 release marker matches Service Worker and shell cache
+# 39 passed, 0 failed
+# Subtest: tests/performance-stage4.test.cjs
+ok 8 - tests/performance-stage4.test.cjs
+  ---
+  duration_ms: 74.998039
+  type: 'test'
+  ...
+# PASS Stage 3 HTML release marker matches Service Worker v66
+# PASS Employee slip content and its three-column signature labels are unchanged
+# PASS Employee detail slip signature name uses a consistent 14 mm label-to-name gap
+# PASS No stale 5.5 mm signature spacing remains in the employee slip print CSS
+# PASS Slip still uses two half-page forms on one Letter print sheet
+# PASS Employee detail slip logo preserves the source image aspect ratio
+# PASS Rekap logo remains naturally contained and is not stretched
+# PASS Cetak Rekap ledger builder remains byte-for-byte unchanged from v63
+# PASS Cetak Reimbursement function and layout remain byte-for-byte unchanged from v63
+# PASS Cetak BKK output remains byte-for-byte unchanged from v63
+# PASS Cetak PDF and Cetak Rekap continue to call the original slip/ledger modes
+# PASS Standalone Reimbursement report preserves its A4 landscape signature geometry
+# PASS Reimbursement report RPC and approval state logic remain unchanged
+# 13 passed, 0 failed
+# Subtest: tests/reimbursement-print-stage3.test.cjs
+ok 9 - tests/reimbursement-print-stage3.test.cjs
+  ---
+  duration_ms: 66.974252
+  type: 'test'
+  ...
+1..9
+# tests 9
+# suites 0
+# pass 9
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 840.761084

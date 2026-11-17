@@ -1,0 +1,208 @@
+{
+  "suite": "Reimbursement Desktop UI v72",
+  "passed": 40,
+  "failed": 0,
+  "total": 40,
+  "results": [
+    {
+      "name": "desktop 1440 uses two-column workspace",
+      "status": "PASS",
+      "details": "630.719px 537.281px"
+    },
+    {
+      "name": "desktop summary spans above category selector",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop form and history are separate panels",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop form exposes all four original inputs",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop contains no horizontal overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "history item is keyboard-operable button",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "history item opens matching request detail action",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Transport tab switches shared category state",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Transport title and available balance update",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "Entertain tab restores original category",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "overbudget state updates submit label",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "overbudget guidance is visible",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "overbudget marks note as required",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "missing overbudget note blocks upload",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "valid form uploads exactly one evidence file",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "valid form submits existing reimbursement RPC",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "RPC payload keeps category/date/amount/note/storage path",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "success reloads the existing reimbursement page once",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "oversized attachment is rejected before upload",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "unsupported attachment type is rejected before upload",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop 1280 layout breakpoint",
+      "status": "PASS",
+      "details": "display=grid; columns=544.312px 463.688px"
+    },
+    {
+      "name": "desktop 1280 has no horizontal overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop 1280 keeps all form controls usable",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop 1280 keeps overbudget guidance visible",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop 1024 stacks panels to preserve readable form width layout breakpoint",
+      "status": "PASS",
+      "details": "display=grid; columns=752px"
+    },
+    {
+      "name": "desktop 1024 stacks panels to preserve readable form width has no horizontal overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop 1024 stacks panels to preserve readable form width keeps all form controls usable",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "desktop 1024 stacks panels to preserve readable form width keeps overbudget guidance visible",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "tablet 768 remains single column layout breakpoint",
+      "status": "PASS",
+      "details": "display=block; columns=none"
+    },
+    {
+      "name": "tablet 768 remains single column has no horizontal overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "tablet 768 remains single column keeps all form controls usable",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "tablet 768 remains single column keeps overbudget guidance visible",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "mobile 390 remains single column layout breakpoint",
+      "status": "PASS",
+      "details": "display=block; columns=none"
+    },
+    {
+      "name": "mobile 390 remains single column has no horizontal overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "mobile 390 remains single column keeps all form controls usable",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "mobile 390 remains single column keeps overbudget guidance visible",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "mobile 360 remains single column layout breakpoint",
+      "status": "PASS",
+      "details": "display=block; columns=none"
+    },
+    {
+      "name": "mobile 360 remains single column has no horizontal overflow",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "mobile 360 remains single column keeps all form controls usable",
+      "status": "PASS",
+      "details": ""
+    },
+    {
+      "name": "mobile 360 remains single column keeps overbudget guidance visible",
+      "status": "PASS",
+      "details": ""
+    }
+  ]
+}

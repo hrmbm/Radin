@@ -1,13 +1,20 @@
-/* ReHolz HRIS Service Worker v53.
- * GitHub Pages deployment: publish this file beside index.html as sw.js.
+/* ReHolz HRIS Service Worker v72.
+ * GitHub Pages deployment: publish this file beside index.html as sw.js,
+ * and keep the assets/ folder (logo) beside them.
  * The app shell is resolved from the Service Worker scope (./), never a versioned HTML filename.
  * Release compatibility is checked only with the reholz-release marker inside the HTML.
  */
 'use strict';
 
-const RH_SW_RELEASE = 'v53-slip-submit-align';
-const RH_EXPECTED_HTML_RELEASE = 'v14.6.14-slip-submit-align-reimburse-print-fix';
-const RH_SHELL_CACHE = 'rehholz-app-shell-v53';
+const RH_SW_RELEASE = 'v72-reimbursement-desktop-ui';
+const RH_EXPECTED_HTML_RELEASE = 'v14.7.18-stage4-reimbursement-desktop-ui';
+const RH_SHELL_CACHE = 'rehholz-app-shell-v72';
+const RH_ASSET_CACHE = 'reholz-app-assets-v1';
+const RH_ASSET_URLS = [
+  './assets/reholz-logo-green.png',
+  './assets/reholz-logo-white.png',
+  './assets/reholz-logo-print.png'
+];
 const RH_SCOPE_URL = new URL(self.registration.scope);
 // GitHub Pages serves index.html automatically at the scope directory URL.
 const RH_CANONICAL_APP_URL = new URL('./', RH_SCOPE_URL);
@@ -18,6 +25,16 @@ function isAppNavigation(urlValue) {
     if (u.origin !== RH_SCOPE_URL.origin || !u.pathname.startsWith(RH_SCOPE_URL.pathname)) return false;
     const leaf = u.pathname.slice(RH_SCOPE_URL.pathname.length).replace(/^\//, '');
     return leaf === '' || leaf.toLowerCase() === 'index.html';
+  } catch (_) { return false; }
+}
+
+function isScopedAsset(urlValue) {
+  try {
+    const u = new URL(urlValue);
+    if (u.origin !== RH_SCOPE_URL.origin) return false;
+    return /^assets\/reholz-logo-(green|white|print)\.png$/i.test(
+      u.pathname.slice(RH_SCOPE_URL.pathname.length).replace(/^\//, '')
+    );
   } catch (_) { return false; }
 }
 
@@ -57,10 +74,32 @@ async function cacheFreshShell() {
   }
 }
 
+async function cacheAssets() {
+  const cache = await caches.open(RH_ASSET_CACHE);
+  await Promise.all(RH_ASSET_URLS.map(async (u) => {
+    try {
+      const res = await fetch(new URL(u, RH_SCOPE_URL).href, { cache: 'no-store', credentials: 'same-origin' });
+      if (res && res.ok) await cache.put(new URL(u, RH_SCOPE_URL).href, res);
+    } catch (_) { /* logo tetap diambil dari jaringan bila gagal */ }
+  }));
+}
+
+/* Logo: cache-first agar tampil utuh walau jaringan lambat/offline,
+ * dengan penyegaran latar dari jaringan bila tersedia. */
+async function assetResponse(request) {
+  const cache = await caches.open(RH_ASSET_CACHE);
+  const hit = await cache.match(request, { ignoreSearch: true });
+  const network = fetch(request).then(async (res) => {
+    if (res && res.ok) await cache.put(request, res.clone());
+    return res;
+  }).catch(() => null);
+  return hit || (await network) || new Response('', { status: 504 });
+}
+
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
-    try { await cacheFreshShell(); }
-    catch (e) { console.warn('[ReHolz SW] Shell preparation failed:', e && e.message || e); }
+    try { await cacheFreshShell(); } catch (e) { console.warn('[ReHolz SW] Shell preparation failed:', e && e.message || e); }
+    try { await cacheAssets(); } catch (e) { console.warn('[ReHolz SW] Asset preparation failed:', e && e.message || e); }
     await self.skipWaiting();
   })());
 });
@@ -75,8 +114,10 @@ self.addEventListener('activate', event => {
     }
     const names = await caches.keys();
     await Promise.all(names
-      .filter(name => name.startsWith('rehholz-app-shell-') && name !== RH_SHELL_CACHE)
+      .filter(name => (name.startsWith('rehholz-app-shell-') && name !== RH_SHELL_CACHE) ||
+                      (name.startsWith('rehholz-app-assets-') && name !== RH_ASSET_CACHE))
       .map(name => caches.delete(name)));
+    try { await cacheAssets(); } catch (_) {}
 
     const openClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     for (const client of openClients) {
@@ -133,7 +174,12 @@ function offlineResponse() {
 
 self.addEventListener('fetch', event => {
   const request = event.request;
-  if (request.method !== 'GET' || request.mode !== 'navigate' || !isAppNavigation(request.url)) return;
+  if (request.method !== 'GET') return;
+  if (isScopedAsset(request.url)) {
+    event.respondWith(assetResponse(request));
+    return;
+  }
+  if (request.mode !== 'navigate' || !isAppNavigation(request.url)) return;
   event.respondWith((async () => {
     try {
       // Always resolve the app from the scope directory. GitHub Pages maps ./ to index.html.
