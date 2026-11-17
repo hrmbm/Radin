@@ -1,36 +1,23 @@
-# HRIS Reholz — Reimbursement Desktop UI v72
+# HRIS Reholz — Rekap Absensi Fix v73
 
-Paket lengkap hasil revisi tampilan **Reimbursement → Pengajuan Reimbursement** desktop, dibangun di atas snapshot v71.
+Paket perbaikan terarah untuk error `ReferenceError: SESSION_GEN is not defined` saat membuka Rekap Absensi desktop setelah deployment v72.
 
-## File utama
-- `index.html` — aplikasi.
-- `sw.js` — Service Worker v72.
-- `assets/` — logo aplikasi.
-- `migrations/` — migrasi Tahap 4 sebelumnya (tidak diubah oleh revisi UI ini).
-- `tests/` — seluruh regresi Tahap 2–4 dan tes UI baru.
-- `previews/` — screenshot desktop/tablet/mobile.
+## Deploy
 
-## Perubahan v72
-Mengadaptasi form existing menjadi komposisi desktop yang lebih rapi: ringkasan saldo, tab kategori, panel form dan riwayat; responsive untuk desktop, tablet, dan mobile. Field, validasi, upload bukti, RPC, akses Hybrid, dan aturan backend tetap sama.
+Deploy these together at the same application scope:
+- `index.html`
+- `sw.js`
+- `assets/`
 
-## Dokumen paket
-- `PLAN.md`
-- `WALKTHROUGH.md`
-- `CHECKPOINT.md`
-- `TEST_RESULTS.md`
-- `RELEASE_NOTES.md`
+No SQL migration is required for this fix. After deployment, refresh the browser/service worker and run the smoke test in `CHECKPOINT.md`.
 
-## Tes
-Regresi Node:
-`node --test tests/*.test.cjs tests-stage4-additions.test.cjs`
+## Package contents
+- `index.html` — frontend v73.
+- `sw.js` — Service Worker v73.
+- `assets/` — existing logos.
+- `tests/` — previous regression suites plus the new scope/runtime test.
+- `PLAN.md`, `WALKTHROUGH.md`, `CHECKPOINT.md`, `REPORT.md`, `TEST_RESULTS.md`.
 
-Tes UI Chromium:
-`python tests/ui/test_reimbursement_ui.py`
+## Important boundary
 
-Tes UI memerlukan Python Playwright dan Chromium yang tersedia di lingkungan pengujian. `tests/ui/fixture.html` adalah fixture lokal; endpoint upload dan RPC dimock.
-
-## Deployment
-Deploy `index.html`, `sw.js`, dan folder `assets/` sebagai satu release. Pertahankan Service Worker berada pada scope yang sama dengan `index.html`. Lakukan smoke test dengan akun Hybrid pada staging sebelum produksi; jangan menguji dengan pengajuan yang mengubah data produksi.
-
-## Batas
-Paket ini belum di-deploy dan belum diuji dengan akun Hybrid/Supabase aktif.
+The fix removes the JavaScript exception that stopped Rekap Absensi before network access. It does not change the RPC contract or SQL. Live RPC availability and returned data must still be confirmed in the deployed Supabase project.

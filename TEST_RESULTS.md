@@ -1,15 +1,28 @@
-# TEST RESULTS — HRIS Reimbursement Desktop UI v72
+# Test Results — Rekap Absensi Fix v73
 
-## Hasil lokal
-- Playwright UI: **40 passed, 0 failed**.
-- Regresi Tahap 2–4: **9/9 test suite; 223 pemeriksaan lulus; 0 gagal**.
-- JavaScript inline: **7/7 blok lulus `node --check`**.
-- Service Worker: lulus `node --check`.
-- HTML release marker dan Service Worker v72: cocok.
-- Viewport UI: 1440, 1280, 1024, 768, 390, dan 360 px; tidak ditemukan horizontal overflow.
+## Result summary (verified from captured test logs)
 
-## Ruang lingkup tes browser
-Menggunakan Chromium dan fixture yang menjalankan fungsi render/validasi aktual dari `index.html`. Endpoint upload dan RPC dimock, sehingga tes memverifikasi payload dan urutan pemanggilan tanpa menulis data ke Supabase aktif.
+- Node regression: 10/10 test files passed; 231 explicit PASS assertions, 0 failed.
+- Reimbursement desktop UI regression: 40/40 passed.
+- Chromium runtime test for actual `fetchAttendanceMonitoring()`: 4/4 passed.
+- Inline JavaScript syntax: 7/7 blocks passed `node --check`.
+- Combined explicit checks: 282 passed, 0 failed.
 
-## Batas verifikasi
-Belum dilakukan pengujian dengan akun Hybrid yang terautentikasi pada Supabase staging/produksi. Tidak ada perubahan database, RPC, RLS, Edge Function, atau aturan bisnis.
+## Runtime proof for the reported issue
+
+The test extracts the actual module-scoped `SESSION_GEN` declaration/accessor, actual classic-script `attMonitorSessionGeneration()` helper, and actual `fetchAttendanceMonitoring()` function from `index.html`, then executes them in separate ES-module and classic-script contexts in Chromium.
+
+Verified:
+1. No `ReferenceError: SESSION_GEN is not defined` occurs.
+2. `hr_get_attendance_monitoring` is called when the function runs.
+3. RPC parameters remain `p_start_date` and `p_end_date`, and timeout remains 90 seconds.
+4. Cache key changes when session generation changes (`0|...` to `1|...`).
+5. No uncaught browser page errors.
+
+## Regression scope
+
+Existing Stage 2 approval UI/flow, Stage 3 print, Stage 4 performance, Stage 4 additions and Reimbursement desktop UI suites were rerun. No SQL migration, RPC signature, role authorization rule or attendance business rule was changed.
+
+## Limitation
+
+The runtime test mocks the RPC response. It proves the frontend no longer stops at the `SESSION_GEN` ReferenceError and that it attempts the expected RPC. It does not prove the live Supabase function exists, is present in the PostgREST schema cache, or returns valid attendance data. That requires a smoke test against the active deployed project.

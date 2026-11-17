@@ -1,0 +1,4 @@
+PASS actual fetchAttendanceMonitoring executes without SESSION_GEN ReferenceError
+PASS first fetch calls hr_get_attendance_monitoring with expected date parameters
+PASS cache key tracks live session generation after login/session change
+PASS no uncaught browser page errors

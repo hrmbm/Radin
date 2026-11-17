@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<meta name="reholz-release" content="v14.7.18-stage4-reimbursement-desktop-ui">
+<meta name="reholz-release" content="v14.7.19-stage4-attendance-monitor-session-scope-fix">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -4528,8 +4528,8 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://usizgscyxtbuutzzdlmq.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzaXpnc2N5eHRidXV0enpkbG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNzA4OTAsImV4cCI6MjEwOTc0Njg5MH0.eo1YNLVIii9_QJkb13OleJ2y46LAVc9WrxQtjIrvF60';
 var APP_VERSION = '6.9-REHOLZ-REIMBURSEMENT-REALIZATION-APPROVAL-SDR'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v14.7.18-stage4-reimbursement-desktop-ui';
-var RH_DISPLAY_VERSION = 'v14.7.17';
+var RH_HTML_RELEASE = 'v14.7.19-stage4-attendance-monitor-session-scope-fix';
+var RH_DISPLAY_VERSION = 'v14.7.19';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -4715,6 +4715,9 @@ function withTimeout(p, ms, fn) {
 
 var SESSION_GEN = 0;
 function stale(gen) { return gen !== SESSION_GEN; }
+// Expose a live accessor for classic-script modules (e.g. Desktop HR Console).
+// SESSION_GEN itself remains module-scoped so session mutation stays centralized.
+window.rhGetSessionGeneration = function() { return SESSION_GEN; };
 
 /* Read dedupe: menggabungkan request identik, menjaga scope per sesi,
  * membatasi memori, dan membuang hasil gagal agar retry tidak memakai error lama. */
@@ -14194,6 +14197,10 @@ function showHrPlaceholder(title, group, description) {
   }
   function attMetricFinal(r){var st=String(attMonFirst(r,['status_approval','approval_status'])||'').toUpperCase();return !st||st==='VALID'||st==='DISETUJUI';}
   function attMetricOutside(r){return r&&(r.outside_location===true||r.outside_location==='true'||r.outsideLocation===true||r.is_outside===true);}
+  // SESSION_GEN lives inside the ES module; classic desktop scripts must use this bridge.
+  function attMonitorSessionGeneration(){
+    return typeof window.rhGetSessionGeneration === 'function' ? window.rhGetSessionGeneration() : 0;
+  }
   function showAttendanceMetricDetail(metric){
     var host=document.getElementById('rkAttMetricDetails');if(!host)return;
     var labels={ontime:'Tepat Waktu',late:'Terlambat Clock In',early:'Clock Out lebih awal',noOut:'Belum Clock Out',noIn:'Belum Clock In'};
@@ -14201,7 +14208,7 @@ function showHrPlaceholder(title, group, description) {
     document.getElementById('rkAttMetricClose').addEventListener('click',function(){host.style.display='none';});
     var out=document.getElementById('rkAttMetricBody'),rows=attMonitorState.rows||[],today=attMonLocalISO(new Date());
     if(metric==='noIn'){
-      var detailKey=String(SESSION_GEN)+'|'+attMonitorState.from+'|'+attMonitorState.to;
+      var detailKey=String(attMonitorSessionGeneration())+'|'+attMonitorState.from+'|'+attMonitorState.to;
       if(attMonitorState.noInDetailKey!==detailKey){attMonitorState.noInDetailKey=detailKey;attMonitorState.noInDetailRows=null;attMonitorState.noInDetailPromise=null;}
       if(!Array.isArray(attMonitorState.noInDetailRows) && !attMonitorState.noInDetailPromise){
         if(typeof window.rhRpc!=='function'){out.textContent='Detail tidak tersedia: RPC broker tidak ditemukan.';return;}
@@ -14229,7 +14236,7 @@ function showHrPlaceholder(title, group, description) {
     if(!from||!to){rkToast('Silakan pilih tanggal awal dan akhir.');return;}
     if(from>to){rkToast('Tanggal awal tidak boleh melewati tanggal akhir.');return;}
     attMonitorState.from=from;attMonitorState.to=to;attMonitorState.loaded=false;
-    attMonitorState.noInDetailKey=String(SESSION_GEN)+'|'+from+'|'+to;
+    attMonitorState.noInDetailKey=String(attMonitorSessionGeneration())+'|'+from+'|'+to;
     attMonitorState.noInDetailRows=null;attMonitorState.noInDetailPromise=null;
     body.innerHTML='<tr><td colspan="19"><div class="rk-loading">Memuat data kehadiran…</div></td></tr>';
     if(btn){btn.disabled=true;btn.textContent='Memuat…';}

@@ -16,7 +16,7 @@ function sha(value) { return crypto.createHash('sha256').update(value).digest('h
 
 const release = (html.match(/<meta name="reholz-release" content="([^"]+)"/) || [])[1] || '';
 const swExpected = (sw.match(/const RH_EXPECTED_HTML_RELEASE = '([^']+)'/) || [])[1] || '';
-check('Stage 3 HTML release marker matches Service Worker v66', release === 'v14.7.18-stage4-reimbursement-desktop-ui' && swExpected === release && /rehholz-app-shell-v72/.test(sw) && /v72-reimbursement-desktop-ui/.test(sw));
+check('Stage 3 HTML release marker matches Service Worker v66', release === 'v14.7.19-stage4-attendance-monitor-session-scope-fix' && swExpected === release && /rehholz-app-shell-v73/.test(sw) && /v73-attendance-monitor-session-scope-fix/.test(sw));
 
 // The employee slip is the existing per-employee Cetak PDF. It contains reimbursement rows,
 // but is not a standalone reimbursement-only document.

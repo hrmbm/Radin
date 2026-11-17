@@ -81,7 +81,7 @@ if (cutiFns.every(Boolean)) {
 const marker = (html.match(/<meta name="reholz-release" content="([^"]+)"\s*>/) || [])[1];
 const expected = (sw.match(/const RH_EXPECTED_HTML_RELEASE = '([^']+)'/) || [])[1];
 check('HTML release marker and Service Worker expectation match', !!marker && marker === expected);
-check('Service Worker cache and release were advanced for the Stage 2 attendance popup proportion fix', /rehholz-app-shell-v72/.test(sw) && /v72-reimbursement-desktop-ui/.test(sw));
+check('Service Worker cache and release were advanced for the Stage 2 attendance popup proportion fix', /rehholz-app-shell-v73/.test(sw) && /v73-attendance-monitor-session-scope-fix/.test(sw));
 
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -32,6 +32,6 @@ check('attendance and Time Off timeline builders keep approver stages above the 
 const marker = (html.match(/<meta name="reholz-release" content="([^"]+)"/) || [])[1];
 const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
 const expected = (sw.match(/const RH_EXPECTED_HTML_RELEASE = '([^']+)'/) || [])[1];
-check('HTML and Service Worker release markers match v65', marker === expected && /rehholz-app-shell-v72/.test(sw));
+check('HTML and Service Worker release markers match v65', marker === expected && /rehholz-app-shell-v73/.test(sw));
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

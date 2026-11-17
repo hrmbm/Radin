@@ -59,7 +59,7 @@ check('BKK and Reimbursement print actions use the same green primary rk-btn sty
 const htmlRelease = (html.match(/var RH_HTML_RELEASE = '([^']+)'/)||[])[1];
 const swExpected = (sw.match(/RH_EXPECTED_HTML_RELEASE = '([^']+)'/)||[])[1];
 check('HTML and Service Worker release markers match', !!htmlRelease && htmlRelease===swExpected);
-check('Service Worker shell cache and release are advanced beyond v66/v67', /rehholz-app-shell-v72/.test(sw) && /v72-reimbursement-desktop-ui/.test(sw));
+check('Service Worker shell cache and release are advanced beyond v66/v67', /rehholz-app-shell-v73/.test(sw) && /v73-attendance-monitor-session-scope-fix/.test(sw));
 check('migrations are staged transactionally and do not contain live credentials', /BEGIN;/.test(migrationA) && /COMMIT;/.test(migrationA) && /BEGIN;/.test(migrationB) && /COMMIT;/.test(migrationB) && !/service_role_key|sb_secret|password\s*=/.test(migrationA+ migrationB));
 
 

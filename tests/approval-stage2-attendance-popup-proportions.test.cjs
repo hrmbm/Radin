@@ -17,6 +17,6 @@ check('details column scrolls internally rather than expanding the popup', /\.rk
 check('decision buttons stay anchored in the details column', /\.rk-att-actions\s*\{[\s\S]*?position:sticky[\s\S]*?bottom:0/.test(css));
 check('runtime sizing no longer expands popup based on natural content height', /function syncDesktopAttendanceApprovalMediaLayout\(shade\)[\s\S]*?layout\.style\.height='100%'[\s\S]*?body\.style\.height='100%'[\s\S]*?body\.scrollHeight>body\.clientHeight\+2/.test(html));
 check('mobile dialog flow remains separate from desktop sizing rules', /@media \(min-width:1024px\)[\s\S]*?\.rk-att-approval-panel/.test(css) && /@media \(max-width:1023px\) \{ #rkAttApprovalShade \{ display:none!important; \} \}/.test(html));
-check('HTML and Service Worker release markers match v66', /<meta name="reholz-release" content="v14\.7\.18-stage4-reimbursement-desktop-ui">/.test(html) && /const RH_EXPECTED_HTML_RELEASE = 'v14\.7\.18-stage4-reimbursement-desktop-ui'/.test(sw) && /rehholz-app-shell-v72/.test(sw));
+check('HTML and Service Worker release markers match v66', /<meta name="reholz-release" content="v14\.7\.19-stage4-attendance-monitor-session-scope-fix">/.test(html) && /const RH_EXPECTED_HTML_RELEASE = 'v14\.7\.19-stage4-attendance-monitor-session-scope-fix'/.test(sw) && /rehholz-app-shell-v73/.test(sw));
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

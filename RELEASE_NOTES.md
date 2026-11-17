@@ -1,10 +1,8 @@
-# Release Notes — v72
+# Release Notes v73 — Rekap Absensi session-scope fix
 
-## Reimbursement Desktop UI
-- Redesigned desktop page as a balanced form/history workspace.
-- Added clearer balance summary and category balance tabs.
-- Improved date, amount, note, and evidence input hierarchy.
-- Improved request history cards and keyboard operability.
-- Kept the same existing form node, upload handler, RPC contract, access restrictions, and approval rules.
-- Added responsive behavior for wide desktop, narrow desktop/tablet, and mobile.
-- Updated the HTML/Service Worker release marker and shell cache to v72.
+- Fixed `ReferenceError: SESSION_GEN is not defined` on the desktop attendance monitoring page.
+- Exposed a read-only live accessor for the module-scoped session generation.
+- Updated the classic desktop script to use the accessor in both monitoring and No Clock In cache keys.
+- Preserved `hr_get_attendance_monitoring`, request parameters, timeout, RPC broker and backend permissions.
+- No SQL changes.
+- Service Worker and app-shell cache advanced to v73.

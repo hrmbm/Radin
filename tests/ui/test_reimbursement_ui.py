@@ -1,4 +1,4 @@
-"""Playwright UI regression tests for HRIS Reimbursement UI v72.
+"""Playwright UI regression tests for HRIS Reimbursement UI v73.
 Run: python tests/ui/test_reimbursement_ui.py
 Requires Playwright and a Chromium executable available to the environment.
 """
@@ -108,7 +108,7 @@ def main():
             browser.close()
     passed = sum(x['status']=='PASS' for x in RESULTS)
     failed = sum(x['status']=='FAIL' for x in RESULTS)
-    result = {'suite':'Reimbursement Desktop UI v72','passed':passed,'failed':failed,'total':len(RESULTS),'results':RESULTS}
+    result = {'suite':'Reimbursement Desktop UI v73','passed':passed,'failed':failed,'total':len(RESULTS),'results':RESULTS}
     out = ROOT/'tests'/'ui'/'RESULTS.json'
     out.write_text(json.dumps(result, indent=2, ensure_ascii=False), encoding='utf-8')
     print(f'RESULT {passed}/{len(RESULTS)} passed; {failed} failed')

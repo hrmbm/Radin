@@ -1,0 +1,25 @@
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const assert = require('assert');
+const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const sw = fs.readFileSync(path.join(__dirname, '..', 'sw.js'), 'utf8');
+const moduleStart = html.indexOf('<script type="module">');
+const moduleEnd = html.indexOf('</script>', moduleStart);
+const desktopAnchor = html.indexOf('function fetchAttendanceMonitoring');
+const desktopScriptStart = html.lastIndexOf('<script>', desktopAnchor);
+const desktopScriptEnd = html.indexOf('</script>', desktopAnchor);
+const moduleCode = html.slice(moduleStart, moduleEnd);
+const desktopCode = html.slice(desktopScriptStart, desktopScriptEnd);
+let passed = 0, failed = 0;
+function check(name, fn) { try { assert.ok(fn()); console.log('PASS ' + name); passed++; } catch (e) { console.log('FAIL ' + name + ': ' + e.message); failed++; } }
+check('module keeps SESSION_GEN private and exposes live accessor', () => /var SESSION_GEN\s*=\s*0;[\s\S]{0,450}window\.rhGetSessionGeneration\s*=\s*function\(\)\s*\{\s*return SESSION_GEN;\s*\}/.test(moduleCode));
+check('desktop script reads session generation through window bridge', () => /function attMonitorSessionGeneration\(\)[\s\S]{0,450}window\.rhGetSessionGeneration\(\)/.test(desktopCode));
+check('desktop script no longer contains a free SESSION_GEN identifier', () => !/(?<![\w$.])SESSION_GEN(?![\w$])/.test(desktopCode.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\/\/[^\n]*/g,'')));
+check('fetchAttendanceMonitoring cache key uses the safe generation helper', () => /attMonitorState\.noInDetailKey=String\(attMonitorSessionGeneration\(\)\)/.test(desktopCode));
+check('Belum Clock In detail cache key uses the safe generation helper', () => /detailKey=String\(attMonitorSessionGeneration\(\)\)/.test(desktopCode));
+check('attendance monitoring still calls the original RPC and date parameters', () => /window\.rhRpc\('hr_get_attendance_monitoring',\s*\{\s*p_start_date:from,\s*p_end_date:to\s*\},\s*90000\)/.test(desktopCode));
+check('HTML release marker matches Service Worker expected marker', () => { const a=(html.match(/name="reholz-release" content="([^"]+)"/)||[])[1]; const b=(sw.match(/RH_EXPECTED_HTML_RELEASE = '([^']+)'/)||[])[1]; return !!a && a===b && /v14\.7\.19/.test(a); });
+check('Service Worker cache version is v73', () => /RH_SW_RELEASE = 'v73-attendance-monitor-session-scope-fix'/.test(sw) && /rehholz-app-shell-v73/.test(sw));
+console.log(`\n${passed} passed, ${failed} failed`);
+process.exit(failed ? 1 : 0);

@@ -109,7 +109,7 @@ function extractBetween(startText, endText) {
 
   // Database/source audit invariants and release.
   check('frontend does not open Supabase realtime subscriptions', !/\.channel\s*\(|\.subscribe\s*\(/.test(html));
-  check('Stage 4 release marker matches Service Worker and shell cache', /content="v14\.7\.18-stage4-reimbursement-desktop-ui"/.test(html) && /RH_EXPECTED_HTML_RELEASE = 'v14\.7\.18-stage4-reimbursement-desktop-ui'/.test(sw) && /rehholz-app-shell-v72/.test(sw) && /v72-reimbursement-desktop-ui/.test(sw));
+  check('Stage 4 release marker matches Service Worker and shell cache', /content="v14\.7\.19-stage4-attendance-monitor-session-scope-fix"/.test(html) && /RH_EXPECTED_HTML_RELEASE = 'v14\.7\.19-stage4-attendance-monitor-session-scope-fix'/.test(sw) && /rehholz-app-shell-v73/.test(sw) && /v73-attendance-monitor-session-scope-fix/.test(sw));
 
   console.log(`\n${passed} passed, ${failed} failed`);
   process.exit(failed ? 1 : 0);

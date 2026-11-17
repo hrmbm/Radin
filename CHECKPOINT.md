@@ -1,38 +1,26 @@
-# CHECKPOINT — HRIS Reimbursement Desktop UI v72
+# Checkpoint — Rekap Absensi Fix v73
 
-## Status
-**Perbaikan tampilan selesai pada source dan pengujian UI lokal.** Paket ini adalah revisi visual untuk Paket C, bukan perubahan alur backend.
+- [x] Root cause confirmed from the user's actual stack trace and source script boundaries.
+- [x] Module exposes a live, read-only session-generation accessor.
+- [x] Desktop attendance monitor uses the accessor instead of free `SESSION_GEN` references.
+- [x] Both attendance monitoring and No Clock In detail cache keys use the bridge.
+- [x] Expected RPC remains `hr_get_attendance_monitoring` with the original date arguments.
+- [x] HTML and Service Worker release markers/cache match v73.
+- [x] Stage 2–4 regression suites: 10/10 test files passed.
+- [x] Reimbursement desktop UI regression: 40/40.
+- [x] Chromium runtime scope/RPC test: 4/4.
+- [x] Inline JavaScript syntax: 7/7.
+- [x] ZIP integrity checked.
+- [x] Test logs included in package (`tests/node-regression.tap`, `tests/reimbursement-ui.tap`, `tests/attendance-monitoring-runtime.tap`, `tests/js-syntax-results.txt`).
+- [ ] Not deployed to the user's active environment by this package build.
+- [ ] Live Supabase response not verified.
 
-## Checkpoint visual
-- [x] Desktop 1440 px: dua panel; form kiri, riwayat kanan.
-- [x] Desktop 1280 px: dua panel tetap seimbang.
-- [x] Desktop 1024 px: panel ditumpuk agar input tidak sempit.
-- [x] Tablet 768 px: satu kolom.
-- [x] Mobile 390 dan 360 px: satu kolom tanpa overflow horizontal.
-- [x] Seluruh field tanggal, nominal, catatan, bukti, dan tombol Ajukan tersedia.
-- [x] Saldo, kategori, status riwayat, dan Over Budget memiliki hierarchy visual yang jelas.
-- [x] Riwayat pengajuan menggunakan kontrol tombol yang keyboard-operable.
+## Post-deployment smoke test
 
-## Checkpoint fungsi
-- [x] Pilihan Entertain/Transport tetap memperbarui state dan saldo kategori.
-- [x] Nominal Over Budget mengubah tombol dan mewajibkan catatan.
-- [x] Pengajuan tanpa catatan Over Budget diblok sebelum upload.
-- [x] Upload bukti valid dan RPC pengajuan existing dipanggil dengan payload yang sama.
-- [x] File di atas 8 MB ditolak sebelum upload.
-- [x] Jenis file di luar JPG/PNG/WEBP/PDF ditolak sebelum upload.
-- [x] Riwayat memanggil handler detail yang sama.
-
-## Hasil tes
-- Tes UI Chromium: **40/40 lulus**.
-- Regresi Tahap 2–4: **9/9 suite, 223 pemeriksaan lulus**.
-- Sintaks inline JavaScript: **7/7 blok lulus**.
-- HTML release marker dan Service Worker v72: cocok.
-- Arsip ZIP: integritas diverifikasi setelah build final.
-
-## Batas verifikasi
-- Endpoint upload dan RPC dimock dalam tes browser; tidak ada data yang dikirim ke Supabase aktif.
-- Belum diuji memakai akun Hybrid nyata, signed-in session, atau deployment staging/produksi.
-- Tidak ada perubahan schema/database, RPC, RLS, maupun aturan akses.
-
-## Checkpoint akhir
-Paket dapat diserahkan untuk ditinjau. Sesudah paket ini dikirim, pekerjaan dihentikan dan menunggu instruksi pengguna.
+1. Deploy `index.html`, `sw.js`, and `assets/` together.
+2. Force-refresh/clear old app cache if the old Service Worker remains active.
+3. Login as HR or Superadmin and open **Rekap Absensi**.
+4. Confirm Network shows `POST /rest/v1/rpc/hr_get_attendance_monitoring`.
+5. Confirm the table loads.
+6. Open the **Belum Clock In** metric and confirm the detail path no longer produces a `SESSION_GEN` error.
+7. If the RPC now appears but fails, capture its Response body; that would be the next independent backend issue.

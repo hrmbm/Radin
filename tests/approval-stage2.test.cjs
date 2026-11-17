@@ -45,6 +45,6 @@ check('uncertain response is verified against server approver identity', /hr_get
 const marker = (html.match(/<meta name="reholz-release" content="([^"]+)"\s*>/) || [])[1];
 const expected = (sw.match(/const RH_EXPECTED_HTML_RELEASE = '([^']+)'/) || [])[1];
 check('service worker release marker matches HTML', !!marker && marker === expected);
-check('service worker cache release was advanced to v66', /rehholz-app-shell-v72/.test(sw) && /v72-reimbursement-desktop-ui/.test(sw));
+check('service worker cache release was advanced to v66', /rehholz-app-shell-v73/.test(sw) && /v73-attendance-monitor-session-scope-fix/.test(sw));
 console.log(`\n${failed ? 'FAILED' : 'ALL PASS'} — ${failed} failed checks`);
 process.exit(failed ? 1 : 0);

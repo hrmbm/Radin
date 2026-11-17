@@ -1,0 +1,41 @@
+PASS desktop 1440 uses two-column workspace — 630.719px 537.281px
+PASS desktop summary spans above category selector
+PASS desktop form and history are separate panels
+PASS desktop form exposes all four original inputs
+PASS desktop contains no horizontal overflow
+PASS history item is keyboard-operable button
+PASS history item opens matching request detail action
+PASS Transport tab switches shared category state
+PASS Transport title and available balance update
+PASS Entertain tab restores original category
+PASS overbudget state updates submit label
+PASS overbudget guidance is visible
+PASS overbudget marks note as required
+PASS missing overbudget note blocks upload
+PASS valid form uploads exactly one evidence file
+PASS valid form submits existing reimbursement RPC
+PASS RPC payload keeps category/date/amount/note/storage path
+PASS success reloads the existing reimbursement page once
+PASS oversized attachment is rejected before upload
+PASS unsupported attachment type is rejected before upload
+PASS desktop 1280 layout breakpoint — display=grid; columns=544.312px 463.688px
+PASS desktop 1280 has no horizontal overflow
+PASS desktop 1280 keeps all form controls usable
+PASS desktop 1280 keeps overbudget guidance visible
+PASS desktop 1024 stacks panels to preserve readable form width layout breakpoint — display=grid; columns=752px
+PASS desktop 1024 stacks panels to preserve readable form width has no horizontal overflow
+PASS desktop 1024 stacks panels to preserve readable form width keeps all form controls usable
+PASS desktop 1024 stacks panels to preserve readable form width keeps overbudget guidance visible
+PASS tablet 768 remains single column layout breakpoint — display=block; columns=none
+PASS tablet 768 remains single column has no horizontal overflow
+PASS tablet 768 remains single column keeps all form controls usable
+PASS tablet 768 remains single column keeps overbudget guidance visible
+PASS mobile 390 remains single column layout breakpoint — display=block; columns=none
+PASS mobile 390 remains single column has no horizontal overflow
+PASS mobile 390 remains single column keeps all form controls usable
+PASS mobile 390 remains single column keeps overbudget guidance visible
+PASS mobile 360 remains single column layout breakpoint — display=block; columns=none
+PASS mobile 360 remains single column has no horizontal overflow
+PASS mobile 360 remains single column keeps all form controls usable
+PASS mobile 360 remains single column keeps overbudget guidance visible
+RESULT 40/40 passed; 0 failed

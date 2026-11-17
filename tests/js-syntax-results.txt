@@ -1,0 +1,8 @@
+PASS inline JavaScript block 1 (script)
+PASS inline JavaScript block 2 (script)
+PASS inline JavaScript block 3 (module)
+PASS inline JavaScript block 4 (script)
+PASS inline JavaScript block 5 (script)
+PASS inline JavaScript block 6 (script)
+PASS inline JavaScript block 7 (script)
+7 blocks passed, 0 failed
