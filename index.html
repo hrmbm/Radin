@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<meta name="reholz-release" content="v14.9.0-approver-dashboard-attendance-adjustment">
+<meta name="reholz-release" content="v14.9.1-approver-role-ui">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v14.9.0-approver-dashboard-attendance-adjustment">
+<meta name="app-release" content="v14.9.1-approver-role-ui">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Portal sistem terintegrasi untuk mengelola data karyawan ReHolz.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -4544,8 +4544,8 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://usizgscyxtbuutzzdlmq.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzaXpnc2N5eHRidXV0enpkbG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNzA4OTAsImV4cCI6MjEwOTc0Njg5MH0.eo1YNLVIii9_QJkb13OleJ2y46LAVc9WrxQtjIrvF60';
 var APP_VERSION = '6.9-REHOLZ-REIMBURSEMENT-REALIZATION-APPROVAL-SDR'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v14.9.0-approver-dashboard-attendance-adjustment';
-var RH_DISPLAY_VERSION = 'v14.9.0';
+var RH_HTML_RELEASE = 'v14.9.1-approver-role-ui';
+var RH_DISPLAY_VERSION = 'v14.9.1';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
 var MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
@@ -9601,7 +9601,7 @@ function karBuildForm(data, opts, mode) {
   html += '<div class="field"><label>Nama Lengkap *</label><input id="kNama" value="' + esc(data.nama || '') + '"></div>';
   html += '<div class="row2"><div class="field"><label>Cabang *</label>' + karSelect('kBranch', karBranchOpts(o.branch), data.branch) + '</div><div class="field"><label>Status Kerja</label>' + karSelect('kStatusKerja', [{ v: 'Contract', t: 'Kontrak' }, { v: 'Permanent', t: 'Tetap' }, { v: 'Outsourcing', t: 'Alih Daya' }, { v: 'Intern', t: 'Magang' }], data.statusKerja) + '</div></div>';
   html += '<div class="row2"><div class="field"><label>Organisasi *</label>' + karSelectWithNew('kOrg', karStrOpts(o.organisasi), data.organisasi) + '</div><div class="field"><label>Level</label>' + karSelectWithNew('kLevel', karStrOpts(o.level), data.level) + '</div></div>';
-  html += '<div class="row2"><div class="field"><label>Jabatan *</label>' + karSelectWithNew('kPos', karStrOpts(o.jabatan), data.posisi) + '</div><div class="field"><label>Peran</label>' + karSelect('kRole', [{ v: 'KARYAWAN', t: 'Karyawan' }, { v: 'ADMIN', t: 'Administrator' }, { v: 'SUPERADMIN', t: 'Superadmin' }], data.role) + '</div></div>';
+  html += '<div class="row2"><div class="field"><label>Jabatan *</label>' + karSelectWithNew('kPos', karStrOpts(o.jabatan), data.posisi) + '</div><div class="field"><label>Peran</label>' + karSelect('kRole', [{ v: 'KARYAWAN', t: 'Karyawan' }, { v: 'APPROVER', t: 'Approver' }, { v: 'ADMIN', t: 'Administrator' }, { v: 'SUPERADMIN', t: 'Superadmin' }], data.role || 'KARYAWAN') + '<small style="display:block;margin-top:5px;color:var(--txt-muted);font-size:11px;line-height:1.4">Approver aktif otomatis jika memiliki minimal satu bawahan langsung aktif. Pilih orang ini sebagai Atasan Langsung pada profil bawahannya.</small></div></div>';
   html += '<div class="field"><label>Atasan Langsung</label>' + karSelect('kAtasan', [{ v: '', t: 'Tidak ada' }].concat((o.atasan || []).map(function(a) { return { v: a.nik, t: a.nama + ' (' + a.nik + ')' }; })), data.atasanId) + '</div>';
   html += '<div class="field"><label>Tanggal Bergabung</label><input type="date" id="kJoin" value="' + esc(data.joinDate || todayISO()) + '"></div>';
   html += '<div style="display:flex;gap:8px;margin-top:10px"><button class="btn btn-blue" onclick="karSave(\'' + mode + '\')">💾 Simpan</button><button class="btn btn-ghost" onclick="closeSheet()">Batal</button></div>';
@@ -9639,6 +9639,24 @@ function karOnSelectNew(sel) {
   }
 }
 
+function karActiveDirectReportCount(managerId) {
+  var targetId = String(managerId || '').trim();
+  if (!targetId) return 0;
+  return (DATA.karList || []).filter(function (employee) {
+    var employeeId = String(employee.employee_id || employee.employeeId || employee.nik || '').trim();
+    var manager = String(employee.approval_line_id || employee.approvalLineId || employee.atasanId || employee.manager_employee_id || '').trim();
+    var status = String(employee.status_akun || employee.statusAkun || employee.akun || 'AKTIF').toUpperCase();
+    return employeeId && employeeId !== targetId && manager === targetId && status === 'AKTIF';
+  }).length;
+}
+
+function karEffectiveRole(employee) {
+  var storedRole = String(employee && employee.role || 'KARYAWAN').toUpperCase();
+  if (storedRole === 'SUPERADMIN' || storedRole === 'ADMIN' || storedRole === 'HR') return storedRole;
+  var employeeId = String(employee && (employee.employee_id || employee.employeeId || employee.nik) || '').trim();
+  return karActiveDirectReportCount(employeeId) > 0 ? 'APPROVER' : 'KARYAWAN';
+}
+
 function karOpenAdd() {
   try { ensureAdminWriteAllowed('tambah karyawan'); } catch (e) { toast(e.message); return; }
   if (!DATA.karOpts) {
@@ -9662,7 +9680,7 @@ function karOpenEdit(nik) {
   var data = {
     nik: x.nik, nama: x.nama, branch: x.branch, organisasi: x.org, level: x.level,
     posisi: x.posisi, grade: x.grade, class: x.class, statusKerja: x.statusKerja,
-    atasanId: x.atasanId, joinDate: x.joinDate, role: x.role
+    atasanId: x.atasanId, joinDate: x.joinDate, role: karEffectiveRole(x)
   };
   $('karFormTitle').textContent = 'Ubah Data Karyawan: ' + x.nama;
   $('karFormBody').innerHTML = karBuildForm(data, DATA.karOpts, 'edit');
@@ -9687,7 +9705,18 @@ function karSave(mode) {
   var organisasi = karGetFinalVal('kOrg', 'kOrg_new');
   var level = karGetFinalVal('kLevel', 'kLevel_new');
   var posisi = karGetFinalVal('kPos', 'kPos_new');
-  var role = $('kRole').value;
+  var requestedRole = String($('kRole').value || 'KARYAWAN').toUpperCase();
+  var directReports = karActiveDirectReportCount(nik);
+  if (mode === 'edit' && requestedRole === 'APPROVER' && directReports < 1) {
+    toast('Approver ditentukan otomatis. Tetapkan karyawan aktif ini sebagai Atasan Langsung pada profil minimal satu karyawan terlebih dahulu.');
+    return;
+  }
+  if (mode === 'edit' && requestedRole === 'KARYAWAN' && directReports > 0) {
+    toast('Peran Approver masih aktif karena karyawan ini memiliki ' + directReports + ' bawahan langsung aktif. Ubah Atasan Langsung pada profil bawahannya terlebih dahulu.');
+    return;
+  }
+  // Database stores base roles; effective APPROVER is derived from active approval_line_id relations.
+  var role = requestedRole === 'APPROVER' ? 'KARYAWAN' : requestedRole;
   var atasanId = $('kAtasan').value;
   var statusKerja = $('kStatusKerja').value;
   var joinDate = $('kJoin').value;
@@ -14282,7 +14311,7 @@ function showHrPlaceholder(title, group, description) {
     if (!shade) { shade=document.createElement('div'); shade.id='rkEmpEditShade'; shade.className='rk-emp-modal-shade'; document.body.appendChild(shade); shade.addEventListener('click',function(e){if(e.target===shade || (e.target.closest&&e.target.closest('[data-emp-edit-close]')))empCloseModal('rkEmpEditShade'); if(e.target.closest&&e.target.closest('[data-emp-edit-save]'))empSaveEditor();}); shade.addEventListener('keydown',function(e){if(e.key==='Escape')empCloseModal('rkEmpEditShade');}); }
     var managerId = String(x.atasanId || '');
     var managerOptions = '<option value="">— Tidak ada —</option>' + empCurrentList().map(empNormalize).filter(function(y){return y.nik && y.nik!==x.nik;}).map(function(y){return '<option value="'+escH(y.nik)+'"'+(y.nik===managerId?' selected':'')+'>'+escH(y.nama)+' ('+escH(y.nik)+')</option>';}).join('');
-    var roleField = isAdd ? '<div class="rk-emp-edit-field"><label for="edRole">Peran Sistem</label><select id="edRole"><option value="KARYAWAN" selected >Karyawan</option><option value="ADMIN">Administrator</option><option value="SUPERADMIN">Superadmin</option></select></div>' : '';
+    var roleField = isAdd ? '<div class="rk-emp-edit-field"><label for="edRole">Peran Sistem</label><select id="edRole"><option value="KARYAWAN" selected>Karyawan</option><option value="APPROVER">Approver</option><option value="ADMIN">Administrator</option><option value="SUPERADMIN">Superadmin</option></select><small style="display:block;margin-top:6px;color:#64756b;line-height:1.45">Approver aktif otomatis setelah minimal satu karyawan aktif menetapkannya sebagai Atasan Langsung. Peran dasar yang disimpan tetap Karyawan.</small></div>' : '';
     shade.innerHTML = '<section class="rk-emp-modal rk-emp-editor-modal" role="dialog" aria-modal="true" aria-labelledby="rkEmpEditorTitle"><header class="rk-emp-modal-head"><div><h2 id="rkEmpEditorTitle">' + (isAdd ? 'Tambah Karyawan' : 'Ubah Profil Karyawan') + '</h2><p>' + (isAdd ? 'Buat data karyawan baru' : escH(x.nama) + ' · ' + escH(x.nik)) + '</p></div><button class="rk-emp-modal-close" type="button" data-emp-edit-close aria-label="Tutup">×</button></header><div class="rk-emp-modal-content">' +
       '<div class="rk-emp-form-section"><h3>Data Pekerjaan</h3><div class="rk-emp-edit-grid">' +
       empEditorField('ID Karyawan','edNik',x.nik,'text','') + empEditorField('Nama Lengkap','edName',x.nama,'text','') + empEditorField('Departemen','edDepartment',x.department,'text','') + '<div class="rk-emp-edit-field"><label for="edBranch">Cabang (jadwal presensi)</label><select id="edBranch">'+(isAdd?'<option value="" selected>Pilih cabang</option>':'')+profileBranchOptions(x.branch,false,true)+'</select></div>' +
@@ -14343,7 +14372,8 @@ function showHrPlaceholder(title, group, description) {
     if(saveBtn){saveBtn.disabled=true;saveBtn.textContent=mode === 'add' ? 'Membuat data...' : 'Menyimpan...';}
     if(msg) msg.textContent='';
     if (mode === 'add') {
-      var createData={nik:data.nik,nama:data.nama,branch:data.branch,organisasi:data.department,level:data.jobLevel,posisi:data.jobPosition,grade:data.grade,class:data.className,statusKerja:data.employmentStatus,atasanId:data.approvalLineId,joinDate:data.joinDate,role:val('edRole')||'KARYAWAN',pin:null};
+      var requestedCreateRole = String(val('edRole') || 'KARYAWAN').toUpperCase();
+      var createData={nik:data.nik,nama:data.nama,branch:data.branch,organisasi:data.department,level:data.jobLevel,posisi:data.jobPosition,grade:data.grade,class:data.className,statusKerja:data.employmentStatus,atasanId:data.approvalLineId,joinDate:data.joinDate,role:(requestedCreateRole === 'APPROVER' ? 'KARYAWAN' : requestedCreateRole),pin:null};
       if(!createData.branch || !createData.organisasi || !createData.posisi){if(msg)msg.textContent='Department, Branch, and Jabatan are required.';if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Buat Karyawan';}return;}
       api('hrAddKaryawan',[createData],30000).then(function(created){
         if(created && (created.ok===false || created.success===false)) throw new Error(created.message || 'Employee could not be created.');
@@ -16867,6 +16897,22 @@ function renderMyApprovalsPage(){
 
   /* ---------------- MANAJEMEN USER ---------------- */
   var usersUI = { q: '' };
+  function usersActiveDirectReportCount(managerId) {
+    var targetId = String(managerId || '').trim();
+    if (!targetId) return 0;
+    return (DATA.karList || []).reduce(function (count, raw) {
+      var employee = empNormalize(raw);
+      if (!employee.nik || employee.nik === targetId) return count;
+      return count + (String(employee.akun || '').toUpperCase() === 'AKTIF' && String(employee.atasanId || '').trim() === targetId ? 1 : 0);
+    }, 0);
+  }
+  function usersEffectiveRole(raw) {
+    var employee = empNormalize(raw);
+    var storedRole = String(employee.role || 'KARYAWAN').toUpperCase();
+    // ADMIN and SUPERADMIN retain priority over derived Approver access.
+    if (storedRole === 'SUPERADMIN' || storedRole === 'ADMIN' || storedRole === 'HR') return storedRole;
+    return usersActiveDirectReportCount(employee.nik) > 0 ? 'APPROVER' : 'KARYAWAN';
+  }
   function renderUsersPage() {
     var el = document.getElementById('rkp-users');
     if (!el) return;
@@ -16879,7 +16925,7 @@ function renderMyApprovalsPage(){
           '<button class="rk-btn ghost" id="rkUsersReload">↻ Muat Ulang</button>' +
         '</div>' +
         '<div class="rk-card"><h3>Akun Pengguna</h3>' +
-        '<div class="rk-card-sub">Kelola peran akses (Karyawan / Administrator / Superadmin), status akun, dan PIN karyawan.</div>' +
+        '<div class="rk-card-sub">Kelola peran akses (Karyawan / Approver / Administrator / Superadmin), status akun, dan PIN. Approver ditentukan otomatis jika ada bawahan langsung aktif yang menunjuk karyawan tersebut sebagai Atasan Langsung.</div>' +
         '<div class="rk-table-wrap"><table class="rk-table"><thead><tr>' +
           '<th>Karyawan</th><th>ID Karyawan</th><th>Peran</th><th>PIN</th><th>Status Akun</th><th>Face ID</th><th style="width:280px">Aksi</th>' +
         '</tr></thead><tbody id="rkUsersBody"><tr><td colspan="7"><div class="rk-loading">Memuat...</div></td></tr></tbody></table></div></div>';
@@ -16903,8 +16949,16 @@ function renderMyApprovalsPage(){
     var canManageUsers = isSuperAdminRole();
     body.innerHTML = list.map(function (x) {
       var ava = '<span class="rk-ava"' + faceWrap(x.nik, x.nama, x.faceVer) + '>' + avaHtml(x.nik, x.nama, x.faceVer) + '</span>';
+      var effectiveRole = usersEffectiveRole(x);
+      var roleOptions = [
+        { value: 'KARYAWAN', label: 'Karyawan' },
+        { value: 'APPROVER', label: 'Approver' },
+        { value: 'ADMIN', label: 'Administrator' },
+        { value: 'SUPERADMIN', label: 'Superadmin' }
+      ];
+      if (effectiveRole === 'HR') roleOptions.push({ value: 'HR', label: 'HR (saat ini)' });
       var roleSel = '<select class="rk-role" data-role-for="' + escH(x.nik) + '"' + (canManageUsers ? '' : ' disabled') + '>' +
-        ['KARYAWAN', 'ADMIN', 'SUPERADMIN'].map(function (r) { var roleLabel = r === 'KARYAWAN' ? 'Karyawan' : (r === 'ADMIN' ? 'Administrator' : 'Superadmin'); return '<option value="' + r + '"' + (x.role === r ? ' selected' : '') + '>' + roleLabel + '</option>'; }).join('') + '</select>';
+        roleOptions.map(function (r) { return '<option value="' + r.value + '"' + (effectiveRole === r.value ? ' selected' : '') + '>' + r.label + '</option>'; }).join('') + '</select>';
       var activePin = empVal(x, ['pin','PIN','pin_aktif','pinAktif','pin_value','pinValue']);
       var pinCell = activePin !== '' && activePin !== null && activePin !== undefined
         ? '<code class="rk-user-pin-value">' + escH(String(activePin)) + '</code>'
@@ -16930,9 +16984,33 @@ function renderMyApprovalsPage(){
     if (!isSuperAdminRole()) { rkToast('Hanya Superadmin yang dapat mengubah peran.'); return; }
     var sel = document.querySelector('select[data-role-for="' + nik + '"]');
     if (!sel) return;
-    rpcOptional('hr_set_role', { p_nik: nik, p_role: sel.value }).then(function (r) {
-      if (r && r.ok !== false) { rkToast((r && r.message) || 'Peran berhasil diperbarui.'); ensureKar(true).then(paintUsers); }
-      else rkToast('Fitur belum tersedia. Hubungi administrator.');
+    var desiredRole = String(sel.value || '').toUpperCase();
+    var directReports = usersActiveDirectReportCount(nik);
+    var employee = (DATA.karList || []).map(empNormalize).find(function (x) { return x.nik === String(nik); });
+    var previousEffectiveRole = employee ? usersEffectiveRole(employee) : 'KARYAWAN';
+    if (desiredRole === 'APPROVER' && directReports < 1) {
+      sel.value = previousEffectiveRole;
+      rkToast('Approver ditentukan otomatis. Tetapkan karyawan aktif ini sebagai Atasan Langsung pada profil minimal satu karyawan terlebih dahulu.');
+      return;
+    }
+    if (desiredRole === 'KARYAWAN' && directReports > 0) {
+      sel.value = 'APPROVER';
+      rkToast('Peran Approver masih aktif karena karyawan ini memiliki ' + directReports + ' bawahan langsung aktif. Ubah Atasan Langsung pada profil bawahannya terlebih dahulu.');
+      return;
+    }
+    // The schema intentionally stores only base roles; Approver is computed from approval_line_id.
+    var storedRole = desiredRole === 'APPROVER' ? 'KARYAWAN' : desiredRole;
+    rpcOptional('hr_set_role', { p_nik: nik, p_role: storedRole }).then(function (r) {
+      if (r && r.ok !== false) {
+        rkToast(desiredRole === 'APPROVER' ? 'Peran efektif berhasil menjadi Approver berdasarkan bawahan langsung aktif.' : ((r && r.message) || 'Peran berhasil diperbarui.'));
+        ensureKar(true).then(paintUsers);
+      } else {
+        sel.value = previousEffectiveRole;
+        rkToast((r && r.message) || 'Perubahan peran gagal.');
+      }
+    }).catch(function (e) {
+      sel.value = previousEffectiveRole;
+      rkToast('Perubahan peran gagal: ' + (e && e.message || e));
     });
   }
 

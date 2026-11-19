@@ -6,9 +6,9 @@
  */
 'use strict';
 
-const RH_SW_RELEASE = 'v77-approver-dashboard-attendance-adjustment';
-const RH_EXPECTED_HTML_RELEASE = 'v14.9.0-approver-dashboard-attendance-adjustment';
-const RH_SHELL_CACHE = 'rehholz-app-shell-v77';
+const RH_SW_RELEASE = 'v78-approver-role-ui';
+const RH_EXPECTED_HTML_RELEASE = 'v14.9.1-approver-role-ui';
+const RH_SHELL_CACHE = 'rehholz-app-shell-v78';
 const RH_ASSET_CACHE = 'reholz-app-assets-v2';
 const RH_ASSET_URLS = [
   './assets/reholz-logo-green.png',
