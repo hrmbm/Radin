@@ -1,4 +1,4 @@
-/* ReHolz HRIS Service Worker v73.
+/* ReHolz HRIS Service Worker v77.
  * GitHub Pages deployment: publish this file beside index.html as sw.js,
  * and keep the assets/ folder (logo) beside them.
  * The app shell is resolved from the Service Worker scope (./), never a versioned HTML filename.
@@ -6,10 +6,10 @@
  */
 'use strict';
 
-const RH_SW_RELEASE = 'v73-attendance-monitor-session-scope-fix';
-const RH_EXPECTED_HTML_RELEASE = 'v14.7.19-stage4-attendance-monitor-session-scope-fix';
-const RH_SHELL_CACHE = 'rehholz-app-shell-v73';
-const RH_ASSET_CACHE = 'reholz-app-assets-v1';
+const RH_SW_RELEASE = 'v77-approver-dashboard-attendance-adjustment';
+const RH_EXPECTED_HTML_RELEASE = 'v14.9.0-approver-dashboard-attendance-adjustment';
+const RH_SHELL_CACHE = 'rehholz-app-shell-v77';
+const RH_ASSET_CACHE = 'reholz-app-assets-v2';
 const RH_ASSET_URLS = [
   './assets/reholz-logo-green.png',
   './assets/reholz-logo-white.png',
