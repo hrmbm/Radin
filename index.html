@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="id"><head>
-<meta name="reholz-release" content="v14.9.1-approver-role-ui">
+<meta name="reholz-release" content="v14.9.2-approver-page-access">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <link rel="preconnect" href="https://unpkg.com" crossorigin="">
@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin="">
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin="">
 <meta name="theme-color" content="#007850">
-<meta name="app-release" content="v14.9.1-approver-role-ui">
+<meta name="app-release" content="v14.9.2-approver-page-access">
 <title>ReHolz HRIS</title>
 <meta name="description" content="Portal sistem terintegrasi untuk mengelola data karyawan ReHolz.">
 <meta property="og:title" content="ReHolz HRIS">
@@ -2570,6 +2570,16 @@ body.rh-noscroll { overflow: hidden !important; }
   body.rh-role-staff #rhDesk .rk-main .rk-page.on { filter:none; pointer-events:auto; user-select:auto; opacity:1; }
   body.rh-role-staff #rkLimitedOverlay { position:absolute; inset:0; z-index:30; display:none; align-items:center; justify-content:center; color:#14352A; font-size:16px; font-weight:750; letter-spacing:.02em; pointer-events:none; }
   body.rh-role-staff #rhDesk .rk-main .rk-page.on#rkp-timeoffRequest { filter:none; pointer-events:auto; opacity:1; }
+  /* Approver has a restricted but functional set of pages. The generic staff
+     blur above must not disable pages explicitly authorized to Approver. */
+  body.rh-role-staff.rh-role-approver #rhDesk .rk-main .rk-page.on#rkp-dash,
+  body.rh-role-staff.rh-role-approver #rhDesk .rk-main .rk-page.on#rkp-att,
+  body.rh-role-staff.rh-role-approver #rhDesk .rk-main .rk-page.on#rkp-attmap,
+  body.rh-role-staff.rh-role-approver #rhDesk .rk-main .rk-page.on#rkp-cuti,
+  body.rh-role-staff.rh-role-approver #rhDesk .rk-main .rk-page.on#rkp-rekap,
+  body.rh-role-staff.rh-role-approver #rhDesk .rk-main .rk-page.on#rkp-my-approvals {
+    filter:none !important; pointer-events:auto !important; user-select:auto !important; opacity:1 !important;
+  }
   body.rh-reim-limited #rhDesk .rk-main .rk-page.on#rkp-reimbursementRequest { filter:blur(5px); pointer-events:none; user-select:none; opacity:.68; }
 
 }
@@ -4544,7 +4554,7 @@ window.__APP_PREPARING_ASSETS = true;
 var SUPABASE_URL = 'https://usizgscyxtbuutzzdlmq.supabase.co';
 var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVzaXpnc2N5eHRidXV0enpkbG1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQxNzA4OTAsImV4cCI6MjEwOTc0Njg5MH0.eo1YNLVIii9_QJkb13OleJ2y46LAVc9WrxQtjIrvF60';
 var APP_VERSION = '6.9-REHOLZ-REIMBURSEMENT-REALIZATION-APPROVAL-SDR'; // Kept in sync with existing app-version RPC to avoid forced reload loops.
-var RH_HTML_RELEASE = 'v14.9.1-approver-role-ui';
+var RH_HTML_RELEASE = 'v14.9.2-approver-page-access';
 var RH_DISPLAY_VERSION = 'v14.9.1';
 var RH_RELEASE_STORAGE_KEY = 'reh_html_release_seen';
 var RH_RELEASE_UPGRADE_ACTIVE = false;
@@ -12544,9 +12554,10 @@ function showHrPlaceholder(title, group, description) {
   function renderDesktopReimbursementRequest(){var app=document.getElementById('reimbursementApp'),mount=document.getElementById('rkDeskReimbursementMount');if(!app||!mount)return;if(!reimbursementAppOriginalParent)reimbursementAppOriginalParent=app.parentNode;if(app.parentNode!==mount)mount.appendChild(app);if(typeof window.loadReimbursementPage==='function')window.loadReimbursementPage();}
   function restoreReimbursementMobileMount(){var app=document.getElementById('reimbursementApp');if(app&&reimbursementAppOriginalParent&&app.parentNode!==reimbursementAppOriginalParent)reimbursementAppOriginalParent.appendChild(app);}
   function activate() {
-    if (document.body.classList.contains('rh-desk-on')) { document.body.classList.toggle('rh-role-staff',isDesktopLimited()); document.body.classList.toggle('rh-reim-limited',!isDesktopHybrid()); applyDesktopRoleNav(); updateDesktopLimitedOverlay(); return; }
+    if (document.body.classList.contains('rh-desk-on')) { document.body.classList.toggle('rh-role-staff',isDesktopLimited()); document.body.classList.toggle('rh-role-approver',isDesktopApprover()); document.body.classList.toggle('rh-reim-limited',!isDesktopHybrid()); applyDesktopRoleNav(); updateDesktopLimitedOverlay(); return; }
     document.body.classList.add('rh-desk-on');
     document.body.classList.toggle('rh-role-staff',isDesktopLimited());
+    document.body.classList.toggle('rh-role-approver',isDesktopApprover());
     document.body.classList.toggle('rh-reim-limited',!isDesktopHybrid());
     var d = document.getElementById('rhDesk');
     if (d) d.setAttribute('aria-hidden', 'false');
@@ -12571,6 +12582,7 @@ function showHrPlaceholder(title, group, description) {
   }
   function deactivate() {
     document.body.classList.remove('rh-desk-on');
+    document.body.classList.remove('rh-role-approver');
     document.body.classList.remove('rh-reim-limited');
     restoreReimbursementMobileMount();
     try { setDeskNotifPanel(false); } catch (e) {}
@@ -19202,7 +19214,7 @@ function renderIncentiveFormulaPage(){
   // Hook status aplikasi: polling ringan (aman karena script utama berada dalam IIFE)
   var _lastEvalKey = '';
   function evaluateThrottled() {
-    var key = (window.S && S.user ? (S.user.nik + '|' + S.user.role) : 'anon') + '|' + MQ.matches;
+    var key = (window.S && S.user ? (S.user.nik + '|' + S.user.role) : 'anon') + '|approver:' + !!(window.S && S.approver) + '|' + MQ.matches;
     if (key === _lastEvalKey) return;
     _lastEvalKey = key;
     evaluate();

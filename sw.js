@@ -6,9 +6,9 @@
  */
 'use strict';
 
-const RH_SW_RELEASE = 'v78-approver-role-ui';
-const RH_EXPECTED_HTML_RELEASE = 'v14.9.1-approver-role-ui';
-const RH_SHELL_CACHE = 'rehholz-app-shell-v78';
+const RH_SW_RELEASE = 'v79-approver-page-access';
+const RH_EXPECTED_HTML_RELEASE = 'v14.9.2-approver-page-access';
+const RH_SHELL_CACHE = 'rehholz-app-shell-v79';
 const RH_ASSET_CACHE = 'reholz-app-assets-v2';
 const RH_ASSET_URLS = [
   './assets/reholz-logo-green.png',
